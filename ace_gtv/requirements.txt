@@ -1,0 +1,15 @@
+# GTV ACE Agent Python依赖
+flask==3.0.0
+flask-cors==4.0.0
+requests==2.31.0
+python-dotenv==1.0.0
+
+# LLM客户端库
+openai==1.3.0
+anthropic==0.7.0
+
+# 开发和测试依赖
+pytest==7.4.3
+pytest-flask==1.3.0
+pdfminer.six==20221105
+python-docx==1.1.2

@@ -1,0 +1,57 @@
+{
+  "name": "测试简历内容2",
+  "created_at": "2025-10-20T13:32:19.511330",
+  "last_updated": "2025-10-20T13:32:19.511338",
+  "extracted_info": {
+    "name": "测试简历内容2",
+    "email": "邮箱：wangwu@example.com",
+    "phone": "电话：+86 139 0013 9000",
+    "experience": "",
+    "education": "",
+    "skills": [
+      "：Java",
+      "Spring Boot",
+      "MySQL"
+    ],
+    "achievements": [],
+    "projects": [],
+    "languages": [],
+    "certifications": [],
+    "summary": ""
+  },
+  "knowledge_bullets": [
+    {
+      "id": "测试简历内容2_skill_1",
+      "section": "技能专长",
+      "content": "：Java",
+      "helpful": true,
+      "harmful": false,
+      "metadata": {
+        "source": "resume",
+        "type": "skill"
+      }
+    },
+    {
+      "id": "测试简历内容2_skill_2",
+      "section": "技能专长",
+      "content": "Spring Boot",
+      "helpful": true,
+      "harmful": false,
+      "metadata": {
+        "source": "resume",
+        "type": "skill"
+      }
+    },
+    {
+      "id": "测试简历内容2_skill_3",
+      "section": "技能专长",
+      "content": "MySQL",
+      "helpful": true,
+      "harmful": false,
+      "metadata": {
+        "source": "resume",
+        "type": "skill"
+      }
+    }
+  ]
+}

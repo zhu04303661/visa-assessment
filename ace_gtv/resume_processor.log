@@ -1,0 +1,488 @@
+✅ 已加载配置文件: /Users/zhuenqing/workspace/lisa/gtv-visa-assessment/.env.local
+2025-10-21 22:22:04,749 INFO resume_processor.py:1156 🚀 启动简历处理服务...
+2025-10-21 22:22:04,749 INFO resume_processor.py:1157 📡 API地址: http://localhost:5002
+2025-10-21 22:22:04,749 INFO resume_processor.py:1158 🔗 健康检查: http://localhost:5002/health
+2025-10-21 22:22:04,749 INFO resume_processor.py:1159 📄 简历上传: http://localhost:5002/api/resume/upload
+2025-10-21 22:22:04,749 INFO resume_processor.py:1160 📚 个人知识库: http://localhost:5002/api/resume/personal/<name>
+ * Serving Flask app 'resume_processor'
+ * Debug mode: on
+2025-10-21 22:22:04,754 INFO _internal.py:96 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5002
+ * Running on http://172.20.10.4:5002
+2025-10-21 22:22:04,754 INFO _internal.py:96 [33mPress CTRL+C to quit[0m
+2025-10-21 22:22:04,758 INFO _internal.py:96  * Restarting with watchdog (fsevents)
+✅ 已加载配置文件: /Users/zhuenqing/workspace/lisa/gtv-visa-assessment/.env.local
+2025-10-21 22:22:05,518 INFO resume_processor.py:1156 🚀 启动简历处理服务...
+2025-10-21 22:22:05,518 INFO resume_processor.py:1157 📡 API地址: http://localhost:5002
+2025-10-21 22:22:05,519 INFO resume_processor.py:1158 🔗 健康检查: http://localhost:5002/health
+2025-10-21 22:22:05,519 INFO resume_processor.py:1159 📄 简历上传: http://localhost:5002/api/resume/upload
+2025-10-21 22:22:05,519 INFO resume_processor.py:1160 📚 个人知识库: http://localhost:5002/api/resume/personal/<name>
+2025-10-21 22:22:05,521 WARNING _internal.py:96  * Debugger is active!
+2025-10-21 22:22:05,536 INFO _internal.py:96  * Debugger PIN: 635-981-963
+2025-10-21 22:22:08,965 INFO _internal.py:96 127.0.0.1 - - [21/Oct/2025 22:22:08] "GET /health HTTP/1.1" 200 -
+2025-10-21 22:22:13,850 INFO _internal.py:96 127.0.0.1 - - [21/Oct/2025 22:22:13] "GET /health HTTP/1.1" 200 -
+2025-10-21 22:22:53,503 INFO resume_processor.py:969 [20251021_222253_503] 开始处理简历上传请求
+2025-10-21 22:22:53,504 INFO resume_processor.py:973 [20251021_222253_503] 请求来源: 127.0.0.1
+2025-10-21 22:22:53,504 INFO resume_processor.py:974 [20251021_222253_503] 请求头: {'Host': 'localhost:5002', 'Connection': 'keep-alive', 'Content-Type': 'multipart/form-data; boundary=----formdata-undici-036511359484', 'Accept': '*/*', 'Accept-Language': '*', 'Sec-Fetch-Mode': 'cors', 'User-Agent': 'node', 'Accept-Encoding': 'gzip, deflate', 'Content-Length': '72275'}
+2025-10-21 22:22:53,506 INFO resume_processor.py:986 [20251021_222253_503] 上传文件名: ZHU Enqing's resume_-202506.docx
+2025-10-21 22:22:53,506 INFO resume_processor.py:987 [20251021_222253_503] 文件大小: 0 bytes
+2025-10-21 22:22:53,506 INFO resume_processor.py:988 [20251021_222253_503] 文件类型: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+2025-10-21 22:22:53,506 INFO resume_processor.py:995 [20251021_222253_503] 文件类型检查通过
+2025-10-21 22:22:53,506 INFO resume_processor.py:1003 [20251021_222253_503] 保存文件到: resumes/20251021_222253_ZHU_Enqings_resume_-202506.docx
+2025-10-21 22:22:53,506 INFO resume_processor.py:1005 [20251021_222253_503] 文件保存成功
+2025-10-21 22:22:53,506 INFO resume_processor.py:1008 [20251021_222253_503] 开始提取文件文本内容
+2025-10-21 22:22:53,507 INFO resume_processor.py:210 开始提取文件文本内容: resumes/20251021_222253_ZHU_Enqings_resume_-202506.docx
+2025-10-21 22:22:53,507 INFO resume_processor.py:219 文件大小: 71640 bytes
+2025-10-21 22:22:53,507 INFO resume_processor.py:233 检测到DOCX文件，使用python-docx解析
+2025-10-21 22:22:53,527 INFO resume_processor.py:147 DOCX解析完成，段落数: 76，字符数: 4861
+2025-10-21 22:22:53,528 INFO resume_processor.py:201 已保存Markdown内容: resumes/20251021_222253_ZHU_Enqings_resume_-202506.md
+2025-10-21 22:22:53,528 INFO resume_processor.py:1014 [20251021_222253_503] 文本提取成功，内容长度: 4861 字符
+2025-10-21 22:22:53,528 INFO resume_processor.py:1018 [20251021_222253_503] 开始AI信息提取
+2025-10-21 22:22:53,528 INFO resume_processor.py:361 开始AI信息提取，输入内容长度: 4861 字符
+🔄 使用AI_PROVIDER=azure -> LLM_PROVIDER=AZURE
+2025-10-21 22:22:53,528 INFO resume_processor.py:300 自动映射AZURE_API_KEY -> AZURE_OPENAI_API_KEY
+2025-10-21 22:22:53,528 INFO resume_processor.py:307 自动映射AZURE_OPENAI_DEPLOYMENT_NAME -> AZURE_OPENAI_DEPLOYMENT
+2025-10-21 22:22:53,647 INFO resume_processor.py:370 调用LLM提供商: AZURE
+2025-10-21 22:23:05,155 INFO resume_processor.py:416 LLM返回文本长度: 1950; 预览: {
+  "name": "朱恩庆",
+  "email": "zhu04303661@163.com",
+  "phone": "18217361837",
+  "experience": "拥有12年技术管理和研发经验，现任新奥集团智能技术负责人、智能技术架构师、智能产品研发群资深技术总监，带领90人团队专注于大模型、智能体、产业智能等领域。曾在携程担任无线技术专家、高级经理，负责移动端研发效能...
+2025-10-21 22:23:05,156 INFO resume_processor.py:433 LLM信息提取成功
+2025-10-21 22:23:05,156 INFO resume_processor.py:1024 [20251021_222253_503] AI信息提取成功
+2025-10-21 22:23:05,156 INFO resume_processor.py:1025 [20251021_222253_503] 提取的信息: {'name': '朱恩庆', 'email': 'zhu04303661@163.com', 'phone': '18217361837', 'experience': '拥有12年技术管理和研发经验，现任新奥集团智能技术负责人、智能技术架构师、智能产品研发群资深技术总监，带领90人团队专注于大模型、智能体、产业智能等领域。曾在携程担任无线技术专家、高级经理，负责移动端研发效能和云平台开发。此前在爱立信从事核心通讯技术研发，参与云计算和自动化平台建设。在阿尔卡特朗讯贝尔实验室负责4G物理层算法仿真系统研发，并赴美国贝尔实验室联合开发。早期在英特尔实习，参与Linux系统研发。', 'education': '2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位', 'skills': ['人工智能', '大模型技术', '智能体Agent', '产业智能', '物联智能', '持续迭代', '软件系统开发', '通讯系统开发', '嵌入式系统开发', 'Linux系统技术应用', '云计算', '移动互联网基础服务', '研发工具链', 'CV/NLP算法', '感知认知技术', '全栈开发', '企业架构', '智能产品架构', '智能算法'], 'achievements': ['2024年大模型工程和智能体技术相关专利6篇', '2023年大模型工程相关专利10篇', '2022年CV识别算法专利5篇', '2022年获得《创值标兵》称号', '2020年携程无线质量优秀个人技术贡献奖', '2016年携程MCD平台获得携程突出技术贡献奖', '2015年在携程提交IOS应用集群打包专利两篇', '2013年阿尔卡特朗讯outstanding员工奖', '2010年发表《液冷源控制系统的研制》核心期刊', '2009年发表论文被EI收录', '2004-2008年校奖学金、校“社会活动积极分子”、校“优秀团干”'], 'projects': ['2024年专家Copilot生成系统：开发长推理距离的大模型Agent，结合RAG知识辅助，助力行业专家沉淀2000+智能能力，实现行业场景智能能力爆发式增长。', '2023年GPT大模型技术研发：为新奥打造产业源模型，建设高效率大模型数据处理、模型训练、部署评估流水线，提升团队协同效率。', '2021年感知认知模型研发平台：创新建设平台，分离算法与工程研发，实现算法组件化复用，交付大量行业特色CV算法，覆盖新奥80%场站，日均调用量800万次，打造SOP识别系统，获得多项AI创新奖。', '调压器智能诊断、危险作业安全监控、AIOT能力建设，实现企业销供产能一体化运筹智能。', '2015-2021年携程无线持续交付云平台（MCD）：带领团队开发业界首个无线APP持续交付平台，支持高并发分布式打包与发布，获得携程年度技术贡献奖。', '2020年携程无线服务质量监控平台APM：搭建全球无线服务质量监控平台，提升海量用户场景下产品能力。', '2014-2015年爱立信eMBMS模拟器开发：负责Ue端和基站端模拟器建模与开发，搭建自动化CI系统，参与K8S与Docker虚拟机环境建设。', '2011-2014年阿尔卡特朗讯LTE物理链路层仿真系统：开发基于C++的LTE物理链路仿真系统，担任仿真测试团队leader，赴美国贝尔实验室联合开发Light Radio LTE物理链路层仿真系统。', '2010年英特尔MeeGo操作系统测试：参与MeeGo Netbook QA，创建自动化测试工具。'], 'languages': ['中文（母语）', '英语（流利）'], 'certifications': [], 'summary': '朱恩庆，南京理工大学硕士，12年智能技术与管理经验，专注于人工智能、大模型、智能体、产业智能等领域。现任新奥集团智能技术负责人，曾在携程、爱立信、阿尔卡特朗讯、英特尔等知名企业从事技术研发与团队管理，具备丰富的项目经验和专利成果，技术能力全面，管理经验突出。'}
+2025-10-21 22:23:05,156 INFO resume_processor.py:1029 [20251021_222253_503] 提取的姓名: 朱恩庆
+2025-10-21 22:23:05,156 INFO resume_processor.py:1032 [20251021_222253_503] 开始创建个人知识库
+2025-10-21 22:23:05,156 INFO resume_processor.py:779 开始为 朱恩庆 创建个人知识库
+2025-10-21 22:23:05,156 INFO resume_processor.py:780 提取的信息: {'name': '朱恩庆', 'email': 'zhu04303661@163.com', 'phone': '18217361837', 'experience': '拥有12年技术管理和研发经验，现任新奥集团智能技术负责人、智能技术架构师、智能产品研发群资深技术总监，带领90人团队专注于大模型、智能体、产业智能等领域。曾在携程担任无线技术专家、高级经理，负责移动端研发效能和云平台开发。此前在爱立信从事核心通讯技术研发，参与云计算和自动化平台建设。在阿尔卡特朗讯贝尔实验室负责4G物理层算法仿真系统研发，并赴美国贝尔实验室联合开发。早期在英特尔实习，参与Linux系统研发。', 'education': '2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位', 'skills': ['人工智能', '大模型技术', '智能体Agent', '产业智能', '物联智能', '持续迭代', '软件系统开发', '通讯系统开发', '嵌入式系统开发', 'Linux系统技术应用', '云计算', '移动互联网基础服务', '研发工具链', 'CV/NLP算法', '感知认知技术', '全栈开发', '企业架构', '智能产品架构', '智能算法'], 'achievements': ['2024年大模型工程和智能体技术相关专利6篇', '2023年大模型工程相关专利10篇', '2022年CV识别算法专利5篇', '2022年获得《创值标兵》称号', '2020年携程无线质量优秀个人技术贡献奖', '2016年携程MCD平台获得携程突出技术贡献奖', '2015年在携程提交IOS应用集群打包专利两篇', '2013年阿尔卡特朗讯outstanding员工奖', '2010年发表《液冷源控制系统的研制》核心期刊', '2009年发表论文被EI收录', '2004-2008年校奖学金、校“社会活动积极分子”、校“优秀团干”'], 'projects': ['2024年专家Copilot生成系统：开发长推理距离的大模型Agent，结合RAG知识辅助，助力行业专家沉淀2000+智能能力，实现行业场景智能能力爆发式增长。', '2023年GPT大模型技术研发：为新奥打造产业源模型，建设高效率大模型数据处理、模型训练、部署评估流水线，提升团队协同效率。', '2021年感知认知模型研发平台：创新建设平台，分离算法与工程研发，实现算法组件化复用，交付大量行业特色CV算法，覆盖新奥80%场站，日均调用量800万次，打造SOP识别系统，获得多项AI创新奖。', '调压器智能诊断、危险作业安全监控、AIOT能力建设，实现企业销供产能一体化运筹智能。', '2015-2021年携程无线持续交付云平台（MCD）：带领团队开发业界首个无线APP持续交付平台，支持高并发分布式打包与发布，获得携程年度技术贡献奖。', '2020年携程无线服务质量监控平台APM：搭建全球无线服务质量监控平台，提升海量用户场景下产品能力。', '2014-2015年爱立信eMBMS模拟器开发：负责Ue端和基站端模拟器建模与开发，搭建自动化CI系统，参与K8S与Docker虚拟机环境建设。', '2011-2014年阿尔卡特朗讯LTE物理链路层仿真系统：开发基于C++的LTE物理链路仿真系统，担任仿真测试团队leader，赴美国贝尔实验室联合开发Light Radio LTE物理链路层仿真系统。', '2010年英特尔MeeGo操作系统测试：参与MeeGo Netbook QA，创建自动化测试工具。'], 'languages': ['中文（母语）', '英语（流利）'], 'certifications': [], 'summary': '朱恩庆，南京理工大学硕士，12年智能技术与管理经验，专注于人工智能、大模型、智能体、产业智能等领域。现任新奥集团智能技术负责人，曾在携程、爱立信、阿尔卡特朗讯、英特尔等知名企业从事技术研发与团队管理，具备丰富的项目经验和专利成果，技术能力全面，管理经验突出。'}
+2025-10-21 22:23:05,156 INFO resume_processor.py:785 创建个人知识库目录: personal_kb
+2025-10-21 22:23:05,156 INFO resume_processor.py:787 个人知识库目录创建成功
+2025-10-21 22:23:05,156 INFO resume_processor.py:797 初始化个人信息结构
+2025-10-21 22:23:05,156 INFO resume_processor.py:801 开始根据提取的信息创建知识条目
+2025-10-21 22:23:05,156 INFO resume_processor.py:813 创建工作经验知识条目: 朱恩庆_exp_1
+2025-10-21 22:23:05,156 INFO resume_processor.py:825 创建教育背景知识条目: 朱恩庆_edu_1
+2025-10-21 22:23:05,156 INFO resume_processor.py:828 创建技能知识条目，技能数量: 19
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 1: 朱恩庆_skill_1 - 人工智能
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 2: 朱恩庆_skill_2 - 大模型技术
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 3: 朱恩庆_skill_3 - 智能体Agent
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 4: 朱恩庆_skill_4 - 产业智能
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 5: 朱恩庆_skill_5 - 物联智能
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 6: 朱恩庆_skill_6 - 持续迭代
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 7: 朱恩庆_skill_7 - 软件系统开发
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 8: 朱恩庆_skill_8 - 通讯系统开发
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 9: 朱恩庆_skill_9 - 嵌入式系统开发
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 10: 朱恩庆_skill_10 - Linux系统技术应用
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 11: 朱恩庆_skill_11 - 云计算
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 12: 朱恩庆_skill_12 - 移动互联网基础服务
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 13: 朱恩庆_skill_13 - 研发工具链
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 14: 朱恩庆_skill_14 - CV/NLP算法
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 15: 朱恩庆_skill_15 - 感知认知技术
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 16: 朱恩庆_skill_16 - 全栈开发
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 17: 朱恩庆_skill_17 - 企业架构
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 18: 朱恩庆_skill_18 - 智能产品架构
+2025-10-21 22:23:05,157 INFO resume_processor.py:839 创建技能知识条目 19: 朱恩庆_skill_19 - 智能算法
+2025-10-21 22:23:05,157 INFO resume_processor.py:842 创建成就知识条目，成就数量: 11
+2025-10-21 22:23:05,157 INFO resume_processor.py:853 创建成就知识条目 1: 朱恩庆_ach_1 - 2024年大模型工程和智能体技术相关专利6篇
+2025-10-21 22:23:05,157 INFO resume_processor.py:853 创建成就知识条目 2: 朱恩庆_ach_2 - 2023年大模型工程相关专利10篇
+2025-10-21 22:23:05,157 INFO resume_processor.py:853 创建成就知识条目 3: 朱恩庆_ach_3 - 2022年CV识别算法专利5篇
+2025-10-21 22:23:05,157 INFO resume_processor.py:853 创建成就知识条目 4: 朱恩庆_ach_4 - 2022年获得《创值标兵》称号
+2025-10-21 22:23:05,157 INFO resume_processor.py:853 创建成就知识条目 5: 朱恩庆_ach_5 - 2020年携程无线质量优秀个人技术贡献奖
+2025-10-21 22:23:05,157 INFO resume_processor.py:853 创建成就知识条目 6: 朱恩庆_ach_6 - 2016年携程MCD平台获得携程突出技术贡献奖
+2025-10-21 22:23:05,157 INFO resume_processor.py:853 创建成就知识条目 7: 朱恩庆_ach_7 - 2015年在携程提交IOS应用集群打包专利两篇
+2025-10-21 22:23:05,157 INFO resume_processor.py:853 创建成就知识条目 8: 朱恩庆_ach_8 - 2013年阿尔卡特朗讯outstanding员工奖
+2025-10-21 22:23:05,157 INFO resume_processor.py:853 创建成就知识条目 9: 朱恩庆_ach_9 - 2010年发表《液冷源控制系统的研制》核心期刊
+2025-10-21 22:23:05,157 INFO resume_processor.py:853 创建成就知识条目 10: 朱恩庆_ach_10 - 2009年发表论文被EI收录
+2025-10-21 22:23:05,157 INFO resume_processor.py:853 创建成就知识条目 11: 朱恩庆_ach_11 - 2004-2008年校奖学金、校“社会活动积极分子”、校“优秀团干”
+2025-10-21 22:23:05,157 INFO resume_processor.py:856 知识条目创建完成，总计 32 个条目
+2025-10-21 22:23:05,157 INFO resume_processor.py:860 保存个人知识库到文件: personal_kb/personal_info.json
+2025-10-21 22:23:05,159 INFO resume_processor.py:863 个人知识库文件保存成功
+2025-10-21 22:23:05,159 INFO resume_processor.py:865 为 朱恩庆 创建了个人知识库，包含 32 个知识条目
+2025-10-21 22:23:05,159 INFO resume_processor.py:1038 [20251021_222253_503] 个人知识库创建成功: personal_kb
+2025-10-21 22:23:05,159 INFO resume_processor.py:1041 [20251021_222253_503] 开始更新主知识库，个人知识库路径: personal_kb
+2025-10-21 22:23:05,159 INFO resume_processor.py:874 开始更新主知识库，个人知识库路径: personal_kb, 姓名: 朱恩庆
+2025-10-21 22:23:05,159 INFO resume_processor.py:879 读取个人知识库文件: personal_kb/personal_info.json
+2025-10-21 22:23:05,159 INFO resume_processor.py:887 个人知识库文件读取成功，包含 32 个知识条目
+2025-10-21 22:23:05,159 INFO resume_processor.py:891 读取主知识库文件: data/playbook.json
+2025-10-21 22:23:05,160 INFO resume_processor.py:896 主知识库文件读取成功，当前包含 62 个条目
+2025-10-21 22:23:05,160 INFO resume_processor.py:912 开始添加 32 个个人知识条目到主知识库
+2025-10-21 22:23:05,160 INFO resume_processor.py:915 处理知识条目 1/32: 朱恩庆_exp_1
+2025-10-21 22:23:05,160 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_exp_1
+2025-10-21 22:23:05,160 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_exp_1
+2025-10-21 22:23:05,160 INFO resume_processor.py:915 处理知识条目 2/32: 朱恩庆_edu_1
+2025-10-21 22:23:05,160 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_edu_1
+2025-10-21 22:23:05,160 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_edu_1
+2025-10-21 22:23:05,160 INFO resume_processor.py:915 处理知识条目 3/32: 朱恩庆_skill_1
+2025-10-21 22:23:05,160 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_1
+2025-10-21 22:23:05,160 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_1
+2025-10-21 22:23:05,160 INFO resume_processor.py:915 处理知识条目 4/32: 朱恩庆_skill_2
+2025-10-21 22:23:05,160 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_2
+2025-10-21 22:23:05,160 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_2
+2025-10-21 22:23:05,160 INFO resume_processor.py:915 处理知识条目 5/32: 朱恩庆_skill_3
+2025-10-21 22:23:05,160 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_3
+2025-10-21 22:23:05,160 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_3
+2025-10-21 22:23:05,160 INFO resume_processor.py:915 处理知识条目 6/32: 朱恩庆_skill_4
+2025-10-21 22:23:05,160 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_4
+2025-10-21 22:23:05,160 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_4
+2025-10-21 22:23:05,160 INFO resume_processor.py:915 处理知识条目 7/32: 朱恩庆_skill_5
+2025-10-21 22:23:05,160 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_5
+2025-10-21 22:23:05,161 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_5
+2025-10-21 22:23:05,161 INFO resume_processor.py:915 处理知识条目 8/32: 朱恩庆_skill_6
+2025-10-21 22:23:05,161 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_6
+2025-10-21 22:23:05,161 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_6
+2025-10-21 22:23:05,161 INFO resume_processor.py:915 处理知识条目 9/32: 朱恩庆_skill_7
+2025-10-21 22:23:05,161 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_7
+2025-10-21 22:23:05,161 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_7
+2025-10-21 22:23:05,161 INFO resume_processor.py:915 处理知识条目 10/32: 朱恩庆_skill_8
+2025-10-21 22:23:05,161 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_8
+2025-10-21 22:23:05,161 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_8
+2025-10-21 22:23:05,161 INFO resume_processor.py:915 处理知识条目 11/32: 朱恩庆_skill_9
+2025-10-21 22:23:05,161 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_9
+2025-10-21 22:23:05,161 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_9
+2025-10-21 22:23:05,161 INFO resume_processor.py:915 处理知识条目 12/32: 朱恩庆_skill_10
+2025-10-21 22:23:05,161 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_10
+2025-10-21 22:23:05,161 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_10
+2025-10-21 22:23:05,161 INFO resume_processor.py:915 处理知识条目 13/32: 朱恩庆_skill_11
+2025-10-21 22:23:05,161 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_11
+2025-10-21 22:23:05,161 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_11
+2025-10-21 22:23:05,161 INFO resume_processor.py:915 处理知识条目 14/32: 朱恩庆_skill_12
+2025-10-21 22:23:05,161 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_12
+2025-10-21 22:23:05,161 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_12
+2025-10-21 22:23:05,161 INFO resume_processor.py:915 处理知识条目 15/32: 朱恩庆_skill_13
+2025-10-21 22:23:05,161 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_13
+2025-10-21 22:23:05,161 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_13
+2025-10-21 22:23:05,161 INFO resume_processor.py:915 处理知识条目 16/32: 朱恩庆_skill_14
+2025-10-21 22:23:05,161 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_14
+2025-10-21 22:23:05,161 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_14
+2025-10-21 22:23:05,161 INFO resume_processor.py:915 处理知识条目 17/32: 朱恩庆_skill_15
+2025-10-21 22:23:05,161 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_15
+2025-10-21 22:23:05,161 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_15
+2025-10-21 22:23:05,161 INFO resume_processor.py:915 处理知识条目 18/32: 朱恩庆_skill_16
+2025-10-21 22:23:05,161 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_16
+2025-10-21 22:23:05,161 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_16
+2025-10-21 22:23:05,161 INFO resume_processor.py:915 处理知识条目 19/32: 朱恩庆_skill_17
+2025-10-21 22:23:05,162 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_17
+2025-10-21 22:23:05,162 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_17
+2025-10-21 22:23:05,162 INFO resume_processor.py:915 处理知识条目 20/32: 朱恩庆_skill_18
+2025-10-21 22:23:05,162 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_18
+2025-10-21 22:23:05,162 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_18
+2025-10-21 22:23:05,162 INFO resume_processor.py:915 处理知识条目 21/32: 朱恩庆_skill_19
+2025-10-21 22:23:05,162 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_19
+2025-10-21 22:23:05,162 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_19
+2025-10-21 22:23:05,162 INFO resume_processor.py:915 处理知识条目 22/32: 朱恩庆_ach_1
+2025-10-21 22:23:05,162 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_1
+2025-10-21 22:23:05,162 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_1
+2025-10-21 22:23:05,162 INFO resume_processor.py:915 处理知识条目 23/32: 朱恩庆_ach_2
+2025-10-21 22:23:05,162 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_2
+2025-10-21 22:23:05,162 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_2
+2025-10-21 22:23:05,162 INFO resume_processor.py:915 处理知识条目 24/32: 朱恩庆_ach_3
+2025-10-21 22:23:05,162 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_3
+2025-10-21 22:23:05,162 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_3
+2025-10-21 22:23:05,162 INFO resume_processor.py:915 处理知识条目 25/32: 朱恩庆_ach_4
+2025-10-21 22:23:05,162 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_4
+2025-10-21 22:23:05,162 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_4
+2025-10-21 22:23:05,162 INFO resume_processor.py:915 处理知识条目 26/32: 朱恩庆_ach_5
+2025-10-21 22:23:05,162 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_5
+2025-10-21 22:23:05,162 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_5
+2025-10-21 22:23:05,162 INFO resume_processor.py:915 处理知识条目 27/32: 朱恩庆_ach_6
+2025-10-21 22:23:05,162 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_6
+2025-10-21 22:23:05,162 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_6
+2025-10-21 22:23:05,162 INFO resume_processor.py:915 处理知识条目 28/32: 朱恩庆_ach_7
+2025-10-21 22:23:05,162 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_7
+2025-10-21 22:23:05,162 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_7
+2025-10-21 22:23:05,162 INFO resume_processor.py:915 处理知识条目 29/32: 朱恩庆_ach_8
+2025-10-21 22:23:05,162 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_8
+2025-10-21 22:23:05,162 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_8
+2025-10-21 22:23:05,162 INFO resume_processor.py:915 处理知识条目 30/32: 朱恩庆_ach_9
+2025-10-21 22:23:05,162 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_9
+2025-10-21 22:23:05,162 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_9
+2025-10-21 22:23:05,163 INFO resume_processor.py:915 处理知识条目 31/32: 朱恩庆_ach_10
+2025-10-21 22:23:05,163 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_10
+2025-10-21 22:23:05,163 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_10
+2025-10-21 22:23:05,163 INFO resume_processor.py:915 处理知识条目 32/32: 朱恩庆_ach_11
+2025-10-21 22:23:05,163 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_11
+2025-10-21 22:23:05,163 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_11
+2025-10-21 22:23:05,163 INFO resume_processor.py:943 所有个人知识条目已添加到主知识库
+2025-10-21 22:23:05,163 INFO resume_processor.py:944 更新后的主知识库包含 62 个条目
+2025-10-21 22:23:05,163 INFO resume_processor.py:945 更新后的sections: ['defaults', 'guidelines', 'test', 'application_guide', '技能专长', '工作经验', '教育背景', '成就荣誉']
+2025-10-21 22:23:05,163 INFO resume_processor.py:948 保存更新后的主知识库到文件: data/playbook.json
+2025-10-21 22:23:05,164 INFO resume_processor.py:951 主知识库文件保存成功
+2025-10-21 22:23:05,164 INFO resume_processor.py:953 已将 朱恩庆 的个人知识库更新到主知识库
+2025-10-21 22:23:05,164 INFO resume_processor.py:1043 [20251021_222253_503] 主知识库更新结果: True
+2025-10-21 22:23:05,164 INFO resume_processor.py:1048 [20251021_222253_503] 临时文件清理成功: resumes/20251021_222253_ZHU_Enqings_resume_-202506.docx
+2025-10-21 22:23:05,164 INFO resume_processor.py:1052 [20251021_222253_503] 简历上传处理完成
+2025-10-21 22:23:05,165 INFO _internal.py:96 127.0.0.1 - - [21/Oct/2025 22:23:05] "POST /api/resume/upload HTTP/1.1" 200 -
+2025-10-21 22:23:05,195 INFO resume_processor.py:1069 [20251021_222305_195] 开始GTV资格评估请求
+2025-10-21 22:23:05,195 INFO resume_processor.py:1084 [20251021_222305_195] 评估参数 - 姓名: 朱, 邮箱: zhu@123, 领域: digital-technology
+2025-10-21 22:23:05,195 INFO resume_processor.py:1085 [20251021_222305_195] 提取的信息: {'achievements': ['2024年大模型工程和智能体技术相关专利6篇', '2023年大模型工程相关专利10篇', '2022年CV识别算法专利5篇', '2022年获得《创值标兵》称号', '2020年携程无线质量优秀个人技术贡献奖', '2016年携程MCD平台获得携程突出技术贡献奖', '2015年在携程提交IOS应用集群打包专利两篇', '2013年阿尔卡特朗讯outstanding员工奖', '2010年发表《液冷源控制系统的研制》核心期刊', '2009年发表论文被EI收录', '2004-2008年校奖学金、校“社会活动积极分子”、校“优秀团干”'], 'certifications': [], 'education': '2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位', 'email': 'zhu04303661@163.com', 'experience': '拥有12年技术管理和研发经验，现任新奥集团智能技术负责人、智能技术架构师、智能产品研发群资深技术总监，带领90人团队专注于大模型、智能体、产业智能等领域。曾在携程担任无线技术专家、高级经理，负责移动端研发效能和云平台开发。此前在爱立信从事核心通讯技术研发，参与云计算和自动化平台建设。在阿尔卡特朗讯贝尔实验室负责4G物理层算法仿真系统研发，并赴美国贝尔实验室联合开发。早期在英特尔实习，参与Linux系统研发。', 'languages': ['中文（母语）', '英语（流利）'], 'name': '朱恩庆', 'phone': '18217361837', 'projects': ['2024年专家Copilot生成系统：开发长推理距离的大模型Agent，结合RAG知识辅助，助力行业专家沉淀2000+智能能力，实现行业场景智能能力爆发式增长。', '2023年GPT大模型技术研发：为新奥打造产业源模型，建设高效率大模型数据处理、模型训练、部署评估流水线，提升团队协同效率。', '2021年感知认知模型研发平台：创新建设平台，分离算法与工程研发，实现算法组件化复用，交付大量行业特色CV算法，覆盖新奥80%场站，日均调用量800万次，打造SOP识别系统，获得多项AI创新奖。', '调压器智能诊断、危险作业安全监控、AIOT能力建设，实现企业销供产能一体化运筹智能。', '2015-2021年携程无线持续交付云平台（MCD）：带领团队开发业界首个无线APP持续交付平台，支持高并发分布式打包与发布，获得携程年度技术贡献奖。', '2020年携程无线服务质量监控平台APM：搭建全球无线服务质量监控平台，提升海量用户场景下产品能力。', '2014-2015年爱立信eMBMS模拟器开发：负责Ue端和基站端模拟器建模与开发，搭建自动化CI系统，参与K8S与Docker虚拟机环境建设。', '2011-2014年阿尔卡特朗讯LTE物理链路层仿真系统：开发基于C++的LTE物理链路仿真系统，担任仿真测试团队leader，赴美国贝尔实验室联合开发Light Radio LTE物理链路层仿真系统。', '2010年英特尔MeeGo操作系统测试：参与MeeGo Netbook QA，创建自动化测试工具。'], 'skills': ['人工智能', '大模型技术', '智能体Agent', '产业智能', '物联智能', '持续迭代', '软件系统开发', '通讯系统开发', '嵌入式系统开发', 'Linux系统技术应用', '云计算', '移动互联网基础服务', '研发工具链', 'CV/NLP算法', '感知认知技术', '全栈开发', '企业架构', '智能产品架构', '智能算法'], 'summary': '朱恩庆，南京理工大学硕士，12年智能技术与管理经验，专注于人工智能、大模型、智能体、产业智能等领域。现任新奥集团智能技术负责人，曾在携程、爱立信、阿尔卡特朗讯、英特尔等知名企业从事技术研发与团队管理，具备丰富的项目经验和专利成果，技术能力全面，管理经验突出。'}
+2025-10-21 22:23:05,195 INFO resume_processor.py:1088 [20251021_222305_195] 开始AI GTV评估
+2025-10-21 22:23:05,195 INFO resume_processor.py:442 开始GTV资格评估，领域: digital-technology
+🔄 使用AI_PROVIDER=azure -> LLM_PROVIDER=AZURE
+2025-10-21 22:23:05,212 INFO resume_processor.py:451 调用LLM提供商进行GTV评估: AZURE
+2025-10-21 22:23:10,647 INFO _internal.py:96 127.0.0.1 - - [21/Oct/2025 22:23:10] "GET /health HTTP/1.1" 200 -
+2025-10-21 22:23:10,650 INFO resume_processor.py:1069 [20251021_222310_650] 开始GTV资格评估请求
+2025-10-21 22:23:10,650 INFO resume_processor.py:1084 [20251021_222310_650] 评估参数 - 姓名: 朱恩庆, 邮箱: zhuenqing@example.com, 领域: digital-technology
+2025-10-21 22:23:10,650 INFO resume_processor.py:1085 [20251021_222310_650] 提取的信息: {'name': '朱恩庆', 'email': 'zhuenqing@example.com', 'phone': '+86 138 0013 8000', 'experience': '新奥集团智能技术负责人，负责AI和大模型技术研发，带领90人技术团队。在携程、爱立信、阿尔卡特朗讯等公司有丰富经验。', 'education': '南京理工大学计算机科学与技术专业学士学位', 'skills': ['人工智能', '大模型技术', '智能体', 'Python', '机器学习', '深度学习'], 'achievements': ['2024年大模型工程和智能体技术相关专利6篇', '带领团队完成多个AI项目', '获得公司技术创新奖'], 'projects': ['智能客服系统', '大模型应用平台', 'AI决策支持系统'], 'languages': ['中文', '英文'], 'certifications': ['PMP项目管理认证', 'AWS云架构师认证'], 'summary': '在AI和大模型技术领域有12年经验，现任新奥集团智能技术负责人，带领90人团队，拥有多项专利和技术奖项。'}
+2025-10-21 22:23:10,650 INFO resume_processor.py:1088 [20251021_222310_650] 开始AI GTV评估
+2025-10-21 22:23:10,650 INFO resume_processor.py:442 开始GTV资格评估，领域: digital-technology
+🔄 使用AI_PROVIDER=azure -> LLM_PROVIDER=AZURE
+2025-10-21 22:23:10,661 INFO resume_processor.py:451 调用LLM提供商进行GTV评估: AZURE
+2025-10-21 22:23:29,275 INFO resume_processor.py:596 GTV评估LLM返回文本长度: 3581; 预览: {
+  "applicantInfo": {
+    "name": "朱恩庆",
+    "field": "数字技术、人工智能、软件工程、技术创新",
+    "currentPosition": "智能技术负责人",
+    "company": "新奥集团",
+    "yearsOfExperience": 12
+  },
+  "educationBackground": {
+    "...
+2025-10-21 22:23:29,275 INFO resume_processor.py:599 GTV资格评估成功
+2025-10-21 22:23:29,275 INFO resume_processor.py:1091 [20251021_222310_650] GTV评估完成
+2025-10-21 22:23:29,276 INFO resume_processor.py:1092 [20251021_222310_650] 评估结果预览: {'applicantInfo': {'name': '朱恩庆', 'field': '数字技术、人工智能、软件工程、技术创新', 'currentPosition': '智能技术负责人', 'company': '新奥集团', 'yearsOfExperience': 12}, 'educationBackground': {'degrees': ['计算机科学与技术学士'], 'institu...
+2025-10-21 22:23:29,276 INFO _internal.py:96 127.0.0.1 - - [21/Oct/2025 22:23:29] "POST /api/resume/gtv-assessment HTTP/1.1" 200 -
+2025-10-21 22:23:29,281 INFO resume_processor.py:969 [20251021_222329_281] 开始处理简历上传请求
+2025-10-21 22:23:29,281 INFO resume_processor.py:973 [20251021_222329_281] 请求来源: 127.0.0.1
+2025-10-21 22:23:29,282 INFO resume_processor.py:974 [20251021_222329_281] 请求头: {'Host': 'localhost:5002', 'User-Agent': 'python-requests/2.31.0', 'Accept-Encoding': 'gzip, deflate, br, zstd', 'Accept': '*/*', 'Connection': 'keep-alive', 'Content-Length': '71825', 'Content-Type': 'multipart/form-data; boundary=e44f0f4901a5821e4f1cba36cd5f9fbb'}
+2025-10-21 22:23:29,282 INFO resume_processor.py:986 [20251021_222329_281] 上传文件名: 20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 22:23:29,283 INFO resume_processor.py:987 [20251021_222329_281] 文件大小: 0 bytes
+2025-10-21 22:23:29,283 INFO resume_processor.py:988 [20251021_222329_281] 文件类型: None
+2025-10-21 22:23:29,283 INFO resume_processor.py:995 [20251021_222329_281] 文件类型检查通过
+2025-10-21 22:23:29,283 INFO resume_processor.py:1003 [20251021_222329_281] 保存文件到: resumes/20251021_222329_20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 22:23:29,283 INFO resume_processor.py:1005 [20251021_222329_281] 文件保存成功
+2025-10-21 22:23:29,283 INFO resume_processor.py:1008 [20251021_222329_281] 开始提取文件文本内容
+2025-10-21 22:23:29,283 INFO resume_processor.py:210 开始提取文件文本内容: resumes/20251021_222329_20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 22:23:29,284 INFO resume_processor.py:219 文件大小: 71640 bytes
+2025-10-21 22:23:29,284 INFO resume_processor.py:233 检测到DOCX文件，使用python-docx解析
+2025-10-21 22:23:29,301 INFO resume_processor.py:147 DOCX解析完成，段落数: 76，字符数: 4861
+2025-10-21 22:23:29,302 INFO resume_processor.py:201 已保存Markdown内容: resumes/20251021_222329_20251020_132537_ZHU_Enqings_resume_-202506.md
+2025-10-21 22:23:29,302 INFO resume_processor.py:1014 [20251021_222329_281] 文本提取成功，内容长度: 4861 字符
+2025-10-21 22:23:29,302 INFO resume_processor.py:1018 [20251021_222329_281] 开始AI信息提取
+2025-10-21 22:23:29,302 INFO resume_processor.py:361 开始AI信息提取，输入内容长度: 4861 字符
+🔄 使用AI_PROVIDER=azure -> LLM_PROVIDER=AZURE
+2025-10-21 22:23:29,313 INFO resume_processor.py:370 调用LLM提供商: AZURE
+2025-10-21 22:23:29,961 INFO resume_processor.py:596 GTV评估LLM返回文本长度: 4437; 预览: {
+  "applicantInfo": {
+    "name": "朱恩庆",
+    "field": "数字技术、人工智能、软件工程、技术创新",
+    "currentPosition": "智能技术负责人、智能技术架构师、智能产品研发群资深技术总监",
+    "company": "新奥集团",
+    "yearsOfExperience": 12
+  },
+  "educati...
+2025-10-21 22:23:29,961 INFO resume_processor.py:599 GTV资格评估成功
+2025-10-21 22:23:29,961 INFO resume_processor.py:1091 [20251021_222305_195] GTV评估完成
+2025-10-21 22:23:29,962 INFO resume_processor.py:1092 [20251021_222305_195] 评估结果预览: {'applicantInfo': {'name': '朱恩庆', 'field': '数字技术、人工智能、软件工程、技术创新', 'currentPosition': '智能技术负责人、智能技术架构师、智能产品研发群资深技术总监', 'company': '新奥集团', 'yearsOfExperience': 12}, 'educationBackground': {'degrees': ['...
+2025-10-21 22:23:29,962 INFO _internal.py:96 127.0.0.1 - - [21/Oct/2025 22:23:29] "POST /api/resume/gtv-assessment HTTP/1.1" 200 -
+2025-10-21 22:23:40,766 INFO resume_processor.py:416 LLM返回文本长度: 1971; 预览: {
+  "name": "朱恩庆",
+  "email": "zhu04303661@163.com",
+  "phone": "18217361837",
+  "experience": "拥有12年技术管理和研发经验。现任新奥集团智能技术负责人、智能技术架构师、智能产品研发群资深技术总监，带领90人团队专研AI大模型、智能体、产业智能等技术，推动能源集团智能化升级。曾任携程无线技术专家、高级经...
+2025-10-21 22:23:40,766 INFO resume_processor.py:433 LLM信息提取成功
+2025-10-21 22:23:40,767 INFO resume_processor.py:1024 [20251021_222329_281] AI信息提取成功
+2025-10-21 22:23:40,767 INFO resume_processor.py:1025 [20251021_222329_281] 提取的信息: {'name': '朱恩庆', 'email': 'zhu04303661@163.com', 'phone': '18217361837', 'experience': '拥有12年技术管理和研发经验。现任新奥集团智能技术负责人、智能技术架构师、智能产品研发群资深技术总监，带领90人团队专研AI大模型、智能体、产业智能等技术，推动能源集团智能化升级。曾任携程无线技术专家、高级经理，负责移动端研发效能、无线服务端开发及云平台建设。曾在爱立信担任资源算法工程师、云计算工程师，负责核心通讯技术研发及自动化开发平台搭建。早期在阿尔卡特朗讯贝尔实验室担任算法工程师及仿真系统研发经理，参与4G物理层算法仿真系统研发，并赴美国贝尔实验室联合开发。英特尔实习期间参与MeeGo开源操作系统测试与自动化工具开发。', 'education': '2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位。', 'skills': ['人工智能', '大模型技术', '智能体Agent技术', '产业智能', '物联智能', '持续迭代', '软件系统开发', '通讯系统开发', '嵌入式系统开发', 'Linux系统技术应用', '云计算', '移动互联网基础服务', '研发工具链', 'CV/NLP算法', '智能模型研发平台', '企业架构', '全栈开发', '持续交付', '算法仿真', '团队管理'], 'achievements': ['2024年大模型工程和智能体技术相关专利6篇', '2023年大模型工程相关专利10篇', '2022年CV识别算法专利5篇', '2022年获得《创值标兵》称号', '2020年携程无线质量优秀个人技术贡献奖', '2016年携程MCD平台获得携程突出技术贡献奖', '2015年在携程提交IOS应用集群打包专利两篇', '2013年阿尔卡特朗讯outstanding员工奖', '2010年发表《液冷源控制系统的研制》核心期刊', '2009年发表论文被EI收录', '2004-2008年校奖学金、社会活动积极分子、优秀团干'], 'projects': ['2024年专家Copliot生成系统：开发长推理距离大模型Agent，结合RAG知识辅助，沉淀2000+智能能力，实现行业场景智能能力爆发式增长。', '2023年GPT大模型技术研发：打造产业源模型，建设视觉多模态和NLP大模型，搭建高效数据处理、模型训练、部署评估流水线。', '2021年感知认知模型研发平台：创新建设算法组件化复用平台，交付大量行业特色CV算法，覆盖新奥80%场站，日均调用量800万次，打造SOP识别系统，获得多项AI创新奖。', '调压器喘症、流量计误差物联算法模型：打造AIOT能力，实现销供产能一体化运筹智能。', '2015-2021年携程无线持续交付云平台（MCD）：集成Android、IOS、hybrid代码检测、打包、测试、发布与hotfix，支持高并发分布式打包与发布，获携程年度技术贡献奖。', '2020年携程无线服务质量监控平台APM：使用Strom与ES，实现秒级延迟监控，提升全球服务质量。', '2014-2015年爱立信eMBMS模拟器开发与自动化CI系统搭建，参与K8S与Docker虚拟机环境及OpenStack兼容维护。', '2011-2014年阿尔卡特朗讯LTE物理链路层仿真系统开发，带领团队完成物理层仿真和测试，赴美国贝尔实验室参与Light Radio LTE仿真系统开发。', '2010年英特尔MeeGo操作系统测试与自动化工具开发。'], 'languages': ['中文（母语）', '英语（流利）'], 'certifications': [], 'summary': '朱恩庆，南京理工大学硕士，12年技术管理与研发经验，专注于人工智能、大模型、智能体、产业智能、物联智能等领域。具备丰富的企业智能化升级、团队管理、算法研发、云计算、移动互联网基础设施建设经验。多次获得技术专利与行业奖项，带领团队实现多项智能技术创新，推动企业数字化转型。'}
+2025-10-21 22:23:40,767 INFO resume_processor.py:1029 [20251021_222329_281] 提取的姓名: 朱恩庆
+2025-10-21 22:23:40,767 INFO resume_processor.py:1032 [20251021_222329_281] 开始创建个人知识库
+2025-10-21 22:23:40,767 INFO resume_processor.py:779 开始为 朱恩庆 创建个人知识库
+2025-10-21 22:23:40,767 INFO resume_processor.py:780 提取的信息: {'name': '朱恩庆', 'email': 'zhu04303661@163.com', 'phone': '18217361837', 'experience': '拥有12年技术管理和研发经验。现任新奥集团智能技术负责人、智能技术架构师、智能产品研发群资深技术总监，带领90人团队专研AI大模型、智能体、产业智能等技术，推动能源集团智能化升级。曾任携程无线技术专家、高级经理，负责移动端研发效能、无线服务端开发及云平台建设。曾在爱立信担任资源算法工程师、云计算工程师，负责核心通讯技术研发及自动化开发平台搭建。早期在阿尔卡特朗讯贝尔实验室担任算法工程师及仿真系统研发经理，参与4G物理层算法仿真系统研发，并赴美国贝尔实验室联合开发。英特尔实习期间参与MeeGo开源操作系统测试与自动化工具开发。', 'education': '2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位。', 'skills': ['人工智能', '大模型技术', '智能体Agent技术', '产业智能', '物联智能', '持续迭代', '软件系统开发', '通讯系统开发', '嵌入式系统开发', 'Linux系统技术应用', '云计算', '移动互联网基础服务', '研发工具链', 'CV/NLP算法', '智能模型研发平台', '企业架构', '全栈开发', '持续交付', '算法仿真', '团队管理'], 'achievements': ['2024年大模型工程和智能体技术相关专利6篇', '2023年大模型工程相关专利10篇', '2022年CV识别算法专利5篇', '2022年获得《创值标兵》称号', '2020年携程无线质量优秀个人技术贡献奖', '2016年携程MCD平台获得携程突出技术贡献奖', '2015年在携程提交IOS应用集群打包专利两篇', '2013年阿尔卡特朗讯outstanding员工奖', '2010年发表《液冷源控制系统的研制》核心期刊', '2009年发表论文被EI收录', '2004-2008年校奖学金、社会活动积极分子、优秀团干'], 'projects': ['2024年专家Copliot生成系统：开发长推理距离大模型Agent，结合RAG知识辅助，沉淀2000+智能能力，实现行业场景智能能力爆发式增长。', '2023年GPT大模型技术研发：打造产业源模型，建设视觉多模态和NLP大模型，搭建高效数据处理、模型训练、部署评估流水线。', '2021年感知认知模型研发平台：创新建设算法组件化复用平台，交付大量行业特色CV算法，覆盖新奥80%场站，日均调用量800万次，打造SOP识别系统，获得多项AI创新奖。', '调压器喘症、流量计误差物联算法模型：打造AIOT能力，实现销供产能一体化运筹智能。', '2015-2021年携程无线持续交付云平台（MCD）：集成Android、IOS、hybrid代码检测、打包、测试、发布与hotfix，支持高并发分布式打包与发布，获携程年度技术贡献奖。', '2020年携程无线服务质量监控平台APM：使用Strom与ES，实现秒级延迟监控，提升全球服务质量。', '2014-2015年爱立信eMBMS模拟器开发与自动化CI系统搭建，参与K8S与Docker虚拟机环境及OpenStack兼容维护。', '2011-2014年阿尔卡特朗讯LTE物理链路层仿真系统开发，带领团队完成物理层仿真和测试，赴美国贝尔实验室参与Light Radio LTE仿真系统开发。', '2010年英特尔MeeGo操作系统测试与自动化工具开发。'], 'languages': ['中文（母语）', '英语（流利）'], 'certifications': [], 'summary': '朱恩庆，南京理工大学硕士，12年技术管理与研发经验，专注于人工智能、大模型、智能体、产业智能、物联智能等领域。具备丰富的企业智能化升级、团队管理、算法研发、云计算、移动互联网基础设施建设经验。多次获得技术专利与行业奖项，带领团队实现多项智能技术创新，推动企业数字化转型。'}
+2025-10-21 22:23:40,767 INFO resume_processor.py:785 创建个人知识库目录: personal_kb
+2025-10-21 22:23:40,767 INFO resume_processor.py:787 个人知识库目录创建成功
+2025-10-21 22:23:40,767 INFO resume_processor.py:797 初始化个人信息结构
+2025-10-21 22:23:40,767 INFO resume_processor.py:801 开始根据提取的信息创建知识条目
+2025-10-21 22:23:40,767 INFO resume_processor.py:813 创建工作经验知识条目: 朱恩庆_exp_1
+2025-10-21 22:23:40,767 INFO resume_processor.py:825 创建教育背景知识条目: 朱恩庆_edu_1
+2025-10-21 22:23:40,767 INFO resume_processor.py:828 创建技能知识条目，技能数量: 20
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 1: 朱恩庆_skill_1 - 人工智能
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 2: 朱恩庆_skill_2 - 大模型技术
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 3: 朱恩庆_skill_3 - 智能体Agent技术
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 4: 朱恩庆_skill_4 - 产业智能
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 5: 朱恩庆_skill_5 - 物联智能
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 6: 朱恩庆_skill_6 - 持续迭代
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 7: 朱恩庆_skill_7 - 软件系统开发
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 8: 朱恩庆_skill_8 - 通讯系统开发
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 9: 朱恩庆_skill_9 - 嵌入式系统开发
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 10: 朱恩庆_skill_10 - Linux系统技术应用
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 11: 朱恩庆_skill_11 - 云计算
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 12: 朱恩庆_skill_12 - 移动互联网基础服务
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 13: 朱恩庆_skill_13 - 研发工具链
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 14: 朱恩庆_skill_14 - CV/NLP算法
+2025-10-21 22:23:40,767 INFO resume_processor.py:839 创建技能知识条目 15: 朱恩庆_skill_15 - 智能模型研发平台
+2025-10-21 22:23:40,768 INFO resume_processor.py:839 创建技能知识条目 16: 朱恩庆_skill_16 - 企业架构
+2025-10-21 22:23:40,768 INFO resume_processor.py:839 创建技能知识条目 17: 朱恩庆_skill_17 - 全栈开发
+2025-10-21 22:23:40,768 INFO resume_processor.py:839 创建技能知识条目 18: 朱恩庆_skill_18 - 持续交付
+2025-10-21 22:23:40,768 INFO resume_processor.py:839 创建技能知识条目 19: 朱恩庆_skill_19 - 算法仿真
+2025-10-21 22:23:40,768 INFO resume_processor.py:839 创建技能知识条目 20: 朱恩庆_skill_20 - 团队管理
+2025-10-21 22:23:40,768 INFO resume_processor.py:842 创建成就知识条目，成就数量: 11
+2025-10-21 22:23:40,768 INFO resume_processor.py:853 创建成就知识条目 1: 朱恩庆_ach_1 - 2024年大模型工程和智能体技术相关专利6篇
+2025-10-21 22:23:40,768 INFO resume_processor.py:853 创建成就知识条目 2: 朱恩庆_ach_2 - 2023年大模型工程相关专利10篇
+2025-10-21 22:23:40,768 INFO resume_processor.py:853 创建成就知识条目 3: 朱恩庆_ach_3 - 2022年CV识别算法专利5篇
+2025-10-21 22:23:40,768 INFO resume_processor.py:853 创建成就知识条目 4: 朱恩庆_ach_4 - 2022年获得《创值标兵》称号
+2025-10-21 22:23:40,768 INFO resume_processor.py:853 创建成就知识条目 5: 朱恩庆_ach_5 - 2020年携程无线质量优秀个人技术贡献奖
+2025-10-21 22:23:40,768 INFO resume_processor.py:853 创建成就知识条目 6: 朱恩庆_ach_6 - 2016年携程MCD平台获得携程突出技术贡献奖
+2025-10-21 22:23:40,768 INFO resume_processor.py:853 创建成就知识条目 7: 朱恩庆_ach_7 - 2015年在携程提交IOS应用集群打包专利两篇
+2025-10-21 22:23:40,768 INFO resume_processor.py:853 创建成就知识条目 8: 朱恩庆_ach_8 - 2013年阿尔卡特朗讯outstanding员工奖
+2025-10-21 22:23:40,768 INFO resume_processor.py:853 创建成就知识条目 9: 朱恩庆_ach_9 - 2010年发表《液冷源控制系统的研制》核心期刊
+2025-10-21 22:23:40,768 INFO resume_processor.py:853 创建成就知识条目 10: 朱恩庆_ach_10 - 2009年发表论文被EI收录
+2025-10-21 22:23:40,768 INFO resume_processor.py:853 创建成就知识条目 11: 朱恩庆_ach_11 - 2004-2008年校奖学金、社会活动积极分子、优秀团干
+2025-10-21 22:23:40,768 INFO resume_processor.py:856 知识条目创建完成，总计 33 个条目
+2025-10-21 22:23:40,768 INFO resume_processor.py:860 保存个人知识库到文件: personal_kb/personal_info.json
+2025-10-21 22:23:40,769 INFO resume_processor.py:863 个人知识库文件保存成功
+2025-10-21 22:23:40,769 INFO resume_processor.py:865 为 朱恩庆 创建了个人知识库，包含 33 个知识条目
+2025-10-21 22:23:40,769 INFO resume_processor.py:1038 [20251021_222329_281] 个人知识库创建成功: personal_kb
+2025-10-21 22:23:40,769 INFO resume_processor.py:1041 [20251021_222329_281] 开始更新主知识库，个人知识库路径: personal_kb
+2025-10-21 22:23:40,769 INFO resume_processor.py:874 开始更新主知识库，个人知识库路径: personal_kb, 姓名: 朱恩庆
+2025-10-21 22:23:40,769 INFO resume_processor.py:879 读取个人知识库文件: personal_kb/personal_info.json
+2025-10-21 22:23:40,769 INFO resume_processor.py:887 个人知识库文件读取成功，包含 33 个知识条目
+2025-10-21 22:23:40,769 INFO resume_processor.py:891 读取主知识库文件: data/playbook.json
+2025-10-21 22:23:40,770 INFO resume_processor.py:896 主知识库文件读取成功，当前包含 62 个条目
+2025-10-21 22:23:40,770 INFO resume_processor.py:912 开始添加 33 个个人知识条目到主知识库
+2025-10-21 22:23:40,770 INFO resume_processor.py:915 处理知识条目 1/33: 朱恩庆_exp_1
+2025-10-21 22:23:40,770 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_exp_1
+2025-10-21 22:23:40,770 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_exp_1
+2025-10-21 22:23:40,770 INFO resume_processor.py:915 处理知识条目 2/33: 朱恩庆_edu_1
+2025-10-21 22:23:40,770 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_edu_1
+2025-10-21 22:23:40,770 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_edu_1
+2025-10-21 22:23:40,770 INFO resume_processor.py:915 处理知识条目 3/33: 朱恩庆_skill_1
+2025-10-21 22:23:40,770 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_1
+2025-10-21 22:23:40,770 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_1
+2025-10-21 22:23:40,770 INFO resume_processor.py:915 处理知识条目 4/33: 朱恩庆_skill_2
+2025-10-21 22:23:40,770 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_2
+2025-10-21 22:23:40,770 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_2
+2025-10-21 22:23:40,770 INFO resume_processor.py:915 处理知识条目 5/33: 朱恩庆_skill_3
+2025-10-21 22:23:40,770 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_3
+2025-10-21 22:23:40,770 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_3
+2025-10-21 22:23:40,770 INFO resume_processor.py:915 处理知识条目 6/33: 朱恩庆_skill_4
+2025-10-21 22:23:40,770 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_4
+2025-10-21 22:23:40,770 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_4
+2025-10-21 22:23:40,770 INFO resume_processor.py:915 处理知识条目 7/33: 朱恩庆_skill_5
+2025-10-21 22:23:40,770 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_5
+2025-10-21 22:23:40,770 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_5
+2025-10-21 22:23:40,770 INFO resume_processor.py:915 处理知识条目 8/33: 朱恩庆_skill_6
+2025-10-21 22:23:40,770 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_6
+2025-10-21 22:23:40,770 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_6
+2025-10-21 22:23:40,770 INFO resume_processor.py:915 处理知识条目 9/33: 朱恩庆_skill_7
+2025-10-21 22:23:40,770 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_7
+2025-10-21 22:23:40,770 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_7
+2025-10-21 22:23:40,771 INFO resume_processor.py:915 处理知识条目 10/33: 朱恩庆_skill_8
+2025-10-21 22:23:40,771 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_8
+2025-10-21 22:23:40,771 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_8
+2025-10-21 22:23:40,771 INFO resume_processor.py:915 处理知识条目 11/33: 朱恩庆_skill_9
+2025-10-21 22:23:40,771 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_9
+2025-10-21 22:23:40,771 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_9
+2025-10-21 22:23:40,771 INFO resume_processor.py:915 处理知识条目 12/33: 朱恩庆_skill_10
+2025-10-21 22:23:40,771 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_10
+2025-10-21 22:23:40,771 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_10
+2025-10-21 22:23:40,771 INFO resume_processor.py:915 处理知识条目 13/33: 朱恩庆_skill_11
+2025-10-21 22:23:40,771 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_11
+2025-10-21 22:23:40,771 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_11
+2025-10-21 22:23:40,771 INFO resume_processor.py:915 处理知识条目 14/33: 朱恩庆_skill_12
+2025-10-21 22:23:40,771 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_12
+2025-10-21 22:23:40,771 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_12
+2025-10-21 22:23:40,771 INFO resume_processor.py:915 处理知识条目 15/33: 朱恩庆_skill_13
+2025-10-21 22:23:40,771 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_13
+2025-10-21 22:23:40,771 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_13
+2025-10-21 22:23:40,771 INFO resume_processor.py:915 处理知识条目 16/33: 朱恩庆_skill_14
+2025-10-21 22:23:40,771 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_14
+2025-10-21 22:23:40,771 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_14
+2025-10-21 22:23:40,771 INFO resume_processor.py:915 处理知识条目 17/33: 朱恩庆_skill_15
+2025-10-21 22:23:40,771 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_15
+2025-10-21 22:23:40,771 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_15
+2025-10-21 22:23:40,771 INFO resume_processor.py:915 处理知识条目 18/33: 朱恩庆_skill_16
+2025-10-21 22:23:40,771 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_16
+2025-10-21 22:23:40,771 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_16
+2025-10-21 22:23:40,771 INFO resume_processor.py:915 处理知识条目 19/33: 朱恩庆_skill_17
+2025-10-21 22:23:40,771 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_17
+2025-10-21 22:23:40,771 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_17
+2025-10-21 22:23:40,771 INFO resume_processor.py:915 处理知识条目 20/33: 朱恩庆_skill_18
+2025-10-21 22:23:40,771 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_18
+2025-10-21 22:23:40,771 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_18
+2025-10-21 22:23:40,771 INFO resume_processor.py:915 处理知识条目 21/33: 朱恩庆_skill_19
+2025-10-21 22:23:40,772 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_19
+2025-10-21 22:23:40,772 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_19
+2025-10-21 22:23:40,772 INFO resume_processor.py:915 处理知识条目 22/33: 朱恩庆_skill_20
+2025-10-21 22:23:40,772 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_skill_20
+2025-10-21 22:23:40,772 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_skill_20
+2025-10-21 22:23:40,772 INFO resume_processor.py:915 处理知识条目 23/33: 朱恩庆_ach_1
+2025-10-21 22:23:40,772 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_1
+2025-10-21 22:23:40,772 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_1
+2025-10-21 22:23:40,772 INFO resume_processor.py:915 处理知识条目 24/33: 朱恩庆_ach_2
+2025-10-21 22:23:40,772 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_2
+2025-10-21 22:23:40,772 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_2
+2025-10-21 22:23:40,772 INFO resume_processor.py:915 处理知识条目 25/33: 朱恩庆_ach_3
+2025-10-21 22:23:40,772 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_3
+2025-10-21 22:23:40,772 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_3
+2025-10-21 22:23:40,772 INFO resume_processor.py:915 处理知识条目 26/33: 朱恩庆_ach_4
+2025-10-21 22:23:40,772 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_4
+2025-10-21 22:23:40,772 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_4
+2025-10-21 22:23:40,772 INFO resume_processor.py:915 处理知识条目 27/33: 朱恩庆_ach_5
+2025-10-21 22:23:40,772 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_5
+2025-10-21 22:23:40,772 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_5
+2025-10-21 22:23:40,772 INFO resume_processor.py:915 处理知识条目 28/33: 朱恩庆_ach_6
+2025-10-21 22:23:40,772 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_6
+2025-10-21 22:23:40,772 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_6
+2025-10-21 22:23:40,772 INFO resume_processor.py:915 处理知识条目 29/33: 朱恩庆_ach_7
+2025-10-21 22:23:40,772 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_7
+2025-10-21 22:23:40,772 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_7
+2025-10-21 22:23:40,772 INFO resume_processor.py:915 处理知识条目 30/33: 朱恩庆_ach_8
+2025-10-21 22:23:40,772 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_8
+2025-10-21 22:23:40,772 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_8
+2025-10-21 22:23:40,772 INFO resume_processor.py:915 处理知识条目 31/33: 朱恩庆_ach_9
+2025-10-21 22:23:40,772 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_9
+2025-10-21 22:23:40,772 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_9
+2025-10-21 22:23:40,772 INFO resume_processor.py:915 处理知识条目 32/33: 朱恩庆_ach_10
+2025-10-21 22:23:40,772 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_10
+2025-10-21 22:23:40,772 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_10
+2025-10-21 22:23:40,773 INFO resume_processor.py:915 处理知识条目 33/33: 朱恩庆_ach_11
+2025-10-21 22:23:40,773 INFO resume_processor.py:928 创建ACE兼容的bullet数据: 朱恩庆_ach_11
+2025-10-21 22:23:40,773 INFO resume_processor.py:932 添加bullet到主知识库: 朱恩庆_ach_11
+2025-10-21 22:23:40,773 INFO resume_processor.py:943 所有个人知识条目已添加到主知识库
+2025-10-21 22:23:40,773 INFO resume_processor.py:944 更新后的主知识库包含 62 个条目
+2025-10-21 22:23:40,773 INFO resume_processor.py:945 更新后的sections: ['defaults', 'guidelines', 'test', 'application_guide', '技能专长', '工作经验', '教育背景', '成就荣誉']
+2025-10-21 22:23:40,773 INFO resume_processor.py:948 保存更新后的主知识库到文件: data/playbook.json
+2025-10-21 22:23:40,774 INFO resume_processor.py:951 主知识库文件保存成功
+2025-10-21 22:23:40,774 INFO resume_processor.py:953 已将 朱恩庆 的个人知识库更新到主知识库
+2025-10-21 22:23:40,774 INFO resume_processor.py:1043 [20251021_222329_281] 主知识库更新结果: True
+2025-10-21 22:23:40,774 INFO resume_processor.py:1048 [20251021_222329_281] 临时文件清理成功: resumes/20251021_222329_20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 22:23:40,774 INFO resume_processor.py:1052 [20251021_222329_281] 简历上传处理完成
+2025-10-21 22:23:40,774 INFO _internal.py:96 127.0.0.1 - - [21/Oct/2025 22:23:40] "POST /api/resume/upload HTTP/1.1" 200 -
+2025-10-21 22:23:40,778 INFO resume_processor.py:1069 [20251021_222340_778] 开始GTV资格评估请求
+2025-10-21 22:23:40,778 INFO resume_processor.py:1084 [20251021_222340_778] 评估参数 - 姓名: 朱恩庆, 邮箱: zhu04303661@163.com, 领域: digital-technology
+2025-10-21 22:23:40,778 INFO resume_processor.py:1085 [20251021_222340_778] 提取的信息: {'achievements': ['2024年大模型工程和智能体技术相关专利6篇', '2023年大模型工程相关专利10篇', '2022年CV识别算法专利5篇', '2022年获得《创值标兵》称号', '2020年携程无线质量优秀个人技术贡献奖', '2016年携程MCD平台获得携程突出技术贡献奖', '2015年在携程提交IOS应用集群打包专利两篇', '2013年阿尔卡特朗讯outstanding员工奖', '2010年发表《液冷源控制系统的研制》核心期刊', '2009年发表论文被EI收录', '2004-2008年校奖学金、社会活动积极分子、优秀团干'], 'certifications': [], 'education': '2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位。', 'email': 'zhu04303661@163.com', 'experience': '拥有12年技术管理和研发经验。现任新奥集团智能技术负责人、智能技术架构师、智能产品研发群资深技术总监，带领90人团队专研AI大模型、智能体、产业智能等技术，推动能源集团智能化升级。曾任携程无线技术专家、高级经理，负责移动端研发效能、无线服务端开发及云平台建设。曾在爱立信担任资源算法工程师、云计算工程师，负责核心通讯技术研发及自动化开发平台搭建。早期在阿尔卡特朗讯贝尔实验室担任算法工程师及仿真系统研发经理，参与4G物理层算法仿真系统研发，并赴美国贝尔实验室联合开发。英特尔实习期间参与MeeGo开源操作系统测试与自动化工具开发。', 'languages': ['中文（母语）', '英语（流利）'], 'name': '朱恩庆', 'phone': '18217361837', 'projects': ['2024年专家Copliot生成系统：开发长推理距离大模型Agent，结合RAG知识辅助，沉淀2000+智能能力，实现行业场景智能能力爆发式增长。', '2023年GPT大模型技术研发：打造产业源模型，建设视觉多模态和NLP大模型，搭建高效数据处理、模型训练、部署评估流水线。', '2021年感知认知模型研发平台：创新建设算法组件化复用平台，交付大量行业特色CV算法，覆盖新奥80%场站，日均调用量800万次，打造SOP识别系统，获得多项AI创新奖。', '调压器喘症、流量计误差物联算法模型：打造AIOT能力，实现销供产能一体化运筹智能。', '2015-2021年携程无线持续交付云平台（MCD）：集成Android、IOS、hybrid代码检测、打包、测试、发布与hotfix，支持高并发分布式打包与发布，获携程年度技术贡献奖。', '2020年携程无线服务质量监控平台APM：使用Strom与ES，实现秒级延迟监控，提升全球服务质量。', '2014-2015年爱立信eMBMS模拟器开发与自动化CI系统搭建，参与K8S与Docker虚拟机环境及OpenStack兼容维护。', '2011-2014年阿尔卡特朗讯LTE物理链路层仿真系统开发，带领团队完成物理层仿真和测试，赴美国贝尔实验室参与Light Radio LTE仿真系统开发。', '2010年英特尔MeeGo操作系统测试与自动化工具开发。'], 'skills': ['人工智能', '大模型技术', '智能体Agent技术', '产业智能', '物联智能', '持续迭代', '软件系统开发', '通讯系统开发', '嵌入式系统开发', 'Linux系统技术应用', '云计算', '移动互联网基础服务', '研发工具链', 'CV/NLP算法', '智能模型研发平台', '企业架构', '全栈开发', '持续交付', '算法仿真', '团队管理'], 'summary': '朱恩庆，南京理工大学硕士，12年技术管理与研发经验，专注于人工智能、大模型、智能体、产业智能、物联智能等领域。具备丰富的企业智能化升级、团队管理、算法研发、云计算、移动互联网基础设施建设经验。多次获得技术专利与行业奖项，带领团队实现多项智能技术创新，推动企业数字化转型。'}
+2025-10-21 22:23:40,778 INFO resume_processor.py:1088 [20251021_222340_778] 开始AI GTV评估
+2025-10-21 22:23:40,778 INFO resume_processor.py:442 开始GTV资格评估，领域: digital-technology
+🔄 使用AI_PROVIDER=azure -> LLM_PROVIDER=AZURE
+2025-10-21 22:23:40,788 INFO resume_processor.py:451 调用LLM提供商进行GTV评估: AZURE
+2025-10-21 22:23:59,339 INFO resume_processor.py:596 GTV评估LLM返回文本长度: 4629; 预览: {
+  "applicantInfo": {
+    "name": "朱恩庆",
+    "field": "数字技术、人工智能、软件工程、技术创新",
+    "currentPosition": "智能技术负责人、智能技术架构师、智能产品研发群资深技术总监",
+    "company": "新奥集团",
+    "yearsOfExperience": 12
+  },
+  "educati...
+2025-10-21 22:23:59,340 INFO resume_processor.py:599 GTV资格评估成功
+2025-10-21 22:23:59,340 INFO resume_processor.py:1091 [20251021_222340_778] GTV评估完成
+2025-10-21 22:23:59,340 INFO resume_processor.py:1092 [20251021_222340_778] 评估结果预览: {'applicantInfo': {'name': '朱恩庆', 'field': '数字技术、人工智能、软件工程、技术创新', 'currentPosition': '智能技术负责人、智能技术架构师、智能产品研发群资深技术总监', 'company': '新奥集团', 'yearsOfExperience': 12}, 'educationBackground': {'degrees': ['...
+2025-10-21 22:23:59,341 INFO _internal.py:96 127.0.0.1 - - [21/Oct/2025 22:23:59] "POST /api/resume/gtv-assessment HTTP/1.1" 200 -
+2025-10-21 22:24:10,048 INFO _internal.py:96  * Detected change in '/Users/zhuenqing/workspace/lisa/gtv-visa-assessment/ace_gtv/resume_processor.py', reloading
+2025-10-21 22:24:10,636 INFO _internal.py:96  * Restarting with watchdog (fsevents)
+✅ 已加载配置文件: /Users/zhuenqing/workspace/lisa/gtv-visa-assessment/.env.local
+2025-10-21 22:24:12,224 INFO resume_processor.py:1156 🚀 启动简历处理服务...
+2025-10-21 22:24:12,224 INFO resume_processor.py:1157 📡 API地址: http://localhost:5002
+2025-10-21 22:24:12,224 INFO resume_processor.py:1158 🔗 健康检查: http://localhost:5002/health
+2025-10-21 22:24:12,224 INFO resume_processor.py:1159 📄 简历上传: http://localhost:5002/api/resume/upload
+2025-10-21 22:24:12,224 INFO resume_processor.py:1160 📚 个人知识库: http://localhost:5002/api/resume/personal/<name>
+2025-10-21 22:24:12,226 WARNING _internal.py:96  * Debugger is active!
+2025-10-21 22:24:12,241 INFO _internal.py:96  * Debugger PIN: 635-981-963
+2025-10-21 22:27:32,664 INFO _internal.py:96  * Detected change in '/Users/zhuenqing/workspace/lisa/gtv-visa-assessment/ace_gtv/resume_processor.py', reloading
+2025-10-21 22:27:33,208 INFO _internal.py:96  * Restarting with watchdog (fsevents)
+✅ 已加载配置文件: /Users/zhuenqing/workspace/lisa/gtv-visa-assessment/.env.local
+2025-10-21 22:27:34,256 INFO resume_processor.py:1156 🚀 启动简历处理服务...
+2025-10-21 22:27:34,256 INFO resume_processor.py:1157 📡 API地址: http://localhost:5002
+2025-10-21 22:27:34,256 INFO resume_processor.py:1158 🔗 健康检查: http://localhost:5002/health
+2025-10-21 22:27:34,257 INFO resume_processor.py:1159 📄 简历上传: http://localhost:5002/api/resume/upload
+2025-10-21 22:27:34,257 INFO resume_processor.py:1160 📚 个人知识库: http://localhost:5002/api/resume/personal/<name>
+2025-10-21 22:27:34,258 WARNING _internal.py:96  * Debugger is active!
+2025-10-21 22:27:34,273 INFO _internal.py:96  * Debugger PIN: 635-981-963

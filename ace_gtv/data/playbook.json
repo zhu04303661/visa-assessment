@@ -1,0 +1,712 @@
+{
+  "bullets": {
+    "gtv_overview": {
+      "id": "gtv_overview",
+      "section": "defaults",
+      "content": "GTV (Global Talent Visa) 是英国为吸引全球顶尖人才而设立的签证类别",
+      "helpful": 5,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-10-17T09:07:01.560246+00:00",
+      "updated_at": "2025-10-17T09:07:01.560673+00:00"
+    },
+    "exceptional_talent": {
+      "id": "exceptional_talent",
+      "section": "guidelines",
+      "content": "Exceptional Talent签证要求申请人在其领域内具有国际认可的杰出成就",
+      "helpful": 8,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-10-17T09:07:01.560687+00:00",
+      "updated_at": "2025-10-17T09:07:01.560690+00:00"
+    },
+    "exceptional_promise": {
+      "id": "exceptional_promise",
+      "section": "guidelines",
+      "content": "Exceptional Promise签证面向具有创新潜力和未来贡献能力的专业人士",
+      "helpful": 11,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-10-17T09:07:01.560696+00:00",
+      "updated_at": "2025-10-17T09:44:58.053181+00:00"
+    },
+    "startup_visa": {
+      "id": "startup_visa",
+      "section": "guidelines",
+      "content": "Startup Visa面向具有创新商业计划的创业者",
+      "helpful": 6,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-10-17T09:07:01.560702+00:00",
+      "updated_at": "2025-10-17T09:07:01.560704+00:00"
+    },
+    "assessment_criteria": {
+      "id": "assessment_criteria",
+      "section": "guidelines",
+      "content": "评估标准包括：专业背景、工作经验、教育背景、成就记录、未来贡献潜力",
+      "helpful": 9,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-10-17T09:07:01.560707+00:00",
+      "updated_at": "2025-10-17T09:07:01.560709+00:00"
+    },
+    "guidelines-00001": {
+      "id": "guidelines-00001",
+      "section": "guidelines",
+      "content": "GTV评估需要从专业背景、工作经验、教育背景、成就记录、未来贡献潜力等多个维度综合考量",
+      "helpful": 1,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-10-17T09:16:17.192916+00:00",
+      "updated_at": "2025-10-17T09:16:17.192931+00:00"
+    },
+    "guidelines-00002": {
+      "id": "guidelines-00002",
+      "section": "guidelines",
+      "content": "GTV评估需要从专业背景、工作经验、教育背景、成就记录、未来贡献潜力等多个维度综合考量",
+      "helpful": 1,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-10-17T09:34:12.680619+00:00",
+      "updated_at": "2025-10-17T09:34:12.680640+00:00"
+    },
+    "application_guide-00003": {
+      "id": "application_guide-00003",
+      "section": "application_guide",
+      "content": "GTV签证申请需要准备详细材料，包括简历、成就证明、推荐信等，建议咨询专业律师",
+      "helpful": 1,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-10-17T09:34:57.477126+00:00",
+      "updated_at": "2025-10-17T09:34:57.477150+00:00"
+    },
+    "个人简历_exp_1": {
+      "id": "个人简历_exp_1",
+      "section": "工作经验",
+      "content": "2021.03~至今 【新奥集团】负责大型能源集团的智能化技术，带领大模型研发团队，担任AI智能资深技术专家/智能大模型工程资深架构师/智能群资深技术总监 2015.8~2021.3【携程】负责携程移动端千人团队的研发效能，支撑移动端亿级流程服务入口，负责无线MCD云平台与无线服务端开发，算法技术专家/高级经理 2014.3~2015.1【爱立信】负责爱立信中国核心通讯技术研发，担任资源算法工程师、云计算工程师1年 2011.4~2014.3【阿尔卡特朗讯贝尔实验室】负责4G核心物理层算法仿真系统研发，担任算法工程师/仿真系统研发经理3年；前往美国贝尔实验室，联合研发物理层仿真系统。 英特尔---Linux操作系统研发实习生10个月 经历简介                                                             擅长 擅长在能源产业、安全生产等场景中开发高价值智能模型，擅长企业智能体Agent技术、大模型训练打造技术、智能模型研发平台，对于大模型应用有深入研究 互联网的各种基础设施的构建，包括云计算，移动互联网的基础服务，以及各种研发工具链。 技术发展路线 研究生时期主攻嵌入式方向，对工业控制方面有一定了解。 工作前三年从事通讯行业，主攻4G物理层通讯算法仿真。 工作第四年转型做云计算方面，加入携程，从事移动互联网云计算相关的研发 在产业互联网行业从事AI技术研发工作，对于CV/NLP以及物联机理算法有深入研究，并研发了一套感知认知与持续迭代技术，大幅提升智能的准确度和研发效率。 对于GPT大模型技术有深入研究，并成功为新奥打造了产业大模型，使用行业数据训练GPT大模型，建设大模型研发平台，持续提升产业大模型能力。 加入新奥、携程从事基础设施建设以及企业智能化架构工作",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T17:47:18.165909",
+      "updated_at": "2025-10-21T17:47:18.165912"
+    },
+    "个人简历_edu_1": {
+      "id": "个人简历_edu_1",
+      "section": "教育背景",
+      "content": "2008.9-2011.4\t    南京理工大学  测控技术与仪器   硕士学位 2004.9-2008.6\t    南京理工大学  测控技术与仪器   学士学位\t 专业与方向： 人工智能，大模型技术，智能体，产业智能，物联智能，持续迭代，软件系统，通讯系统，嵌入式系统的开发，Linux系统技术应用 工作经验（12年）： 2021.03~至今 【新奥集团】负责大型能源集团的智能化技术，带领大模型研发团队，担任AI智能资深技术专家/智能大模型工程资深架构师/智能群资深技术总监 2015.8~2021.3【携程】负责携程移动端千人团队的研发效能，支撑移动端亿级流程服务入口，负责无线MCD云平台与无线服务端开发，算法技术专家/高级经理 2014.3~2015.1【爱立信】负责爱立信中国核心通讯技术研发，担任资源算法工程师、云计算工程师1年 2011.4~2014.3【阿尔卡特朗讯贝尔实验室】负责4G核心物理层算法仿真系统研发，担任算法工程师/仿真系统研发经理3年；前往美国贝尔实验室，联合研发物理层仿真系统。 英特尔---Linux操作系统研发实习生10个月 经历简介                                                             擅长 擅长在能源产业、安全生产等场景中开发高价值智能模型，擅长企业智能体Agent技术、大模型训练打造技术、智能模型研发平台，对于大模型应用有深入研究 互联网的各种基础设施的构建，包括云计算，移动互联网的基础服务，以及各种研发工具链。 技术发展路线 研究生时期主攻嵌入式方向，对工业控制方面有一定了解。 工作前三年从事通讯行业，主攻4G物理层通讯算法仿真。 工作第四年转型做云计算方面，加入携程，从事移动互联网云计算相关的研发 在产业互联网行业从事AI技术研发工作，对于CV/NLP以及物联机理算法有深入研究，并研发了一套感知认知与持续迭代技术，大幅提升智能的准确度和研发效率。 对于GPT大模型技术有深入研究，并成功为新奥打造了产业大模型，使用行业数据训练GPT大模型，建设大模型研发平台，持续提升产业大模型能力。 加入新奥、携程从事基础设施建设以及企业智能化架构工作",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T17:47:18.165996",
+      "updated_at": "2025-10-21T17:47:18.165998"
+    },
+    "个人简历_skill_1": {
+      "id": "个人简历_skill_1",
+      "section": "技能专长",
+      "content": "点全面，由全栈工程师逐步成长为移动领域持续交付专家，企业架构师，智能产品架构师，智能算法专家。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T17:47:18.166079",
+      "updated_at": "2025-10-21T17:47:18.166081"
+    },
+    "张三_exp_1": {
+      "id": "张三_exp_1",
+      "section": "工作经验",
+      "content": "2020-2025 高级AI工程师 - 腾讯科技：负责机器学习平台架构设计，主导了千万级用户推荐系统项目，团队规模15人。2018-2020 机器学习工程师 - 字节跳动：开发了智能推荐算法，优化了模型训练效率30%，参与过多个AI产品开发。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.570008",
+      "updated_at": "2025-10-21T16:15:37.570018"
+    },
+    "张三_edu_1": {
+      "id": "张三_edu_1",
+      "section": "教育背景",
+      "content": "2016-2018 清华大学 计算机科学与技术 硕士。2012-2016 北京大学 计算机科学与技术 学士。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.570670",
+      "updated_at": "2025-10-21T16:15:37.570675"
+    },
+    "张三_skill_1": {
+      "id": "张三_skill_1",
+      "section": "技能专长",
+      "content": "Python",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.570893",
+      "updated_at": "2025-10-21T16:15:37.570895"
+    },
+    "张三_skill_2": {
+      "id": "张三_skill_2",
+      "section": "技能专长",
+      "content": "Java",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.571099",
+      "updated_at": "2025-10-21T16:15:37.571101"
+    },
+    "张三_skill_3": {
+      "id": "张三_skill_3",
+      "section": "技能专长",
+      "content": "C++",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.571404",
+      "updated_at": "2025-10-21T16:15:37.571406"
+    },
+    "张三_skill_4": {
+      "id": "张三_skill_4",
+      "section": "技能专长",
+      "content": "TensorFlow",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.571990",
+      "updated_at": "2025-10-21T16:15:37.571993"
+    },
+    "张三_skill_5": {
+      "id": "张三_skill_5",
+      "section": "技能专长",
+      "content": "PyTorch",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.572447",
+      "updated_at": "2025-10-21T16:15:37.572450"
+    },
+    "张三_skill_6": {
+      "id": "张三_skill_6",
+      "section": "技能专长",
+      "content": "Scikit-learn",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.574114",
+      "updated_at": "2025-10-21T16:15:37.574130"
+    },
+    "张三_skill_7": {
+      "id": "张三_skill_7",
+      "section": "技能专长",
+      "content": "机器学习",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.575136",
+      "updated_at": "2025-10-21T16:15:37.575151"
+    },
+    "张三_skill_8": {
+      "id": "张三_skill_8",
+      "section": "技能专长",
+      "content": "深度学习",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.575986",
+      "updated_at": "2025-10-21T16:15:37.575995"
+    },
+    "张三_skill_9": {
+      "id": "张三_skill_9",
+      "section": "技能专长",
+      "content": "自然语言处理",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.577000",
+      "updated_at": "2025-10-21T16:15:37.577008"
+    },
+    "张三_skill_10": {
+      "id": "张三_skill_10",
+      "section": "技能专长",
+      "content": "Docker",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.577231",
+      "updated_at": "2025-10-21T16:15:37.577234"
+    },
+    "张三_skill_11": {
+      "id": "张三_skill_11",
+      "section": "技能专长",
+      "content": "Kubernetes",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.577469",
+      "updated_at": "2025-10-21T16:15:37.577472"
+    },
+    "张三_skill_12": {
+      "id": "张三_skill_12",
+      "section": "技能专长",
+      "content": "AWS",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.577696",
+      "updated_at": "2025-10-21T16:15:37.577698"
+    },
+    "张三_ach_1": {
+      "id": "张三_ach_1",
+      "section": "成就荣誉",
+      "content": "发表3篇SCI论文",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.577924",
+      "updated_at": "2025-10-21T16:15:37.577927"
+    },
+    "张三_ach_2": {
+      "id": "张三_ach_2",
+      "section": "成就荣誉",
+      "content": "获得2项发明专利",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.578210",
+      "updated_at": "2025-10-21T16:15:37.578212"
+    },
+    "张三_ach_3": {
+      "id": "张三_ach_3",
+      "section": "成就荣誉",
+      "content": "主导过千万级AI项目",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.578665",
+      "updated_at": "2025-10-21T16:15:37.578676"
+    },
+    "张三_ach_4": {
+      "id": "张三_ach_4",
+      "section": "成就荣誉",
+      "content": "获得公司年度最佳员工奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T16:15:37.579480",
+      "updated_at": "2025-10-21T16:15:37.579483"
+    },
+    "朱恩庆_exp_1": {
+      "id": "朱恩庆_exp_1",
+      "section": "工作经验",
+      "content": "拥有12年技术管理和研发经验。现任新奥集团智能技术负责人、智能技术架构师、智能产品研发群资深技术总监，带领90人团队专研AI大模型、智能体、产业智能等技术，推动能源集团智能化升级。曾任携程无线技术专家、高级经理，负责移动端研发效能、无线服务端开发及云平台建设。曾在爱立信担任资源算法工程师、云计算工程师，负责核心通讯技术研发及自动化开发平台搭建。早期在阿尔卡特朗讯贝尔实验室担任算法工程师及仿真系统研发经理，参与4G物理层算法仿真系统研发，并赴美国贝尔实验室联合开发。英特尔实习期间参与MeeGo开源操作系统测试与自动化工具开发。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.770234",
+      "updated_at": "2025-10-21T22:23:40.770237"
+    },
+    "朱恩庆_edu_1": {
+      "id": "朱恩庆_edu_1",
+      "section": "教育背景",
+      "content": "2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.770331",
+      "updated_at": "2025-10-21T22:23:40.770333"
+    },
+    "朱恩庆_skill_1": {
+      "id": "朱恩庆_skill_1",
+      "section": "技能专长",
+      "content": "人工智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.770422",
+      "updated_at": "2025-10-21T22:23:40.770424"
+    },
+    "朱恩庆_skill_2": {
+      "id": "朱恩庆_skill_2",
+      "section": "技能专长",
+      "content": "大模型技术",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.770519",
+      "updated_at": "2025-10-21T22:23:40.770521"
+    },
+    "朱恩庆_skill_3": {
+      "id": "朱恩庆_skill_3",
+      "section": "技能专长",
+      "content": "智能体Agent技术",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.770607",
+      "updated_at": "2025-10-21T22:23:40.770609"
+    },
+    "朱恩庆_skill_4": {
+      "id": "朱恩庆_skill_4",
+      "section": "技能专长",
+      "content": "产业智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.770696",
+      "updated_at": "2025-10-21T22:23:40.770698"
+    },
+    "朱恩庆_skill_5": {
+      "id": "朱恩庆_skill_5",
+      "section": "技能专长",
+      "content": "物联智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.770783",
+      "updated_at": "2025-10-21T22:23:40.770785"
+    },
+    "朱恩庆_skill_6": {
+      "id": "朱恩庆_skill_6",
+      "section": "技能专长",
+      "content": "持续迭代",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.770870",
+      "updated_at": "2025-10-21T22:23:40.770872"
+    },
+    "朱恩庆_skill_7": {
+      "id": "朱恩庆_skill_7",
+      "section": "技能专长",
+      "content": "软件系统开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.770957",
+      "updated_at": "2025-10-21T22:23:40.770959"
+    },
+    "朱恩庆_skill_8": {
+      "id": "朱恩庆_skill_8",
+      "section": "技能专长",
+      "content": "通讯系统开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.771044",
+      "updated_at": "2025-10-21T22:23:40.771046"
+    },
+    "朱恩庆_skill_9": {
+      "id": "朱恩庆_skill_9",
+      "section": "技能专长",
+      "content": "嵌入式系统开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.771131",
+      "updated_at": "2025-10-21T22:23:40.771133"
+    },
+    "朱恩庆_skill_10": {
+      "id": "朱恩庆_skill_10",
+      "section": "技能专长",
+      "content": "Linux系统技术应用",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.771218",
+      "updated_at": "2025-10-21T22:23:40.771220"
+    },
+    "朱恩庆_skill_11": {
+      "id": "朱恩庆_skill_11",
+      "section": "技能专长",
+      "content": "云计算",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.771304",
+      "updated_at": "2025-10-21T22:23:40.771306"
+    },
+    "朱恩庆_skill_12": {
+      "id": "朱恩庆_skill_12",
+      "section": "技能专长",
+      "content": "移动互联网基础服务",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.771390",
+      "updated_at": "2025-10-21T22:23:40.771392"
+    },
+    "朱恩庆_skill_13": {
+      "id": "朱恩庆_skill_13",
+      "section": "技能专长",
+      "content": "研发工具链",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.771477",
+      "updated_at": "2025-10-21T22:23:40.771479"
+    },
+    "朱恩庆_skill_14": {
+      "id": "朱恩庆_skill_14",
+      "section": "技能专长",
+      "content": "CV/NLP算法",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.771562",
+      "updated_at": "2025-10-21T22:23:40.771564"
+    },
+    "朱恩庆_skill_15": {
+      "id": "朱恩庆_skill_15",
+      "section": "技能专长",
+      "content": "智能模型研发平台",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.771650",
+      "updated_at": "2025-10-21T22:23:40.771651"
+    },
+    "朱恩庆_skill_16": {
+      "id": "朱恩庆_skill_16",
+      "section": "技能专长",
+      "content": "企业架构",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.771741",
+      "updated_at": "2025-10-21T22:23:40.771743"
+    },
+    "朱恩庆_skill_17": {
+      "id": "朱恩庆_skill_17",
+      "section": "技能专长",
+      "content": "全栈开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.771827",
+      "updated_at": "2025-10-21T22:23:40.771829"
+    },
+    "朱恩庆_skill_18": {
+      "id": "朱恩庆_skill_18",
+      "section": "技能专长",
+      "content": "持续交付",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.771913",
+      "updated_at": "2025-10-21T22:23:40.771915"
+    },
+    "朱恩庆_skill_19": {
+      "id": "朱恩庆_skill_19",
+      "section": "技能专长",
+      "content": "算法仿真",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.771999",
+      "updated_at": "2025-10-21T22:23:40.772000"
+    },
+    "朱恩庆_skill_20": {
+      "id": "朱恩庆_skill_20",
+      "section": "技能专长",
+      "content": "团队管理",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.772085",
+      "updated_at": "2025-10-21T22:23:40.772086"
+    },
+    "朱恩庆_ach_1": {
+      "id": "朱恩庆_ach_1",
+      "section": "成就荣誉",
+      "content": "2024年大模型工程和智能体技术相关专利6篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.772171",
+      "updated_at": "2025-10-21T22:23:40.772173"
+    },
+    "朱恩庆_ach_2": {
+      "id": "朱恩庆_ach_2",
+      "section": "成就荣誉",
+      "content": "2023年大模型工程相关专利10篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.772259",
+      "updated_at": "2025-10-21T22:23:40.772260"
+    },
+    "朱恩庆_ach_3": {
+      "id": "朱恩庆_ach_3",
+      "section": "成就荣誉",
+      "content": "2022年CV识别算法专利5篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.772353",
+      "updated_at": "2025-10-21T22:23:40.772355"
+    },
+    "朱恩庆_ach_4": {
+      "id": "朱恩庆_ach_4",
+      "section": "成就荣誉",
+      "content": "2022年获得《创值标兵》称号",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.772442",
+      "updated_at": "2025-10-21T22:23:40.772443"
+    },
+    "朱恩庆_ach_5": {
+      "id": "朱恩庆_ach_5",
+      "section": "成就荣誉",
+      "content": "2020年携程无线质量优秀个人技术贡献奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.772529",
+      "updated_at": "2025-10-21T22:23:40.772530"
+    },
+    "朱恩庆_ach_6": {
+      "id": "朱恩庆_ach_6",
+      "section": "成就荣誉",
+      "content": "2016年携程MCD平台获得携程突出技术贡献奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.772614",
+      "updated_at": "2025-10-21T22:23:40.772615"
+    },
+    "朱恩庆_ach_7": {
+      "id": "朱恩庆_ach_7",
+      "section": "成就荣誉",
+      "content": "2015年在携程提交IOS应用集群打包专利两篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.772700",
+      "updated_at": "2025-10-21T22:23:40.772701"
+    },
+    "朱恩庆_ach_8": {
+      "id": "朱恩庆_ach_8",
+      "section": "成就荣誉",
+      "content": "2013年阿尔卡特朗讯outstanding员工奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.772785",
+      "updated_at": "2025-10-21T22:23:40.772787"
+    },
+    "朱恩庆_ach_9": {
+      "id": "朱恩庆_ach_9",
+      "section": "成就荣誉",
+      "content": "2010年发表《液冷源控制系统的研制》核心期刊",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.772877",
+      "updated_at": "2025-10-21T22:23:40.772879"
+    },
+    "朱恩庆_ach_10": {
+      "id": "朱恩庆_ach_10",
+      "section": "成就荣誉",
+      "content": "2009年发表论文被EI收录",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.772963",
+      "updated_at": "2025-10-21T22:23:40.772965"
+    },
+    "朱恩庆_ach_11": {
+      "id": "朱恩庆_ach_11",
+      "section": "成就荣誉",
+      "content": "2004-2008年校奖学金、社会活动积极分子、优秀团干",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-21T22:23:40.773049",
+      "updated_at": "2025-10-21T22:23:40.773050"
+    }
+  },
+  "sections": {
+    "defaults": [
+      "gtv_overview"
+    ],
+    "guidelines": [
+      "exceptional_talent",
+      "exceptional_promise",
+      "startup_visa",
+      "assessment_criteria",
+      "guidelines-00001",
+      "guidelines-00002"
+    ],
+    "test": [
+      "test_persistence"
+    ],
+    "application_guide": [
+      "application_guide-00003"
+    ],
+    "技能专长": [
+      "测试简历内容3_skill_1",
+      "测试简历内容3_skill_2",
+      "测试简历内容3_skill_3",
+      "测试简历内容_skill_1",
+      "测试简历内容_skill_2",
+      "测试简历内容_skill_3",
+      "个人简历_skill_1",
+      "张三_skill_1",
+      "张三_skill_2",
+      "张三_skill_3",
+      "张三_skill_4",
+      "张三_skill_5",
+      "张三_skill_6",
+      "张三_skill_7",
+      "张三_skill_8",
+      "张三_skill_9",
+      "张三_skill_10",
+      "张三_skill_11",
+      "张三_skill_12",
+      "朱恩庆_skill_1",
+      "朱恩庆_skill_2",
+      "朱恩庆_skill_3",
+      "朱恩庆_skill_4",
+      "朱恩庆_skill_5",
+      "朱恩庆_skill_6",
+      "朱恩庆_skill_7",
+      "朱恩庆_skill_8",
+      "朱恩庆_skill_9",
+      "朱恩庆_skill_10",
+      "朱恩庆_skill_11",
+      "朱恩庆_skill_12",
+      "朱恩庆_skill_13",
+      "朱恩庆_skill_14",
+      "朱恩庆_skill_15",
+      "朱恩庆_skill_16",
+      "朱恩庆_skill_17",
+      "朱恩庆_skill_18",
+      "朱恩庆_skill_19",
+      "朱恩庆_skill_20"
+    ],
+    "工作经验": [
+      "个人简历_exp_1",
+      "张三_exp_1",
+      "朱恩庆_exp_1"
+    ],
+    "教育背景": [
+      "个人简历_edu_1",
+      "张三_edu_1",
+      "朱恩庆_edu_1"
+    ],
+    "成就荣誉": [
+      "张三_ach_1",
+      "张三_ach_2",
+      "张三_ach_3",
+      "张三_ach_4",
+      "朱恩庆_ach_1",
+      "朱恩庆_ach_2",
+      "朱恩庆_ach_3",
+      "朱恩庆_ach_4",
+      "朱恩庆_ach_5",
+      "朱恩庆_ach_6",
+      "朱恩庆_ach_7",
+      "朱恩庆_ach_8",
+      "朱恩庆_ach_9",
+      "朱恩庆_ach_10",
+      "朱恩庆_ach_11"
+    ]
+  },
+  "next_id": 3
+}

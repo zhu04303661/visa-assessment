@@ -1,0 +1,1085 @@
+2025-10-21 09:45:32,704 INFO test_resume_processor.py:58 📁 创建测试文件...
+2025-10-21 09:45:32,704 INFO test_resume_processor.py:115 ✅ 创建测试简历文件: test_data/test_resume.txt
+2025-10-21 09:45:32,704 INFO test_resume_processor.py:130 ✅ 创建简化测试简历文件: test_data/simple_resume.txt
+2025-10-21 09:45:32,704 INFO test_resume_processor.py:139 🧪 测试文本提取功能...
+2025-10-21 09:45:32,704 INFO resume_processor.py:199 开始提取文件文本内容: test_data/test_resume.txt
+2025-10-21 09:45:32,705 INFO resume_processor.py:208 文件大小: 1158 bytes
+2025-10-21 09:45:32,705 INFO resume_processor.py:235 尝试使用 6 种编码格式读取文件
+2025-10-21 09:45:32,705 INFO resume_processor.py:242 成功使用 utf-8 编码读取文件，内容长度: 590 字符
+2025-10-21 09:45:32,705 INFO resume_processor.py:190 已保存Markdown内容: test_data/test_resume.md
+2025-10-21 09:45:32,705 INFO test_resume_processor.py:147 ✅ 详细简历文本提取成功，长度: 590 字符
+2025-10-21 09:45:32,705 INFO resume_processor.py:199 开始提取文件文本内容: test_data/simple_resume.txt
+2025-10-21 09:45:32,705 INFO resume_processor.py:208 文件大小: 161 bytes
+2025-10-21 09:45:32,705 INFO resume_processor.py:235 尝试使用 6 种编码格式读取文件
+2025-10-21 09:45:32,705 INFO resume_processor.py:242 成功使用 utf-8 编码读取文件，内容长度: 89 字符
+2025-10-21 09:45:32,705 INFO resume_processor.py:190 已保存Markdown内容: test_data/simple_resume.md
+2025-10-21 09:45:32,705 INFO test_resume_processor.py:154 ✅ 简化简历文本提取成功，长度: 89 字符
+2025-10-21 09:45:32,706 INFO test_resume_processor.py:165 ✅ 文本提取功能测试通过
+2025-10-21 09:45:32,706 INFO test_resume_processor.py:174 🧪 测试本地规则信息提取...
+2025-10-21 09:45:32,706 INFO resume_processor.py:403 执行本地规则信息提取
+2025-10-21 09:45:32,706 INFO resume_processor.py:406 回退规则：将内容分割为 49 行进行处理
+2025-10-21 09:45:32,706 INFO resume_processor.py:470 本地规则信息提取完成
+2025-10-21 09:45:32,706 INFO test_resume_processor.py:188 ✅ 本地规则提取成功: {'name': '张三', 'email': '邮箱：zhangsan@example.com', 'phone': '- 英语：流利（CET-6）', 'experience': '2020-2025 高级AI工程师 - 腾讯科技 - 负责机器学习平台架构设计 - 主导了千万级用户推荐系统项目 - 团队规模：15人 2018-2020 机器学习工程师 - 字节跳动 - 开发了智能推荐算法 - 优化了模型训练效率30% - 参与过多个AI产品开发', 'education': '2016-2018 清华大学 计算机科学与技术 硕士 2012-2016 北京大学 计算机科学与技术 学士', 'skills': ['：'], 'achievements': ['：'], 'projects': [], 'languages': [], 'certifications': [], 'summary': ''}
+2025-10-21 09:45:32,706 INFO test_resume_processor.py:197 ✅ 本地规则信息提取测试通过
+2025-10-21 09:45:32,706 INFO test_resume_processor.py:351 🧪 测试安全预览功能...
+2025-10-21 09:45:32,706 ERROR test_resume_processor.py:358 ❌ 正常文本预览失败
+2025-10-21 09:45:32,706 INFO test_resume_processor.py:58 📁 创建测试文件...
+2025-10-21 09:45:32,707 INFO test_resume_processor.py:115 ✅ 创建测试简历文件: test_data/test_resume.txt
+2025-10-21 09:45:32,707 INFO test_resume_processor.py:130 ✅ 创建简化测试简历文件: test_data/simple_resume.txt
+2025-10-21 09:45:32,707 INFO test_resume_processor.py:206 🧪 测试LLM客户端配置...
+2025-10-21 09:45:32,822 INFO test_resume_processor.py:214 ✅ LLM客户端创建成功: OpenAI
+2025-10-21 09:45:32,822 INFO test_resume_processor.py:223 🧪 测试AI信息提取...
+2025-10-21 09:45:32,822 INFO resume_processor.py:322 开始AI信息提取，输入内容长度: 590 字符
+2025-10-21 09:45:32,832 INFO resume_processor.py:331 调用LLM提供商: OPENAI
+2025-10-21 09:46:18,283 INFO _base_client.py:1085 Retrying request to /chat/completions in 0.409110 seconds
+2025-10-21 09:47:03,708 INFO _base_client.py:1085 Retrying request to /chat/completions in 0.801414 seconds
+2025-10-21 09:47:49,528 ERROR resume_processor.py:397 LLM调用失败，回退本地规则: Request timed out.
+Traceback (most recent call last):
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_transports/default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection.py", line 101, in handle_request
+    raise exc
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection.py", line 78, in handle_request
+    stream = self._connect(request)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection.py", line 124, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_backends/sync.py", line 207, in connect_tcp
+    with map_exceptions(exc_map):
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectTimeout: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 989, in _request
+    response = self._client.send(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_client.py", line 914, in send
+    response = self._send_handling_auth(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_transports/default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectTimeout: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/zhuenqing/workspace/lisa/gtv-visa-assessment/ace_gtv/resume_processor.py", line 352, in call_ai_for_extraction
+    response = client.chat.completions.create(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_utils/_utils.py", line 279, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/resources/chat/completions/completions.py", line 929, in create
+    return self._post(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 1276, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 949, in request
+    return self._request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 998, in _request
+    return self._retry_request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 1091, in _retry_request
+    return self._request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 998, in _request
+    return self._retry_request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 1091, in _retry_request
+    return self._request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 1008, in _request
+    raise APITimeoutError(request=request) from err
+openai.APITimeoutError: Request timed out.
+2025-10-21 09:47:49,541 INFO resume_processor.py:403 执行本地规则信息提取
+2025-10-21 09:47:49,541 INFO resume_processor.py:406 回退规则：将内容分割为 49 行进行处理
+2025-10-21 09:47:49,541 INFO resume_processor.py:470 本地规则信息提取完成
+2025-10-21 09:47:49,541 INFO test_resume_processor.py:237 ✅ AI信息提取成功: {'name': '张三', 'email': '邮箱：zhangsan@example.com', 'phone': '- 英语：流利（CET-6）', 'experience': '2020-2025 高级AI工程师 - 腾讯科技 - 负责机器学习平台架构设计 - 主导了千万级用户推荐系统项目 - 团队规模：15人 2018-2020 机器学习工程师 - 字节跳动 - 开发了智能推荐算法 - 优化了模型训练效率30% - 参与过多个AI产品开发', 'education': '2016-2018 清华大学 计算机科学与技术 硕士 2012-2016 北京大学 计算机科学与技术 学士', 'skills': ['：'], 'achievements': ['：'], 'projects': [], 'languages': [], 'certifications': [], 'summary': ''}
+2025-10-21 09:47:49,541 INFO test_resume_processor.py:246 ✅ AI信息提取测试通过
+2025-10-21 09:47:49,542 INFO test_resume_processor.py:58 📁 创建测试文件...
+2025-10-21 09:47:49,542 INFO test_resume_processor.py:115 ✅ 创建测试简历文件: test_data/test_resume.txt
+2025-10-21 09:47:49,542 INFO test_resume_processor.py:130 ✅ 创建简化测试简历文件: test_data/simple_resume.txt
+2025-10-21 09:47:49,542 INFO test_resume_processor.py:255 🧪 测试知识库创建...
+2025-10-21 09:47:49,542 INFO resume_processor.py:322 开始AI信息提取，输入内容长度: 590 字符
+2025-10-21 09:47:49,554 INFO resume_processor.py:331 调用LLM提供商: OPENAI
+2025-10-21 09:48:34,559 INFO _base_client.py:1085 Retrying request to /chat/completions in 0.461385 seconds
+2025-10-21 09:49:20,033 INFO _base_client.py:1085 Retrying request to /chat/completions in 0.837689 seconds
+2025-10-21 09:50:05,546 INFO test_resume_processor.py:58 📁 创建测试文件...
+2025-10-21 09:50:05,548 INFO test_resume_processor.py:115 ✅ 创建测试简历文件: test_data/test_resume.txt
+2025-10-21 09:50:05,548 INFO test_resume_processor.py:130 ✅ 创建简化测试简历文件: test_data/simple_resume.txt
+2025-10-21 09:50:05,548 INFO test_resume_processor.py:139 🧪 测试文本提取功能...
+2025-10-21 09:50:05,548 INFO resume_processor.py:199 开始提取文件文本内容: test_data/test_resume.txt
+2025-10-21 09:50:05,548 INFO resume_processor.py:208 文件大小: 1158 bytes
+2025-10-21 09:50:05,548 INFO resume_processor.py:235 尝试使用 6 种编码格式读取文件
+2025-10-21 09:50:05,548 INFO resume_processor.py:242 成功使用 utf-8 编码读取文件，内容长度: 590 字符
+2025-10-21 09:50:05,548 INFO resume_processor.py:190 已保存Markdown内容: test_data/test_resume.md
+2025-10-21 09:50:05,549 INFO test_resume_processor.py:147 ✅ 详细简历文本提取成功，长度: 590 字符
+2025-10-21 09:50:05,549 INFO resume_processor.py:199 开始提取文件文本内容: test_data/simple_resume.txt
+2025-10-21 09:50:05,549 INFO resume_processor.py:208 文件大小: 161 bytes
+2025-10-21 09:50:05,549 INFO resume_processor.py:235 尝试使用 6 种编码格式读取文件
+2025-10-21 09:50:05,549 INFO resume_processor.py:242 成功使用 utf-8 编码读取文件，内容长度: 89 字符
+2025-10-21 09:50:05,549 INFO resume_processor.py:190 已保存Markdown内容: test_data/simple_resume.md
+2025-10-21 09:50:05,549 INFO test_resume_processor.py:154 ✅ 简化简历文本提取成功，长度: 89 字符
+2025-10-21 09:50:05,549 INFO test_resume_processor.py:165 ✅ 文本提取功能测试通过
+2025-10-21 09:50:05,549 INFO test_resume_processor.py:174 🧪 测试本地规则信息提取...
+2025-10-21 09:50:05,549 INFO resume_processor.py:403 执行本地规则信息提取
+2025-10-21 09:50:05,549 INFO resume_processor.py:406 回退规则：将内容分割为 49 行进行处理
+2025-10-21 09:50:05,549 INFO resume_processor.py:470 本地规则信息提取完成
+2025-10-21 09:50:05,549 INFO test_resume_processor.py:188 ✅ 本地规则提取成功: {'name': '张三', 'email': '邮箱：zhangsan@example.com', 'phone': '- 英语：流利（CET-6）', 'experience': '2020-2025 高级AI工程师 - 腾讯科技 - 负责机器学习平台架构设计 - 主导了千万级用户推荐系统项目 - 团队规模：15人 2018-2020 机器学习工程师 - 字节跳动 - 开发了智能推荐算法 - 优化了模型训练效率30% - 参与过多个AI产品开发', 'education': '2016-2018 清华大学 计算机科学与技术 硕士 2012-2016 北京大学 计算机科学与技术 学士', 'skills': ['：'], 'achievements': ['：'], 'projects': [], 'languages': [], 'certifications': [], 'summary': ''}
+2025-10-21 09:50:05,549 INFO test_resume_processor.py:197 ✅ 本地规则信息提取测试通过
+2025-10-21 09:50:05,549 INFO test_resume_processor.py:351 🧪 测试安全预览功能...
+2025-10-21 09:50:05,549 ERROR test_resume_processor.py:358 ❌ 正常文本预览失败
+2025-10-21 09:50:05,550 INFO test_resume_processor.py:58 📁 创建测试文件...
+2025-10-21 09:50:05,550 INFO test_resume_processor.py:115 ✅ 创建测试简历文件: test_data/test_resume.txt
+2025-10-21 09:50:05,550 INFO test_resume_processor.py:130 ✅ 创建简化测试简历文件: test_data/simple_resume.txt
+2025-10-21 09:50:05,550 INFO test_resume_processor.py:206 🧪 测试LLM客户端配置...
+2025-10-21 09:50:05,652 INFO test_resume_processor.py:214 ✅ LLM客户端创建成功: OpenAI
+2025-10-21 09:50:05,652 INFO test_resume_processor.py:223 🧪 测试AI信息提取...
+2025-10-21 09:50:05,652 INFO resume_processor.py:322 开始AI信息提取，输入内容长度: 590 字符
+2025-10-21 09:50:05,661 INFO resume_processor.py:331 调用LLM提供商: OPENAI
+2025-10-21 09:50:50,731 INFO _base_client.py:1085 Retrying request to /chat/completions in 0.450764 seconds
+2025-10-21 09:51:36,208 INFO _base_client.py:1085 Retrying request to /chat/completions in 0.811638 seconds
+2025-10-21 09:52:22,030 ERROR resume_processor.py:397 LLM调用失败，回退本地规则: Request timed out.
+Traceback (most recent call last):
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_transports/default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection.py", line 101, in handle_request
+    raise exc
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection.py", line 78, in handle_request
+    stream = self._connect(request)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection.py", line 124, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_backends/sync.py", line 207, in connect_tcp
+    with map_exceptions(exc_map):
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectTimeout: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 989, in _request
+    response = self._client.send(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_client.py", line 914, in send
+    response = self._send_handling_auth(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_transports/default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectTimeout: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/zhuenqing/workspace/lisa/gtv-visa-assessment/ace_gtv/resume_processor.py", line 352, in call_ai_for_extraction
+    response = client.chat.completions.create(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_utils/_utils.py", line 279, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/resources/chat/completions/completions.py", line 929, in create
+    return self._post(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 1276, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 949, in request
+    return self._request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 998, in _request
+    return self._retry_request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 1091, in _retry_request
+    return self._request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 998, in _request
+    return self._retry_request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 1091, in _retry_request
+    return self._request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 1008, in _request
+    raise APITimeoutError(request=request) from err
+openai.APITimeoutError: Request timed out.
+2025-10-21 09:52:22,041 INFO resume_processor.py:403 执行本地规则信息提取
+2025-10-21 09:52:22,041 INFO resume_processor.py:406 回退规则：将内容分割为 49 行进行处理
+2025-10-21 09:52:22,041 INFO resume_processor.py:470 本地规则信息提取完成
+2025-10-21 09:52:22,041 INFO test_resume_processor.py:237 ✅ AI信息提取成功: {'name': '张三', 'email': '邮箱：zhangsan@example.com', 'phone': '- 英语：流利（CET-6）', 'experience': '2020-2025 高级AI工程师 - 腾讯科技 - 负责机器学习平台架构设计 - 主导了千万级用户推荐系统项目 - 团队规模：15人 2018-2020 机器学习工程师 - 字节跳动 - 开发了智能推荐算法 - 优化了模型训练效率30% - 参与过多个AI产品开发', 'education': '2016-2018 清华大学 计算机科学与技术 硕士 2012-2016 北京大学 计算机科学与技术 学士', 'skills': ['：'], 'achievements': ['：'], 'projects': [], 'languages': [], 'certifications': [], 'summary': ''}
+2025-10-21 09:52:22,041 INFO test_resume_processor.py:246 ✅ AI信息提取测试通过
+2025-10-21 09:52:22,041 INFO test_resume_processor.py:58 📁 创建测试文件...
+2025-10-21 09:52:22,042 INFO test_resume_processor.py:115 ✅ 创建测试简历文件: test_data/test_resume.txt
+2025-10-21 09:52:22,042 INFO test_resume_processor.py:130 ✅ 创建简化测试简历文件: test_data/simple_resume.txt
+2025-10-21 09:52:22,042 INFO test_resume_processor.py:255 🧪 测试知识库创建...
+2025-10-21 09:52:22,042 INFO resume_processor.py:322 开始AI信息提取，输入内容长度: 590 字符
+2025-10-21 09:52:22,053 INFO resume_processor.py:331 调用LLM提供商: OPENAI
+2025-10-21 09:53:07,065 INFO _base_client.py:1085 Retrying request to /chat/completions in 0.390704 seconds
+2025-10-21 09:53:18,656 INFO test_resume_processor.py:98 📁 创建测试文件...
+2025-10-21 09:53:18,657 INFO test_resume_processor.py:155 ✅ 创建测试简历文件: test_data/test_resume.txt
+2025-10-21 09:53:18,657 INFO test_resume_processor.py:170 ✅ 创建简化测试简历文件: test_data/simple_resume.txt
+2025-10-21 09:53:18,657 INFO test_resume_processor.py:179 🧪 测试文本提取功能...
+2025-10-21 09:53:18,657 INFO resume_processor.py:199 开始提取文件文本内容: test_data/test_resume.txt
+2025-10-21 09:53:18,657 INFO resume_processor.py:208 文件大小: 1158 bytes
+2025-10-21 09:53:18,657 INFO resume_processor.py:235 尝试使用 6 种编码格式读取文件
+2025-10-21 09:53:18,657 INFO resume_processor.py:242 成功使用 utf-8 编码读取文件，内容长度: 590 字符
+2025-10-21 09:53:18,658 INFO resume_processor.py:190 已保存Markdown内容: test_data/test_resume.md
+2025-10-21 09:53:18,658 INFO test_resume_processor.py:187 ✅ 详细简历文本提取成功，长度: 590 字符
+2025-10-21 09:53:18,658 INFO resume_processor.py:199 开始提取文件文本内容: test_data/simple_resume.txt
+2025-10-21 09:53:18,658 INFO resume_processor.py:208 文件大小: 161 bytes
+2025-10-21 09:53:18,658 INFO resume_processor.py:235 尝试使用 6 种编码格式读取文件
+2025-10-21 09:53:18,658 INFO resume_processor.py:242 成功使用 utf-8 编码读取文件，内容长度: 89 字符
+2025-10-21 09:53:18,658 INFO resume_processor.py:190 已保存Markdown内容: test_data/simple_resume.md
+2025-10-21 09:53:18,658 INFO test_resume_processor.py:194 ✅ 简化简历文本提取成功，长度: 89 字符
+2025-10-21 09:53:18,658 INFO test_resume_processor.py:205 ✅ 文本提取功能测试通过
+2025-10-21 09:53:18,658 INFO test_resume_processor.py:214 🧪 测试本地规则信息提取...
+2025-10-21 09:53:18,658 INFO resume_processor.py:403 执行本地规则信息提取
+2025-10-21 09:53:18,659 INFO resume_processor.py:406 回退规则：将内容分割为 49 行进行处理
+2025-10-21 09:53:18,659 INFO resume_processor.py:470 本地规则信息提取完成
+2025-10-21 09:53:18,659 INFO test_resume_processor.py:228 ✅ 本地规则提取成功: {'name': '张三', 'email': '邮箱：zhangsan@example.com', 'phone': '- 英语：流利（CET-6）', 'experience': '2020-2025 高级AI工程师 - 腾讯科技 - 负责机器学习平台架构设计 - 主导了千万级用户推荐系统项目 - 团队规模：15人 2018-2020 机器学习工程师 - 字节跳动 - 开发了智能推荐算法 - 优化了模型训练效率30% - 参与过多个AI产品开发', 'education': '2016-2018 清华大学 计算机科学与技术 硕士 2012-2016 北京大学 计算机科学与技术 学士', 'skills': ['：'], 'achievements': ['：'], 'projects': [], 'languages': [], 'certifications': [], 'summary': ''}
+2025-10-21 09:53:18,659 INFO test_resume_processor.py:237 ✅ 本地规则信息提取测试通过
+2025-10-21 09:53:18,659 INFO test_resume_processor.py:391 🧪 测试安全预览功能...
+2025-10-21 09:53:18,659 ERROR test_resume_processor.py:398 ❌ 正常文本预览失败
+2025-10-21 09:53:18,659 INFO test_resume_processor.py:98 📁 创建测试文件...
+2025-10-21 09:53:18,659 INFO test_resume_processor.py:155 ✅ 创建测试简历文件: test_data/test_resume.txt
+2025-10-21 09:53:18,659 INFO test_resume_processor.py:170 ✅ 创建简化测试简历文件: test_data/simple_resume.txt
+2025-10-21 09:53:18,659 INFO test_resume_processor.py:246 🧪 测试LLM客户端配置...
+2025-10-21 09:53:18,659 ERROR test_resume_processor.py:258 ❌ LLM客户端测试失败: OpenAI.__init__() got an unexpected keyword argument 'api_version'
+2025-10-21 09:53:18,659 INFO test_resume_processor.py:98 📁 创建测试文件...
+2025-10-21 09:53:18,660 INFO test_resume_processor.py:155 ✅ 创建测试简历文件: test_data/test_resume.txt
+2025-10-21 09:53:18,660 INFO test_resume_processor.py:170 ✅ 创建简化测试简历文件: test_data/simple_resume.txt
+2025-10-21 09:53:18,660 INFO test_resume_processor.py:295 🧪 测试知识库创建...
+2025-10-21 09:53:18,660 INFO resume_processor.py:322 开始AI信息提取，输入内容长度: 590 字符
+2025-10-21 09:53:18,660 ERROR test_resume_processor.py:336 ❌ 知识库创建测试失败: OpenAI.__init__() got an unexpected keyword argument 'api_version'
+2025-10-21 09:53:37,152 INFO test_resume_processor.py:476 🧹 清理测试数据...
+2025-10-21 09:53:37,156 INFO test_resume_processor.py:483 ✅ 测试文件清理完成
+2025-10-21 09:53:37,159 INFO test_resume_processor.py:504 ✅ 清理测试条目: test_persistence
+2025-10-21 09:53:37,159 INFO test_resume_processor.py:504 ✅ 清理测试条目: 测试简历内容2_skill_1
+2025-10-21 09:53:37,159 INFO test_resume_processor.py:504 ✅ 清理测试条目: 测试简历内容2_skill_2
+2025-10-21 09:53:37,159 INFO test_resume_processor.py:504 ✅ 清理测试条目: 测试简历内容2_skill_3
+2025-10-21 09:53:37,160 INFO test_resume_processor.py:504 ✅ 清理测试条目: 测试简历内容3_skill_1
+2025-10-21 09:53:37,160 INFO test_resume_processor.py:504 ✅ 清理测试条目: 测试简历内容3_skill_2
+2025-10-21 09:53:37,160 INFO test_resume_processor.py:504 ✅ 清理测试条目: 测试简历内容3_skill_3
+2025-10-21 09:53:37,160 INFO test_resume_processor.py:504 ✅ 清理测试条目: 测试简历内容_skill_1
+2025-10-21 09:53:37,160 INFO test_resume_processor.py:504 ✅ 清理测试条目: 测试简历内容_skill_2
+2025-10-21 09:53:37,160 INFO test_resume_processor.py:504 ✅ 清理测试条目: 测试简历内容_skill_3
+2025-10-21 09:53:37,161 INFO test_resume_processor.py:509 ✅ 主知识库清理完成
+2025-10-21 09:53:52,474 INFO _base_client.py:1085 Retrying request to /chat/completions in 0.804577 seconds
+2025-10-21 09:54:38,299 ERROR resume_processor.py:397 LLM调用失败，回退本地规则: Request timed out.
+Traceback (most recent call last):
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_transports/default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection.py", line 101, in handle_request
+    raise exc
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection.py", line 78, in handle_request
+    stream = self._connect(request)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_sync/connection.py", line 124, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_backends/sync.py", line 207, in connect_tcp
+    with map_exceptions(exc_map):
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectTimeout: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 989, in _request
+    response = self._client.send(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_client.py", line 914, in send
+    response = self._send_handling_auth(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_transports/default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectTimeout: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/zhuenqing/workspace/lisa/gtv-visa-assessment/ace_gtv/resume_processor.py", line 352, in call_ai_for_extraction
+    raise ValueError("Azure OpenAI需要配置AZURE_OPENAI_DEPLOYMENT")
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_utils/_utils.py", line 279, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/resources/chat/completions/completions.py", line 929, in create
+    return self._post(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 1276, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 949, in request
+    return self._request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 998, in _request
+    return self._retry_request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 1091, in _retry_request
+    return self._request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 998, in _request
+    return self._retry_request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 1091, in _retry_request
+    return self._request(
+  File "/Users/zhuenqing/anaconda3/lib/python3.10/site-packages/openai/_base_client.py", line 1008, in _request
+    raise APITimeoutError(request=request) from err
+openai.APITimeoutError: Request timed out.
+2025-10-21 09:54:38,302 INFO resume_processor.py:403 执行本地规则信息提取
+2025-10-21 09:54:38,302 INFO resume_processor.py:406 回退规则：将内容分割为 49 行进行处理
+2025-10-21 09:54:38,302 INFO resume_processor.py:470 本地规则信息提取完成
+2025-10-21 09:54:38,303 INFO resume_processor.py:478 开始为 张三 创建个人知识库
+2025-10-21 09:54:38,303 INFO resume_processor.py:479 提取的信息: {'name': '张三', 'email': '邮箱：zhangsan@example.com', 'phone': '- 英语：流利（CET-6）', 'experience': '2020-2025 高级AI工程师 - 腾讯科技 - 负责机器学习平台架构设计 - 主导了千万级用户推荐系统项目 - 团队规模：15人 2018-2020 机器学习工程师 - 字节跳动 - 开发了智能推荐算法 - 优化了模型训练效率30% - 参与过多个AI产品开发', 'education': '2016-2018 清华大学 计算机科学与技术 硕士 2012-2016 北京大学 计算机科学与技术 学士', 'skills': ['：'], 'achievements': ['：'], 'projects': [], 'languages': [], 'certifications': [], 'summary': ''}
+2025-10-21 09:54:38,304 INFO resume_processor.py:484 创建个人知识库目录: personal_kb
+2025-10-21 09:54:38,304 INFO resume_processor.py:486 个人知识库目录创建成功
+2025-10-21 09:54:38,304 INFO resume_processor.py:496 初始化个人信息结构
+2025-10-21 09:54:38,304 INFO resume_processor.py:500 开始根据提取的信息创建知识条目
+2025-10-21 09:54:38,304 INFO resume_processor.py:512 创建工作经验知识条目: 张三_exp_1
+2025-10-21 09:54:38,304 INFO resume_processor.py:524 创建教育背景知识条目: 张三_edu_1
+2025-10-21 09:54:38,304 INFO resume_processor.py:527 创建技能知识条目，技能数量: 1
+2025-10-21 09:54:38,304 INFO resume_processor.py:538 创建技能知识条目 1: 张三_skill_1 - ：
+2025-10-21 09:54:38,304 INFO resume_processor.py:541 创建成就知识条目，成就数量: 1
+2025-10-21 09:54:38,304 INFO resume_processor.py:552 创建成就知识条目 1: 张三_ach_1 - ：
+2025-10-21 09:54:38,304 INFO resume_processor.py:555 知识条目创建完成，总计 4 个条目
+2025-10-21 09:54:38,304 INFO resume_processor.py:559 保存个人知识库到文件: personal_kb/personal_info.json
+2025-10-21 09:54:38,305 INFO resume_processor.py:562 个人知识库文件保存成功
+2025-10-21 09:54:38,305 INFO resume_processor.py:564 为 张三 创建了个人知识库，包含 4 个知识条目
+2025-10-21 09:54:38,305 INFO test_resume_processor.py:276 ✅ 个人知识库创建成功: personal_kb
+2025-10-21 09:54:38,306 INFO test_resume_processor.py:291 ✅ 个人知识库包含 4 个知识条目
+2025-10-21 09:54:38,306 INFO test_resume_processor.py:292 ✅ 知识库创建测试通过
+2025-10-21 09:54:38,306 INFO test_resume_processor.py:301 🧪 测试主知识库更新...
+2025-10-21 09:54:38,306 ERROR test_resume_processor.py:346 ❌ 主知识库更新测试失败: [Errno 2] No such file or directory: 'test_data/test_resume.txt'
+2025-10-21 16:15:23,740 INFO test_resume_processor.py:527 🔍 检查运行环境...
+2025-10-21 16:15:23,740 INFO test_resume_processor.py:533 ✅ 确保目录存在: data
+2025-10-21 16:15:23,741 INFO test_resume_processor.py:533 ✅ 确保目录存在: personal_kb
+2025-10-21 16:15:23,741 INFO test_resume_processor.py:431 🚀 开始运行简历处理器测试套件...
+2025-10-21 16:15:23,741 INFO test_resume_processor.py:98 📁 创建测试文件...
+2025-10-21 16:15:23,741 INFO test_resume_processor.py:155 ✅ 创建测试简历文件: test_data/test_resume.txt
+2025-10-21 16:15:23,741 INFO test_resume_processor.py:170 ✅ 创建简化测试简历文件: test_data/simple_resume.txt
+2025-10-21 16:15:23,741 INFO test_resume_processor.py:451 
+==================================================
+2025-10-21 16:15:23,741 INFO test_resume_processor.py:452 🧪 运行测试: 文本提取功能
+2025-10-21 16:15:23,741 INFO test_resume_processor.py:453 ==================================================
+2025-10-21 16:15:23,741 INFO test_resume_processor.py:179 🧪 测试文本提取功能...
+2025-10-21 16:15:23,741 INFO resume_processor.py:202 开始提取文件文本内容: test_data/test_resume.txt
+2025-10-21 16:15:23,741 INFO resume_processor.py:211 文件大小: 1158 bytes
+2025-10-21 16:15:23,741 INFO resume_processor.py:238 尝试使用 6 种编码格式读取文件
+2025-10-21 16:15:23,741 INFO resume_processor.py:245 成功使用 utf-8 编码读取文件，内容长度: 590 字符
+2025-10-21 16:15:23,742 INFO resume_processor.py:193 已保存Markdown内容: test_data/test_resume.md
+2025-10-21 16:15:23,742 INFO test_resume_processor.py:187 ✅ 详细简历文本提取成功，长度: 590 字符
+2025-10-21 16:15:23,742 INFO resume_processor.py:202 开始提取文件文本内容: test_data/simple_resume.txt
+2025-10-21 16:15:23,742 INFO resume_processor.py:211 文件大小: 161 bytes
+2025-10-21 16:15:23,742 INFO resume_processor.py:238 尝试使用 6 种编码格式读取文件
+2025-10-21 16:15:23,742 INFO resume_processor.py:245 成功使用 utf-8 编码读取文件，内容长度: 89 字符
+2025-10-21 16:15:23,742 INFO resume_processor.py:193 已保存Markdown内容: test_data/simple_resume.md
+2025-10-21 16:15:23,742 INFO test_resume_processor.py:194 ✅ 简化简历文本提取成功，长度: 89 字符
+2025-10-21 16:15:23,742 INFO test_resume_processor.py:205 ✅ 文本提取功能测试通过
+2025-10-21 16:15:23,742 INFO test_resume_processor.py:458 ✅ 文本提取功能 - 通过
+2025-10-21 16:15:23,742 INFO test_resume_processor.py:451 
+==================================================
+2025-10-21 16:15:23,742 INFO test_resume_processor.py:452 🧪 运行测试: 本地规则信息提取
+2025-10-21 16:15:23,742 INFO test_resume_processor.py:453 ==================================================
+2025-10-21 16:15:23,742 INFO test_resume_processor.py:214 🧪 测试本地规则信息提取...
+2025-10-21 16:15:23,742 INFO resume_processor.py:406 执行本地规则信息提取
+2025-10-21 16:15:23,742 INFO resume_processor.py:409 回退规则：将内容分割为 49 行进行处理
+2025-10-21 16:15:23,743 INFO resume_processor.py:473 本地规则信息提取完成
+2025-10-21 16:15:23,743 INFO test_resume_processor.py:228 ✅ 本地规则提取成功: {'name': '张三', 'email': '邮箱：zhangsan@example.com', 'phone': '- 英语：流利（CET-6）', 'experience': '2020-2025 高级AI工程师 - 腾讯科技 - 负责机器学习平台架构设计 - 主导了千万级用户推荐系统项目 - 团队规模：15人 2018-2020 机器学习工程师 - 字节跳动 - 开发了智能推荐算法 - 优化了模型训练效率30% - 参与过多个AI产品开发', 'education': '2016-2018 清华大学 计算机科学与技术 硕士 2012-2016 北京大学 计算机科学与技术 学士', 'skills': ['：'], 'achievements': ['：'], 'projects': [], 'languages': [], 'certifications': [], 'summary': ''}
+2025-10-21 16:15:23,743 INFO test_resume_processor.py:237 ✅ 本地规则信息提取测试通过
+2025-10-21 16:15:23,743 INFO test_resume_processor.py:458 ✅ 本地规则信息提取 - 通过
+2025-10-21 16:15:23,743 INFO test_resume_processor.py:451 
+==================================================
+2025-10-21 16:15:23,743 INFO test_resume_processor.py:452 🧪 运行测试: LLM客户端配置
+2025-10-21 16:15:23,743 INFO test_resume_processor.py:453 ==================================================
+2025-10-21 16:15:23,743 INFO test_resume_processor.py:246 🧪 测试LLM客户端配置...
+2025-10-21 16:15:23,854 INFO test_resume_processor.py:254 ✅ LLM客户端创建成功: OpenAI
+2025-10-21 16:15:23,854 INFO test_resume_processor.py:458 ✅ LLM客户端配置 - 通过
+2025-10-21 16:15:23,854 INFO test_resume_processor.py:451 
+==================================================
+2025-10-21 16:15:23,854 INFO test_resume_processor.py:452 🧪 运行测试: AI信息提取
+2025-10-21 16:15:23,854 INFO test_resume_processor.py:453 ==================================================
+2025-10-21 16:15:23,854 INFO test_resume_processor.py:263 🧪 测试AI信息提取...
+2025-10-21 16:15:23,854 INFO resume_processor.py:325 开始AI信息提取，输入内容长度: 590 字符
+2025-10-21 16:15:23,866 INFO resume_processor.py:334 调用LLM提供商: AZURE
+2025-10-21 16:15:28,732 INFO _client.py:1025 HTTP Request: POST https://ennew-openai-east-us-2.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview "HTTP/1.1 200 OK"
+2025-10-21 16:15:28,960 INFO resume_processor.py:380 LLM返回文本长度: 945; 预览: {
+  "name": "张三",
+  "email": "zhangsan@example.com",
+  "phone": "+86 138 0000 0000",
+  "experience": "2020-2025 高级AI工程师 - 腾讯科技：负责机器学习平台架构设计，主导了千万级用户推荐系统项目，团队规模15人。2018-2020 机器学习工程师 - 字节跳动：开发了智能推荐算法，优化...
+2025-10-21 16:15:28,960 INFO resume_processor.py:397 LLM信息提取成功
+2025-10-21 16:15:28,960 INFO test_resume_processor.py:277 ✅ AI信息提取成功: {'name': '张三', 'email': 'zhangsan@example.com', 'phone': '+86 138 0000 0000', 'experience': '2020-2025 高级AI工程师 - 腾讯科技：负责机器学习平台架构设计，主导了千万级用户推荐系统项目，团队规模15人。2018-2020 机器学习工程师 - 字节跳动：开发了智能推荐算法，优化了模型训练效率30%，参与过多个AI产品开发。', 'education': '2016-2018 清华大学 计算机科学与技术 硕士。2012-2016 北京大学 计算机科学与技术 学士。', 'skills': ['Python', 'Java', 'C++', 'TensorFlow', 'PyTorch', 'Scikit-learn', '机器学习', '深度学习', '自然语言处理', 'Docker', 'Kubernetes', 'AWS'], 'achievements': ['发表3篇SCI论文', '获得2项发明专利', '主导过千万级AI项目', '获得公司年度最佳员工奖'], 'projects': ['智能推荐系统：基于深度学习的个性化推荐', '机器学习平台：支持多租户的MLOps平台', '自然语言处理：多语言文本分类系统'], 'languages': ['中文：母语', '英语：流利（CET-6）', '日语：基础'], 'certifications': ['AWS机器学习专业认证', 'Google Cloud AI认证', '华为云AI工程师认证'], 'summary': '高级AI工程师，拥有丰富的机器学习平台架构设计和推荐系统开发经验，具备深厚的计算机科学背景，精通多种编程语言和AI技术，曾在腾讯科技和字节跳动主导重要项目，具备多项行业认证和突出成就。'}
+2025-10-21 16:15:28,960 INFO test_resume_processor.py:286 ✅ AI信息提取测试通过
+2025-10-21 16:15:28,960 INFO test_resume_processor.py:458 ✅ AI信息提取 - 通过
+2025-10-21 16:15:28,960 INFO test_resume_processor.py:451 
+==================================================
+2025-10-21 16:15:28,960 INFO test_resume_processor.py:452 🧪 运行测试: 知识库创建
+2025-10-21 16:15:28,961 INFO test_resume_processor.py:453 ==================================================
+2025-10-21 16:15:28,961 INFO test_resume_processor.py:295 🧪 测试知识库创建...
+2025-10-21 16:15:28,961 INFO resume_processor.py:325 开始AI信息提取，输入内容长度: 590 字符
+2025-10-21 16:15:28,970 INFO resume_processor.py:334 调用LLM提供商: AZURE
+2025-10-21 16:15:33,194 INFO _client.py:1025 HTTP Request: POST https://ennew-openai-east-us-2.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview "HTTP/1.1 200 OK"
+2025-10-21 16:15:33,417 INFO resume_processor.py:380 LLM返回文本长度: 939; 预览: {
+  "name": "张三",
+  "email": "zhangsan@example.com",
+  "phone": "+86 138 0000 0000",
+  "experience": "2020-2025 高级AI工程师 - 腾讯科技\n- 负责机器学习平台架构设计\n- 主导了千万级用户推荐系统项目\n- 团队规模：15人\n\n2018-2020 机器学习工程师 - 字节跳动...
+2025-10-21 16:15:33,418 INFO resume_processor.py:397 LLM信息提取成功
+2025-10-21 16:15:33,419 INFO resume_processor.py:481 开始为 张三 创建个人知识库
+2025-10-21 16:15:33,419 INFO resume_processor.py:482 提取的信息: {'name': '张三', 'email': 'zhangsan@example.com', 'phone': '+86 138 0000 0000', 'experience': '2020-2025 高级AI工程师 - 腾讯科技\n- 负责机器学习平台架构设计\n- 主导了千万级用户推荐系统项目\n- 团队规模：15人\n\n2018-2020 机器学习工程师 - 字节跳动\n- 开发了智能推荐算法\n- 优化了模型训练效率30%\n- 参与过多个AI产品开发', 'education': '2016-2018 清华大学 计算机科学与技术 硕士\n2012-2016 北京大学 计算机科学与技术 学士', 'skills': ['Python', 'Java', 'C++', 'TensorFlow', 'PyTorch', 'Scikit-learn', '机器学习', '深度学习', '自然语言处理', 'Docker', 'Kubernetes', 'AWS'], 'achievements': ['发表3篇SCI论文', '获得2项发明专利', '主导过千万级AI项目', '获得公司年度最佳员工奖'], 'projects': ['智能推荐系统：基于深度学习的个性化推荐', '机器学习平台：支持多租户的MLOps平台', '自然语言处理：多语言文本分类系统'], 'languages': ['中文：母语', '英语：流利（CET-6）', '日语：基础'], 'certifications': ['AWS机器学习专业认证', 'Google Cloud AI认证', '华为云AI工程师认证'], 'summary': '高级AI工程师，拥有丰富的机器学习与深度学习平台架构设计经验，主导过千万级用户推荐系统项目，具备团队管理与跨领域AI产品开发能力。'}
+2025-10-21 16:15:33,420 INFO resume_processor.py:487 创建个人知识库目录: personal_kb
+2025-10-21 16:15:33,421 INFO resume_processor.py:489 个人知识库目录创建成功
+2025-10-21 16:15:33,421 INFO resume_processor.py:499 初始化个人信息结构
+2025-10-21 16:15:33,421 INFO resume_processor.py:503 开始根据提取的信息创建知识条目
+2025-10-21 16:15:33,421 INFO resume_processor.py:515 创建工作经验知识条目: 张三_exp_1
+2025-10-21 16:15:33,421 INFO resume_processor.py:527 创建教育背景知识条目: 张三_edu_1
+2025-10-21 16:15:33,422 INFO resume_processor.py:530 创建技能知识条目，技能数量: 12
+2025-10-21 16:15:33,422 INFO resume_processor.py:541 创建技能知识条目 1: 张三_skill_1 - Python
+2025-10-21 16:15:33,422 INFO resume_processor.py:541 创建技能知识条目 2: 张三_skill_2 - Java
+2025-10-21 16:15:33,422 INFO resume_processor.py:541 创建技能知识条目 3: 张三_skill_3 - C++
+2025-10-21 16:15:33,422 INFO resume_processor.py:541 创建技能知识条目 4: 张三_skill_4 - TensorFlow
+2025-10-21 16:15:33,422 INFO resume_processor.py:541 创建技能知识条目 5: 张三_skill_5 - PyTorch
+2025-10-21 16:15:33,422 INFO resume_processor.py:541 创建技能知识条目 6: 张三_skill_6 - Scikit-learn
+2025-10-21 16:15:33,422 INFO resume_processor.py:541 创建技能知识条目 7: 张三_skill_7 - 机器学习
+2025-10-21 16:15:33,422 INFO resume_processor.py:541 创建技能知识条目 8: 张三_skill_8 - 深度学习
+2025-10-21 16:15:33,423 INFO resume_processor.py:541 创建技能知识条目 9: 张三_skill_9 - 自然语言处理
+2025-10-21 16:15:33,423 INFO resume_processor.py:541 创建技能知识条目 10: 张三_skill_10 - Docker
+2025-10-21 16:15:33,423 INFO resume_processor.py:541 创建技能知识条目 11: 张三_skill_11 - Kubernetes
+2025-10-21 16:15:33,423 INFO resume_processor.py:541 创建技能知识条目 12: 张三_skill_12 - AWS
+2025-10-21 16:15:33,423 INFO resume_processor.py:544 创建成就知识条目，成就数量: 4
+2025-10-21 16:15:33,423 INFO resume_processor.py:555 创建成就知识条目 1: 张三_ach_1 - 发表3篇SCI论文
+2025-10-21 16:15:33,423 INFO resume_processor.py:555 创建成就知识条目 2: 张三_ach_2 - 获得2项发明专利
+2025-10-21 16:15:33,423 INFO resume_processor.py:555 创建成就知识条目 3: 张三_ach_3 - 主导过千万级AI项目
+2025-10-21 16:15:33,423 INFO resume_processor.py:555 创建成就知识条目 4: 张三_ach_4 - 获得公司年度最佳员工奖
+2025-10-21 16:15:33,423 INFO resume_processor.py:558 知识条目创建完成，总计 18 个条目
+2025-10-21 16:15:33,423 INFO resume_processor.py:562 保存个人知识库到文件: personal_kb/personal_info.json
+2025-10-21 16:15:33,424 INFO resume_processor.py:565 个人知识库文件保存成功
+2025-10-21 16:15:33,424 INFO resume_processor.py:567 为 张三 创建了个人知识库，包含 18 个知识条目
+2025-10-21 16:15:33,424 INFO test_resume_processor.py:316 ✅ 个人知识库创建成功: personal_kb
+2025-10-21 16:15:33,425 INFO test_resume_processor.py:331 ✅ 个人知识库包含 18 个知识条目
+2025-10-21 16:15:33,425 INFO test_resume_processor.py:332 ✅ 知识库创建测试通过
+2025-10-21 16:15:33,425 INFO test_resume_processor.py:458 ✅ 知识库创建 - 通过
+2025-10-21 16:15:33,425 INFO test_resume_processor.py:451 
+==================================================
+2025-10-21 16:15:33,425 INFO test_resume_processor.py:452 🧪 运行测试: 主知识库更新
+2025-10-21 16:15:33,425 INFO test_resume_processor.py:453 ==================================================
+2025-10-21 16:15:33,425 INFO test_resume_processor.py:341 🧪 测试主知识库更新...
+2025-10-21 16:15:33,425 INFO resume_processor.py:325 开始AI信息提取，输入内容长度: 590 字符
+2025-10-21 16:15:33,435 INFO resume_processor.py:334 调用LLM提供商: AZURE
+2025-10-21 16:15:37,345 INFO _client.py:1025 HTTP Request: POST https://ennew-openai-east-us-2.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview "HTTP/1.1 200 OK"
+2025-10-21 16:15:37,565 INFO resume_processor.py:380 LLM返回文本长度: 948; 预览: {
+  "name": "张三",
+  "email": "zhangsan@example.com",
+  "phone": "+86 138 0000 0000",
+  "experience": "2020-2025 高级AI工程师 - 腾讯科技：负责机器学习平台架构设计，主导了千万级用户推荐系统项目，团队规模15人。2018-2020 机器学习工程师 - 字节跳动：开发了智能推荐算法，优化...
+2025-10-21 16:15:37,565 INFO resume_processor.py:397 LLM信息提取成功
+2025-10-21 16:15:37,565 INFO resume_processor.py:481 开始为 张三 创建个人知识库
+2025-10-21 16:15:37,566 INFO resume_processor.py:482 提取的信息: {'name': '张三', 'email': 'zhangsan@example.com', 'phone': '+86 138 0000 0000', 'experience': '2020-2025 高级AI工程师 - 腾讯科技：负责机器学习平台架构设计，主导了千万级用户推荐系统项目，团队规模15人。2018-2020 机器学习工程师 - 字节跳动：开发了智能推荐算法，优化了模型训练效率30%，参与过多个AI产品开发。', 'education': '2016-2018 清华大学 计算机科学与技术 硕士。2012-2016 北京大学 计算机科学与技术 学士。', 'skills': ['Python', 'Java', 'C++', 'TensorFlow', 'PyTorch', 'Scikit-learn', '机器学习', '深度学习', '自然语言处理', 'Docker', 'Kubernetes', 'AWS'], 'achievements': ['发表3篇SCI论文', '获得2项发明专利', '主导过千万级AI项目', '获得公司年度最佳员工奖'], 'projects': ['智能推荐系统：基于深度学习的个性化推荐', '机器学习平台：支持多租户的MLOps平台', '自然语言处理：多语言文本分类系统'], 'languages': ['中文：母语', '英语：流利（CET-6）', '日语：基础'], 'certifications': ['AWS机器学习专业认证', 'Google Cloud AI认证', '华为云AI工程师认证'], 'summary': '高级AI工程师，拥有丰富的机器学习与深度学习平台架构设计经验，主导过千万级用户推荐系统项目，具备团队管理与跨领域AI产品开发能力。毕业于清华大学和北京大学，发表多篇论文并获得多项专利及认证。'}
+2025-10-21 16:15:37,566 INFO resume_processor.py:487 创建个人知识库目录: personal_kb
+2025-10-21 16:15:37,566 INFO resume_processor.py:489 个人知识库目录创建成功
+2025-10-21 16:15:37,566 INFO resume_processor.py:499 初始化个人信息结构
+2025-10-21 16:15:37,566 INFO resume_processor.py:503 开始根据提取的信息创建知识条目
+2025-10-21 16:15:37,566 INFO resume_processor.py:515 创建工作经验知识条目: 张三_exp_1
+2025-10-21 16:15:37,566 INFO resume_processor.py:527 创建教育背景知识条目: 张三_edu_1
+2025-10-21 16:15:37,567 INFO resume_processor.py:530 创建技能知识条目，技能数量: 12
+2025-10-21 16:15:37,567 INFO resume_processor.py:541 创建技能知识条目 1: 张三_skill_1 - Python
+2025-10-21 16:15:37,567 INFO resume_processor.py:541 创建技能知识条目 2: 张三_skill_2 - Java
+2025-10-21 16:15:37,567 INFO resume_processor.py:541 创建技能知识条目 3: 张三_skill_3 - C++
+2025-10-21 16:15:37,567 INFO resume_processor.py:541 创建技能知识条目 4: 张三_skill_4 - TensorFlow
+2025-10-21 16:15:37,567 INFO resume_processor.py:541 创建技能知识条目 5: 张三_skill_5 - PyTorch
+2025-10-21 16:15:37,567 INFO resume_processor.py:541 创建技能知识条目 6: 张三_skill_6 - Scikit-learn
+2025-10-21 16:15:37,567 INFO resume_processor.py:541 创建技能知识条目 7: 张三_skill_7 - 机器学习
+2025-10-21 16:15:37,567 INFO resume_processor.py:541 创建技能知识条目 8: 张三_skill_8 - 深度学习
+2025-10-21 16:15:37,567 INFO resume_processor.py:541 创建技能知识条目 9: 张三_skill_9 - 自然语言处理
+2025-10-21 16:15:37,567 INFO resume_processor.py:541 创建技能知识条目 10: 张三_skill_10 - Docker
+2025-10-21 16:15:37,567 INFO resume_processor.py:541 创建技能知识条目 11: 张三_skill_11 - Kubernetes
+2025-10-21 16:15:37,567 INFO resume_processor.py:541 创建技能知识条目 12: 张三_skill_12 - AWS
+2025-10-21 16:15:37,567 INFO resume_processor.py:544 创建成就知识条目，成就数量: 4
+2025-10-21 16:15:37,567 INFO resume_processor.py:555 创建成就知识条目 1: 张三_ach_1 - 发表3篇SCI论文
+2025-10-21 16:15:37,567 INFO resume_processor.py:555 创建成就知识条目 2: 张三_ach_2 - 获得2项发明专利
+2025-10-21 16:15:37,567 INFO resume_processor.py:555 创建成就知识条目 3: 张三_ach_3 - 主导过千万级AI项目
+2025-10-21 16:15:37,567 INFO resume_processor.py:555 创建成就知识条目 4: 张三_ach_4 - 获得公司年度最佳员工奖
+2025-10-21 16:15:37,567 INFO resume_processor.py:558 知识条目创建完成，总计 18 个条目
+2025-10-21 16:15:37,567 INFO resume_processor.py:562 保存个人知识库到文件: personal_kb/personal_info.json
+2025-10-21 16:15:37,568 INFO resume_processor.py:565 个人知识库文件保存成功
+2025-10-21 16:15:37,568 INFO resume_processor.py:567 为 张三 创建了个人知识库，包含 18 个知识条目
+2025-10-21 16:15:37,568 INFO resume_processor.py:576 开始更新主知识库，个人知识库路径: personal_kb, 姓名: 张三
+2025-10-21 16:15:37,568 INFO resume_processor.py:581 读取个人知识库文件: personal_kb/personal_info.json
+2025-10-21 16:15:37,568 INFO resume_processor.py:589 个人知识库文件读取成功，包含 18 个知识条目
+2025-10-21 16:15:37,568 INFO resume_processor.py:593 读取主知识库文件: data/playbook.json
+2025-10-21 16:15:37,569 INFO resume_processor.py:598 主知识库文件读取成功，当前包含 11 个条目
+2025-10-21 16:15:37,569 INFO resume_processor.py:614 开始添加 18 个个人知识条目到主知识库
+2025-10-21 16:15:37,569 INFO resume_processor.py:617 处理知识条目 1/18: 张三_exp_1
+2025-10-21 16:15:37,570 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_exp_1
+2025-10-21 16:15:37,570 INFO resume_processor.py:634 添加bullet到主知识库: 张三_exp_1
+2025-10-21 16:15:37,570 INFO resume_processor.py:643 添加bullet到section 工作经验: 张三_exp_1
+2025-10-21 16:15:37,570 INFO resume_processor.py:617 处理知识条目 2/18: 张三_edu_1
+2025-10-21 16:15:37,570 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_edu_1
+2025-10-21 16:15:37,570 INFO resume_processor.py:634 添加bullet到主知识库: 张三_edu_1
+2025-10-21 16:15:37,570 INFO resume_processor.py:643 添加bullet到section 教育背景: 张三_edu_1
+2025-10-21 16:15:37,570 INFO resume_processor.py:617 处理知识条目 3/18: 张三_skill_1
+2025-10-21 16:15:37,570 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_skill_1
+2025-10-21 16:15:37,570 INFO resume_processor.py:634 添加bullet到主知识库: 张三_skill_1
+2025-10-21 16:15:37,570 INFO resume_processor.py:643 添加bullet到section 技能专长: 张三_skill_1
+2025-10-21 16:15:37,571 INFO resume_processor.py:617 处理知识条目 4/18: 张三_skill_2
+2025-10-21 16:15:37,571 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_skill_2
+2025-10-21 16:15:37,571 INFO resume_processor.py:634 添加bullet到主知识库: 张三_skill_2
+2025-10-21 16:15:37,571 INFO resume_processor.py:643 添加bullet到section 技能专长: 张三_skill_2
+2025-10-21 16:15:37,571 INFO resume_processor.py:617 处理知识条目 5/18: 张三_skill_3
+2025-10-21 16:15:37,571 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_skill_3
+2025-10-21 16:15:37,571 INFO resume_processor.py:634 添加bullet到主知识库: 张三_skill_3
+2025-10-21 16:15:37,571 INFO resume_processor.py:643 添加bullet到section 技能专长: 张三_skill_3
+2025-10-21 16:15:37,571 INFO resume_processor.py:617 处理知识条目 6/18: 张三_skill_4
+2025-10-21 16:15:37,572 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_skill_4
+2025-10-21 16:15:37,572 INFO resume_processor.py:634 添加bullet到主知识库: 张三_skill_4
+2025-10-21 16:15:37,572 INFO resume_processor.py:643 添加bullet到section 技能专长: 张三_skill_4
+2025-10-21 16:15:37,572 INFO resume_processor.py:617 处理知识条目 7/18: 张三_skill_5
+2025-10-21 16:15:37,572 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_skill_5
+2025-10-21 16:15:37,572 INFO resume_processor.py:634 添加bullet到主知识库: 张三_skill_5
+2025-10-21 16:15:37,572 INFO resume_processor.py:643 添加bullet到section 技能专长: 张三_skill_5
+2025-10-21 16:15:37,572 INFO resume_processor.py:617 处理知识条目 8/18: 张三_skill_6
+2025-10-21 16:15:37,574 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_skill_6
+2025-10-21 16:15:37,574 INFO resume_processor.py:634 添加bullet到主知识库: 张三_skill_6
+2025-10-21 16:15:37,574 INFO resume_processor.py:643 添加bullet到section 技能专长: 张三_skill_6
+2025-10-21 16:15:37,574 INFO resume_processor.py:617 处理知识条目 9/18: 张三_skill_7
+2025-10-21 16:15:37,575 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_skill_7
+2025-10-21 16:15:37,575 INFO resume_processor.py:634 添加bullet到主知识库: 张三_skill_7
+2025-10-21 16:15:37,575 INFO resume_processor.py:643 添加bullet到section 技能专长: 张三_skill_7
+2025-10-21 16:15:37,575 INFO resume_processor.py:617 处理知识条目 10/18: 张三_skill_8
+2025-10-21 16:15:37,576 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_skill_8
+2025-10-21 16:15:37,576 INFO resume_processor.py:634 添加bullet到主知识库: 张三_skill_8
+2025-10-21 16:15:37,576 INFO resume_processor.py:643 添加bullet到section 技能专长: 张三_skill_8
+2025-10-21 16:15:37,576 INFO resume_processor.py:617 处理知识条目 11/18: 张三_skill_9
+2025-10-21 16:15:37,577 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_skill_9
+2025-10-21 16:15:37,577 INFO resume_processor.py:634 添加bullet到主知识库: 张三_skill_9
+2025-10-21 16:15:37,577 INFO resume_processor.py:643 添加bullet到section 技能专长: 张三_skill_9
+2025-10-21 16:15:37,577 INFO resume_processor.py:617 处理知识条目 12/18: 张三_skill_10
+2025-10-21 16:15:37,577 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_skill_10
+2025-10-21 16:15:37,577 INFO resume_processor.py:634 添加bullet到主知识库: 张三_skill_10
+2025-10-21 16:15:37,577 INFO resume_processor.py:643 添加bullet到section 技能专长: 张三_skill_10
+2025-10-21 16:15:37,577 INFO resume_processor.py:617 处理知识条目 13/18: 张三_skill_11
+2025-10-21 16:15:37,577 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_skill_11
+2025-10-21 16:15:37,577 INFO resume_processor.py:634 添加bullet到主知识库: 张三_skill_11
+2025-10-21 16:15:37,577 INFO resume_processor.py:643 添加bullet到section 技能专长: 张三_skill_11
+2025-10-21 16:15:37,577 INFO resume_processor.py:617 处理知识条目 14/18: 张三_skill_12
+2025-10-21 16:15:37,577 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_skill_12
+2025-10-21 16:15:37,577 INFO resume_processor.py:634 添加bullet到主知识库: 张三_skill_12
+2025-10-21 16:15:37,577 INFO resume_processor.py:643 添加bullet到section 技能专长: 张三_skill_12
+2025-10-21 16:15:37,577 INFO resume_processor.py:617 处理知识条目 15/18: 张三_ach_1
+2025-10-21 16:15:37,577 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_ach_1
+2025-10-21 16:15:37,578 INFO resume_processor.py:634 添加bullet到主知识库: 张三_ach_1
+2025-10-21 16:15:37,578 INFO resume_processor.py:640 创建新的section: 成就荣誉
+2025-10-21 16:15:37,578 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 张三_ach_1
+2025-10-21 16:15:37,578 INFO resume_processor.py:617 处理知识条目 16/18: 张三_ach_2
+2025-10-21 16:15:37,578 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_ach_2
+2025-10-21 16:15:37,578 INFO resume_processor.py:634 添加bullet到主知识库: 张三_ach_2
+2025-10-21 16:15:37,578 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 张三_ach_2
+2025-10-21 16:15:37,578 INFO resume_processor.py:617 处理知识条目 17/18: 张三_ach_3
+2025-10-21 16:15:37,578 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_ach_3
+2025-10-21 16:15:37,578 INFO resume_processor.py:634 添加bullet到主知识库: 张三_ach_3
+2025-10-21 16:15:37,579 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 张三_ach_3
+2025-10-21 16:15:37,579 INFO resume_processor.py:617 处理知识条目 18/18: 张三_ach_4
+2025-10-21 16:15:37,579 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 张三_ach_4
+2025-10-21 16:15:37,580 INFO resume_processor.py:634 添加bullet到主知识库: 张三_ach_4
+2025-10-21 16:15:37,580 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 张三_ach_4
+2025-10-21 16:15:37,580 INFO resume_processor.py:645 所有个人知识条目已添加到主知识库
+2025-10-21 16:15:37,580 INFO resume_processor.py:646 更新后的主知识库包含 29 个条目
+2025-10-21 16:15:37,581 INFO resume_processor.py:647 更新后的sections: ['defaults', 'guidelines', 'test', 'application_guide', '技能专长', '工作经验', '教育背景', '成就荣誉']
+2025-10-21 16:15:37,581 INFO resume_processor.py:650 保存更新后的主知识库到文件: data/playbook.json
+2025-10-21 16:15:37,582 INFO resume_processor.py:653 主知识库文件保存成功
+2025-10-21 16:15:37,582 INFO resume_processor.py:655 已将 张三 的个人知识库更新到主知识库
+2025-10-21 16:15:37,582 INFO test_resume_processor.py:369 ✅ 主知识库更新成功
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:378 ✅ 主知识库包含 29 个条目
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:382 ✅ 主知识库更新测试通过
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:458 ✅ 主知识库更新 - 通过
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:451 
+==================================================
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:452 🧪 运行测试: 安全预览功能
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:453 ==================================================
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:391 🧪 测试安全预览功能...
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:422 ✅ 安全预览功能测试通过
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:458 ✅ 安全预览功能 - 通过
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:466 
+==================================================
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:467 📊 测试结果汇总
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:468 ==================================================
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:469 总测试数: 7
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:470 通过数: 7
+2025-10-21 16:15:37,583 INFO test_resume_processor.py:471 失败数: 0
+2025-10-21 16:15:37,585 INFO test_resume_processor.py:472 通过率: 100.0%
+2025-10-21 16:15:37,586 INFO test_resume_processor.py:475 🎉 所有测试通过！
+2025-10-21 16:15:55,855 INFO test_resume_processor.py:483 🧹 清理测试数据...
+2025-10-21 16:15:55,856 INFO test_resume_processor.py:490 ✅ 测试文件清理完成
+2025-10-21 16:15:55,857 INFO test_resume_processor.py:516 ✅ 主知识库清理完成
+2025-10-21 16:20:14,978 INFO test_resume_processor.py:542 🔍 检查运行环境...
+2025-10-21 16:20:14,978 INFO test_resume_processor.py:548 ✅ 确保目录存在: data
+2025-10-21 16:20:14,978 INFO test_resume_processor.py:548 ✅ 确保目录存在: personal_kb
+2025-10-21 16:20:14,979 INFO test_resume_processor.py:446 🚀 开始运行简历处理器测试套件...
+2025-10-21 16:20:14,979 INFO test_resume_processor.py:98 📁 准备测试文件...
+2025-10-21 16:20:14,979 INFO test_resume_processor.py:103 ✅ 找到真实简历文件: resumes/20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 16:20:14,979 INFO test_resume_processor.py:466 
+==================================================
+2025-10-21 16:20:14,979 INFO test_resume_processor.py:467 🧪 运行测试: 文本提取功能
+2025-10-21 16:20:14,979 INFO test_resume_processor.py:468 ==================================================
+2025-10-21 16:20:14,979 INFO test_resume_processor.py:194 🧪 测试文本提取功能...
+2025-10-21 16:20:14,979 INFO resume_processor.py:202 开始提取文件文本内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 16:20:14,979 INFO resume_processor.py:211 文件大小: 71640 bytes
+2025-10-21 16:20:14,979 INFO resume_processor.py:225 检测到DOCX文件，使用python-docx解析
+2025-10-21 16:20:14,996 INFO resume_processor.py:139 DOCX解析完成，段落数: 76，字符数: 4861
+2025-10-21 16:20:14,997 INFO resume_processor.py:193 已保存Markdown内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.md
+2025-10-21 16:20:14,997 INFO test_resume_processor.py:202 ✅ 详细简历文本提取成功，长度: 4861 字符
+2025-10-21 16:20:14,997 INFO resume_processor.py:202 开始提取文件文本内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 16:20:14,997 INFO resume_processor.py:211 文件大小: 71640 bytes
+2025-10-21 16:20:14,997 INFO resume_processor.py:225 检测到DOCX文件，使用python-docx解析
+2025-10-21 16:20:15,015 INFO resume_processor.py:139 DOCX解析完成，段落数: 76，字符数: 4861
+2025-10-21 16:20:15,015 INFO resume_processor.py:193 已保存Markdown内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.md
+2025-10-21 16:20:15,015 INFO test_resume_processor.py:209 ✅ 简化简历文本提取成功，长度: 4861 字符
+2025-10-21 16:20:15,015 ERROR test_resume_processor.py:213 ❌ 详细简历内容验证失败
+2025-10-21 16:20:15,015 ERROR test_resume_processor.py:476 ❌ 文本提取功能 - 失败
+2025-10-21 16:20:15,015 INFO test_resume_processor.py:466 
+==================================================
+2025-10-21 16:20:15,015 INFO test_resume_processor.py:467 🧪 运行测试: 本地规则信息提取
+2025-10-21 16:20:15,015 INFO test_resume_processor.py:468 ==================================================
+2025-10-21 16:20:15,015 INFO test_resume_processor.py:229 🧪 测试本地规则信息提取...
+2025-10-21 16:20:15,016 ERROR test_resume_processor.py:256 ❌ 本地规则信息提取测试失败: 'utf-8' codec can't decode byte 0xec in position 14: invalid continuation byte
+2025-10-21 16:20:15,016 ERROR test_resume_processor.py:476 ❌ 本地规则信息提取 - 失败
+2025-10-21 16:20:15,016 INFO test_resume_processor.py:466 
+==================================================
+2025-10-21 16:20:15,016 INFO test_resume_processor.py:467 🧪 运行测试: LLM客户端配置
+2025-10-21 16:20:15,016 INFO test_resume_processor.py:468 ==================================================
+2025-10-21 16:20:15,016 INFO test_resume_processor.py:261 🧪 测试LLM客户端配置...
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:269 ✅ LLM客户端创建成功: OpenAI
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:473 ✅ LLM客户端配置 - 通过
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:466 
+==================================================
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:467 🧪 运行测试: AI信息提取
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:468 ==================================================
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:278 🧪 测试AI信息提取...
+2025-10-21 16:20:15,132 ERROR test_resume_processor.py:305 ❌ AI信息提取测试失败: 'utf-8' codec can't decode byte 0xec in position 14: invalid continuation byte
+2025-10-21 16:20:15,132 ERROR test_resume_processor.py:476 ❌ AI信息提取 - 失败
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:466 
+==================================================
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:467 🧪 运行测试: 知识库创建
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:468 ==================================================
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:310 🧪 测试知识库创建...
+2025-10-21 16:20:15,132 ERROR test_resume_processor.py:351 ❌ 知识库创建测试失败: 'utf-8' codec can't decode byte 0xec in position 14: invalid continuation byte
+2025-10-21 16:20:15,132 ERROR test_resume_processor.py:476 ❌ 知识库创建 - 失败
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:466 
+==================================================
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:467 🧪 运行测试: 主知识库更新
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:468 ==================================================
+2025-10-21 16:20:15,132 INFO test_resume_processor.py:356 🧪 测试主知识库更新...
+2025-10-21 16:20:15,133 ERROR test_resume_processor.py:401 ❌ 主知识库更新测试失败: 'utf-8' codec can't decode byte 0xec in position 14: invalid continuation byte
+2025-10-21 16:20:15,133 ERROR test_resume_processor.py:476 ❌ 主知识库更新 - 失败
+2025-10-21 16:20:15,133 INFO test_resume_processor.py:466 
+==================================================
+2025-10-21 16:20:15,133 INFO test_resume_processor.py:467 🧪 运行测试: 安全预览功能
+2025-10-21 16:20:15,133 INFO test_resume_processor.py:468 ==================================================
+2025-10-21 16:20:15,133 INFO test_resume_processor.py:406 🧪 测试安全预览功能...
+2025-10-21 16:20:15,134 INFO test_resume_processor.py:437 ✅ 安全预览功能测试通过
+2025-10-21 16:20:15,134 INFO test_resume_processor.py:473 ✅ 安全预览功能 - 通过
+2025-10-21 16:20:15,134 INFO test_resume_processor.py:481 
+==================================================
+2025-10-21 16:20:15,134 INFO test_resume_processor.py:482 📊 测试结果汇总
+2025-10-21 16:20:15,135 INFO test_resume_processor.py:483 ==================================================
+2025-10-21 16:20:15,135 INFO test_resume_processor.py:484 总测试数: 7
+2025-10-21 16:20:15,135 INFO test_resume_processor.py:485 通过数: 2
+2025-10-21 16:20:15,135 INFO test_resume_processor.py:486 失败数: 5
+2025-10-21 16:20:15,135 INFO test_resume_processor.py:487 通过率: 28.6%
+2025-10-21 16:20:15,135 WARNING test_resume_processor.py:492 ⚠️  有 5 个测试失败
+2025-10-21 16:20:18,637 INFO test_resume_processor.py:498 🧹 清理测试数据...
+2025-10-21 16:20:18,638 INFO test_resume_processor.py:505 ✅ 测试文件清理完成
+2025-10-21 16:20:18,641 INFO test_resume_processor.py:531 ✅ 主知识库清理完成
+2025-10-21 16:21:07,644 INFO test_resume_processor.py:562 🔍 检查运行环境...
+2025-10-21 16:21:07,644 INFO test_resume_processor.py:568 ✅ 确保目录存在: data
+2025-10-21 16:21:07,644 INFO test_resume_processor.py:568 ✅ 确保目录存在: personal_kb
+2025-10-21 16:21:07,644 INFO test_resume_processor.py:466 🚀 开始运行简历处理器测试套件...
+2025-10-21 16:21:07,644 INFO test_resume_processor.py:120 📁 准备测试文件...
+2025-10-21 16:21:07,644 INFO test_resume_processor.py:125 ✅ 找到真实简历文件: resumes/20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 16:21:07,644 INFO test_resume_processor.py:486 
+==================================================
+2025-10-21 16:21:07,644 INFO test_resume_processor.py:487 🧪 运行测试: 文本提取功能
+2025-10-21 16:21:07,644 INFO test_resume_processor.py:488 ==================================================
+2025-10-21 16:21:07,644 INFO test_resume_processor.py:216 🧪 测试文本提取功能...
+2025-10-21 16:21:07,644 INFO resume_processor.py:202 开始提取文件文本内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 16:21:07,644 INFO resume_processor.py:211 文件大小: 71640 bytes
+2025-10-21 16:21:07,644 INFO resume_processor.py:225 检测到DOCX文件，使用python-docx解析
+2025-10-21 16:21:07,661 INFO resume_processor.py:139 DOCX解析完成，段落数: 76，字符数: 4861
+2025-10-21 16:21:07,662 INFO resume_processor.py:193 已保存Markdown内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.md
+2025-10-21 16:21:07,662 INFO test_resume_processor.py:224 ✅ 详细简历文本提取成功，长度: 4861 字符
+2025-10-21 16:21:07,663 INFO resume_processor.py:202 开始提取文件文本内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 16:21:07,663 INFO resume_processor.py:211 文件大小: 71640 bytes
+2025-10-21 16:21:07,663 INFO resume_processor.py:225 检测到DOCX文件，使用python-docx解析
+2025-10-21 16:21:07,680 INFO resume_processor.py:139 DOCX解析完成，段落数: 76，字符数: 4861
+2025-10-21 16:21:07,680 INFO resume_processor.py:193 已保存Markdown内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.md
+2025-10-21 16:21:07,680 INFO test_resume_processor.py:231 ✅ 简化简历文本提取成功，长度: 4861 字符
+2025-10-21 16:21:07,681 INFO test_resume_processor.py:235 ✅ 详细简历内容验证通过（包含姓名信息）
+2025-10-21 16:21:07,681 INFO test_resume_processor.py:240 ✅ 简化简历内容验证通过（包含姓名信息）
+2025-10-21 16:21:07,681 INFO test_resume_processor.py:244 ✅ 文本提取功能测试通过
+2025-10-21 16:21:07,681 INFO test_resume_processor.py:493 ✅ 文本提取功能 - 通过
+2025-10-21 16:21:07,681 INFO test_resume_processor.py:486 
+==================================================
+2025-10-21 16:21:07,681 INFO test_resume_processor.py:487 🧪 运行测试: 本地规则信息提取
+2025-10-21 16:21:07,681 INFO test_resume_processor.py:488 ==================================================
+2025-10-21 16:21:07,681 INFO test_resume_processor.py:253 🧪 测试本地规则信息提取...
+2025-10-21 16:21:07,681 INFO resume_processor.py:202 开始提取文件文本内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 16:21:07,681 INFO resume_processor.py:211 文件大小: 71640 bytes
+2025-10-21 16:21:07,681 INFO resume_processor.py:225 检测到DOCX文件，使用python-docx解析
+2025-10-21 16:21:07,697 INFO resume_processor.py:139 DOCX解析完成，段落数: 76，字符数: 4861
+2025-10-21 16:21:07,698 INFO resume_processor.py:193 已保存Markdown内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.md
+2025-10-21 16:21:07,698 INFO resume_processor.py:406 执行本地规则信息提取
+2025-10-21 16:21:07,698 INFO resume_processor.py:409 回退规则：将内容分割为 76 行进行处理
+2025-10-21 16:21:07,698 INFO resume_processor.py:473 本地规则信息提取完成
+2025-10-21 16:21:07,699 INFO test_resume_processor.py:266 ✅ 本地规则提取成功: {'name': '个人简历', 'email': '手  机： （0）18217361837     微信号：zhuenqing824    电子邮件：zhu04303661@163.com', 'phone': '2009 \t\t发表《》---EI收录', 'experience': '2021.03~至今 【新奥集团】负责大型能源集团的智能化技术，带领大模型研发团队，担任AI智能资深技术专家/智能大模型工程资深架构师/智能群资深技术总监 2015.8~2021.3【携程】负责携程移动端千人团队的研发效能，支撑移动端亿级流程服务入口，负责无线MCD云平台与无线服务端开发，算法技术专家/高级经理 2014.3~2015.1【爱立信】负责爱立信中国核心通讯技术研发，担任资源算法工程师、云计算工程师1年 2011.4~2014.3【阿尔卡特朗讯贝尔实验室】负责4G核心物理层算法仿真系统研发，担任算法工程师/仿真系统研发经理3年；前往美国贝尔实验室，联合研发物理层仿真系统。 英特尔---Linux操作系统研发实习生10个月 经历简介                                                             擅长 擅长在能源产业、安全生产等场景中开发高价值智能模型，擅长企业智能体Agent技术、大模型训练打造技术、智能模型研发平台，对于大模型应用有深入研究 互联网的各种基础设施的构建，包括云计算，移动互联网的基础服务，以及各种研发工具链。 技术发展路线 研究生时期主攻嵌入式方向，对工业控制方面有一定了解。 工作前三年从事通讯行业，主攻4G物理层通讯算法仿真。 工作第四年转型做云计算方面，加入携程，从事移动互联网云计算相关的研发 在产业互联网行业从事AI技术研发工作，对于CV/NLP以及物联机理算法有深入研究，并研发了一套感知认知与持续迭代技术，大幅提升智能的准确度和研发效率。 对于GPT大模型技术有深入研究，并成功为新奥打造了产业大模型，使用行业数据训练GPT大模型，建设大模型研发平台，持续提升产业大模型能力。 加入新奥、携程从事基础设施建设以及企业智能化架构工作', 'education': '2008.9-2011.4\t    南京理工大学  测控技术与仪器   硕士学位 2004.9-2008.6\t    南京理工大学  测控技术与仪器   学士学位\t 专业与方向： 人工智能，大模型技术，智能体，产业智能，物联智能，持续迭代，软件系统，通讯系统，嵌入式系统的开发，Linux系统技术应用 工作经验（12年）： 2021.03~至今 【新奥集团】负责大型能源集团的智能化技术，带领大模型研发团队，担任AI智能资深技术专家/智能大模型工程资深架构师/智能群资深技术总监 2015.8~2021.3【携程】负责携程移动端千人团队的研发效能，支撑移动端亿级流程服务入口，负责无线MCD云平台与无线服务端开发，算法技术专家/高级经理 2014.3~2015.1【爱立信】负责爱立信中国核心通讯技术研发，担任资源算法工程师、云计算工程师1年 2011.4~2014.3【阿尔卡特朗讯贝尔实验室】负责4G核心物理层算法仿真系统研发，担任算法工程师/仿真系统研发经理3年；前往美国贝尔实验室，联合研发物理层仿真系统。 英特尔---Linux操作系统研发实习生10个月 经历简介                                                             擅长 擅长在能源产业、安全生产等场景中开发高价值智能模型，擅长企业智能体Agent技术、大模型训练打造技术、智能模型研发平台，对于大模型应用有深入研究 互联网的各种基础设施的构建，包括云计算，移动互联网的基础服务，以及各种研发工具链。 技术发展路线 研究生时期主攻嵌入式方向，对工业控制方面有一定了解。 工作前三年从事通讯行业，主攻4G物理层通讯算法仿真。 工作第四年转型做云计算方面，加入携程，从事移动互联网云计算相关的研发 在产业互联网行业从事AI技术研发工作，对于CV/NLP以及物联机理算法有深入研究，并研发了一套感知认知与持续迭代技术，大幅提升智能的准确度和研发效率。 对于GPT大模型技术有深入研究，并成功为新奥打造了产业大模型，使用行业数据训练GPT大模型，建设大模型研发平台，持续提升产业大模型能力。 加入新奥、携程从事基础设施建设以及企业智能化架构工作', 'skills': ['点全面，由全栈工程师逐步成长为移动领域持续交付专家，企业架构师，智能产品架构师，智能算法专家。'], 'achievements': [], 'projects': [], 'languages': [], 'certifications': [], 'summary': ''}
+2025-10-21 16:21:07,699 INFO test_resume_processor.py:275 ✅ 本地规则信息提取测试通过
+2025-10-21 16:21:07,699 INFO test_resume_processor.py:493 ✅ 本地规则信息提取 - 通过
+2025-10-21 16:21:07,699 INFO test_resume_processor.py:486 
+==================================================
+2025-10-21 16:21:07,699 INFO test_resume_processor.py:487 🧪 运行测试: LLM客户端配置
+2025-10-21 16:21:07,699 INFO test_resume_processor.py:488 ==================================================
+2025-10-21 16:21:07,699 INFO test_resume_processor.py:284 🧪 测试LLM客户端配置...
+2025-10-21 16:21:07,805 INFO test_resume_processor.py:292 ✅ LLM客户端创建成功: OpenAI
+2025-10-21 16:21:07,805 INFO test_resume_processor.py:493 ✅ LLM客户端配置 - 通过
+2025-10-21 16:21:07,805 INFO test_resume_processor.py:486 
+==================================================
+2025-10-21 16:21:07,805 INFO test_resume_processor.py:487 🧪 运行测试: AI信息提取
+2025-10-21 16:21:07,805 INFO test_resume_processor.py:488 ==================================================
+2025-10-21 16:21:07,805 INFO test_resume_processor.py:301 🧪 测试AI信息提取...
+2025-10-21 16:21:07,806 INFO resume_processor.py:202 开始提取文件文本内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 16:21:07,806 INFO resume_processor.py:211 文件大小: 71640 bytes
+2025-10-21 16:21:07,806 INFO resume_processor.py:225 检测到DOCX文件，使用python-docx解析
+2025-10-21 16:21:07,821 INFO resume_processor.py:139 DOCX解析完成，段落数: 76，字符数: 4861
+2025-10-21 16:21:07,822 INFO resume_processor.py:193 已保存Markdown内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.md
+2025-10-21 16:21:07,822 INFO resume_processor.py:325 开始AI信息提取，输入内容长度: 4861 字符
+2025-10-21 16:21:07,832 INFO resume_processor.py:334 调用LLM提供商: AZURE
+2025-10-21 16:21:22,212 INFO _client.py:1025 HTTP Request: POST https://ennew-openai-east-us-2.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview "HTTP/1.1 200 OK"
+2025-10-21 16:21:22,431 INFO resume_processor.py:380 LLM返回文本长度: 2366; 预览: {
+  "name": "朱恩庆",
+  "email": "zhu04303661@163.com",
+  "phone": "18217361837",
+  "experience": "2021.03~至今 新奥集团，担任AI智能资深技术专家/智能大模型工程资深架构师/智能群资深技术总监，负责大型能源集团的智能化技术，带领大模型研发团队。2015.8~2021.3 携程，担任算法技术专家/高...
+2025-10-21 16:21:22,431 INFO resume_processor.py:397 LLM信息提取成功
+2025-10-21 16:21:22,431 INFO test_resume_processor.py:314 ✅ AI信息提取成功: {'name': '朱恩庆', 'email': 'zhu04303661@163.com', 'phone': '18217361837', 'experience': '2021.03~至今 新奥集团，担任AI智能资深技术专家/智能大模型工程资深架构师/智能群资深技术总监，负责大型能源集团的智能化技术，带领大模型研发团队。2015.8~2021.3 携程，担任算法技术专家/高级经理，负责携程移动端千人团队的研发效能，支撑移动端亿级流程服务入口，无线MCD云平台与无线服务端开发。2014.3~2015.1 爱立信，担任资源算法工程师、云计算工程师，负责中国核心通讯技术研发。2011.4~2014.3 阿尔卡特朗讯贝尔实验室，担任算法工程师/仿真系统研发经理，负责4G核心物理层算法仿真系统研发，并前往美国贝尔实验室联合研发。英特尔，Linux操作系统研发实习生10个月。共12年技术管理经验，团队管理规模从5人到90人，涵盖算法、工程、智能研发等方向。', 'education': '2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位。2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位。专业方向包括人工智能、大模型技术、智能体、产业智能、物联智能、持续迭代、软件系统、通讯系统、嵌入式系统开发、Linux系统技术应用。', 'skills': ['人工智能', '大模型技术', '智能体Agent技术', '大模型训练与打造', '智能模型研发平台', '云计算', '移动互联网基础服务', '研发工具链', '嵌入式系统开发', '通讯算法仿真', 'CV/NLP算法', '物联机理算法', '感知认知与持续迭代技术', 'GPT大模型技术', '企业智能化架构', '全栈开发', '持续交付', '企业架构', '智能产品架构', '智能算法'], 'achievements': ['2024年大模型工程和智能体技术相关专利6篇', '2023年大模型工程相关专利10篇', '2022年CV识别算法专利5篇', '2022年获得《创值标兵》称号', '2020年携程无线质量优秀个人技术贡献奖', '2016年携程MCD平台获得携程突出技术贡献奖', '2015年在携程提交IOS应用集群打包专利两篇', '2013年阿尔卡特朗讯outstanding员工奖', '2010年发表《液冷源控制系统的研制》核心期刊', '2009年EI收录论文', '2004-2008年校奖学金、社会活动积极分子、优秀团干'], 'projects': ['2024年专家Copliot生成系统：开发长推理距离大模型Agent，结合RAG知识辅助，建设产业互联网场景下的大模型应用产品，实现2000+智能能力沉淀。', '2023年GPT大模型技术研发：为新奥打造产业源模型，包括视觉多模态和NLP大模型，建设高效率大模型数据处理、训练、部署评估流水线。', '2021年感知认知模型研发平台：创新建设感知认知模型研发平台，实现算法组件化复用，交付大量行业特色CV算法，覆盖新奥80%场站，日均调用量800万次。', '2021年SOP识别系统：创新打造SOP识别系统，获得多项AI创新奖。', '2015-2021年携程无线服务端开发：负责无线页面资源配置中心、AR服务端、IM客服聊天、位置信息服务、VOIP、P2P、SIP语音呼叫、IM聊天推送等高并发服务。', '2018年无线服务质量监控平台APM：为携程app搭建无线服务质量监控平台，提升全球请求质量。', '2015年无线APP持续交付云平台（MCD）：带领团队建设业界首个无线APP持续交付云平台，获得携程年度技术贡献奖。', '2014年爱立信eMBMS模拟器开发：负责eMBMS Ue端和基站端模拟器建模开发，搭建自动化CI系统。', '2014年K8S和Docker虚拟机环境：参与OpenStack虚拟云平台兼容运行维护。', '2011-2014年阿尔卡特朗讯LTE物理链路层仿真系统：负责物理层数字信号处理算法与系统仿真，建立基于C++的LTE物理链路行为仿真系统。', '2013年LTE物理层仿真测试团队leader：带领团队完成LTE物理层仿真和测试任务。', '2013年美国贝尔实验室Light Radio LTE项目：与全球工程师共同开发物理链路层仿真系统。', '2010年Intel MeeGo操作系统测试：开发自动化测试工具，参与MeeGo Netbook QA团队。'], 'languages': ['中文（母语）', '英语（流利，具备海外工作经验）'], 'certifications': [], 'summary': '朱恩庆，硕士学历，12年技术与管理经验，专注于人工智能、大模型、智能体、产业智能、物联智能等领域。具备丰富的团队管理与跨国项目经验，主导多个大型企业智能化升级与AI平台研发。技术全面，擅长智能模型开发、企业架构、持续交付、云计算、嵌入式系统等，获得多项专利与行业奖项。具备良好的行业洞察力和团队合作精神。'}
+2025-10-21 16:21:22,431 INFO test_resume_processor.py:323 ✅ AI信息提取测试通过
+2025-10-21 16:21:22,431 INFO test_resume_processor.py:493 ✅ AI信息提取 - 通过
+2025-10-21 16:21:22,431 INFO test_resume_processor.py:486 
+==================================================
+2025-10-21 16:21:22,431 INFO test_resume_processor.py:487 🧪 运行测试: 知识库创建
+2025-10-21 16:21:22,431 INFO test_resume_processor.py:488 ==================================================
+2025-10-21 16:21:22,431 INFO test_resume_processor.py:332 🧪 测试知识库创建...
+2025-10-21 16:21:22,431 INFO resume_processor.py:202 开始提取文件文本内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 16:21:22,431 INFO resume_processor.py:211 文件大小: 71640 bytes
+2025-10-21 16:21:22,431 INFO resume_processor.py:225 检测到DOCX文件，使用python-docx解析
+2025-10-21 16:21:22,449 INFO resume_processor.py:139 DOCX解析完成，段落数: 76，字符数: 4861
+2025-10-21 16:21:22,449 INFO resume_processor.py:193 已保存Markdown内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.md
+2025-10-21 16:21:22,449 INFO resume_processor.py:325 开始AI信息提取，输入内容长度: 4861 字符
+2025-10-21 16:21:22,460 INFO resume_processor.py:334 调用LLM提供商: AZURE
+2025-10-21 16:21:38,054 INFO _client.py:1025 HTTP Request: POST https://ennew-openai-east-us-2.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview "HTTP/1.1 200 OK"
+2025-10-21 16:21:38,325 INFO resume_processor.py:380 LLM返回文本长度: 2296; 预览: {
+  "name": "朱恩庆",
+  "email": "zhu04303661@163.com",
+  "phone": "18217361837",
+  "experience": "2021.03~至今在新奥集团担任AI智能资深技术专家/智能大模型工程资深架构师/智能群资深技术总监，负责大型能源集团的智能化技术，带领大模型研发团队。2015.8~2021.3在携程担任算法技术专家/高级经...
+2025-10-21 16:21:38,325 INFO resume_processor.py:397 LLM信息提取成功
+2025-10-21 16:21:38,325 INFO resume_processor.py:481 开始为 朱恩庆 创建个人知识库
+2025-10-21 16:21:38,325 INFO resume_processor.py:482 提取的信息: {'name': '朱恩庆', 'email': 'zhu04303661@163.com', 'phone': '18217361837', 'experience': '2021.03~至今在新奥集团担任AI智能资深技术专家/智能大模型工程资深架构师/智能群资深技术总监，负责大型能源集团的智能化技术，带领大模型研发团队。2015.8~2021.3在携程担任算法技术专家/高级经理，负责携程移动端千人团队的研发效能，支撑移动端亿级流程服务入口，负责无线MCD云平台与无线服务端开发。2014.3~2015.1在爱立信担任资源算法工程师、云计算工程师，负责核心通讯技术研发。2011.4~2014.3在阿尔卡特朗讯贝尔实验室担任算法工程师/仿真系统研发经理，负责4G核心物理层算法仿真系统研发，并前往美国贝尔实验室联合研发。英特尔Linux操作系统研发实习生10个月。共12年技术管理经验，带领团队规模从5人到90人，涵盖算法开发和工程技术研发，专注于AI、大模型、智能体、产业智能、物联智能、软件系统、通讯系统、嵌入式系统、Linux系统技术应用等领域。', 'education': '2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位。2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位。', 'skills': ['人工智能', '大模型技术', '智能体Agent技术', '产业智能', '物联智能', '持续迭代', '软件系统开发', '通讯系统开发', '嵌入式系统开发', 'Linux系统技术应用', '云计算', '移动互联网基础服务', '研发工具链', '全栈开发', '企业架构', '智能产品架构', '智能算法', '团队管理'], 'achievements': ['2024年大模型工程和智能体技术相关专利6篇', '2023年大模型工程相关专利10篇', '2022年CV识别算法专利5篇', '2022年获得《创值标兵》称号', '2020年携程无线质量优秀个人技术贡献奖', '2016年携程MCD平台获得携程突出技术贡献奖', '2015年在携程提交IOS应用集群打包专利两篇', '2013年阿尔卡特朗讯outstanding员工奖', '2010年发表《液冷源控制系统的研制》核心期刊', '2009年EI收录论文', '2004-2008年校奖学金、校“社会活动积极分子”、校“优秀团干”'], 'projects': ['2024年专家Copilot生成系统：开发长推理距离大模型Agent，结合RAG知识辅助，建设产业互联网场景下的大模型应用产品，实现2000+智能能力沉淀。', '2023年GPT大模型技术研发：为新奥打造产业源模型，包括视觉多模态和NLP大模型，建设高效率大模型数据处理、训练、部署评估流水线。', '2021年感知认知模型研发平台：创新建设感知认知模型研发平台，实现算法组件化复用，交付大量行业特色CV算法，覆盖新奥80%场站，日均调用量800万次。', '2021年SOP识别系统：创新打造SOP识别系统，获得多项AI创新奖。', '2015-2021年携程无线服务端开发：负责无线页面资源配置中心、AR服务端、IM客服聊天、位置信息服务、VOIP、P2P、SIP语音呼叫、IM聊天推送等服务。', '2018年携程无线服务质量监控平台APM：搭建无线服务质量监控平台，提升全球请求质量。', '2015年携程无线APP持续交付云平台（MCD）：建设业界首个无线APP持续交付云平台，支持高并发分布式打包与发布，获得携程年度技术贡献奖。', '2014-2015年爱立信eMBMS模拟器开发：负责eMBMS Ue端和基站端模拟器建模与开发，搭建自动化CI系统，参与OpenStack虚拟云平台兼容运行维护。', '2011-2014年阿尔卡特朗讯LTE物理链路层仿真系统：开发基于C++的LTE物理链路行为仿真系统，担任仿真测试部门leader，带领团队完成所有开发任务。', '2013年美国贝尔实验室Light Radio LTE物理链路层仿真系统：与全球工程师共同开发，推动中美合作。', '2010年Intel MeeGo操作系统测试：参与MeeGo操作系统在Netbook上的测试，创建自动化测试工具。'], 'languages': ['中文（母语）', '英语（流利）'], 'certifications': [], 'summary': '朱恩庆，硕士学历，12年AI与智能系统研发及管理经验，具备丰富的大模型、智能体、产业智能、物联网、云计算、移动互联网等领域的技术与团队管理能力。曾在新奥集团、携程、爱立信、阿尔卡特朗讯、英特尔等知名企业担任核心技术与管理岗位，带领团队实现多项技术创新和产业智能化升级，拥有多项专利和行业荣誉。擅长高价值智能模型开发、企业智能体技术、大模型训练与平台建设，具备全栈开发、企业架构、智能算法等综合能力。'}
+2025-10-21 16:21:38,326 INFO resume_processor.py:487 创建个人知识库目录: personal_kb
+2025-10-21 16:21:38,326 INFO resume_processor.py:489 个人知识库目录创建成功
+2025-10-21 16:21:38,326 INFO resume_processor.py:499 初始化个人信息结构
+2025-10-21 16:21:38,326 INFO resume_processor.py:503 开始根据提取的信息创建知识条目
+2025-10-21 16:21:38,326 INFO resume_processor.py:515 创建工作经验知识条目: 朱恩庆_exp_1
+2025-10-21 16:21:38,326 INFO resume_processor.py:527 创建教育背景知识条目: 朱恩庆_edu_1
+2025-10-21 16:21:38,326 INFO resume_processor.py:530 创建技能知识条目，技能数量: 18
+2025-10-21 16:21:38,326 INFO resume_processor.py:541 创建技能知识条目 1: 朱恩庆_skill_1 - 人工智能
+2025-10-21 16:21:38,326 INFO resume_processor.py:541 创建技能知识条目 2: 朱恩庆_skill_2 - 大模型技术
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 3: 朱恩庆_skill_3 - 智能体Agent技术
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 4: 朱恩庆_skill_4 - 产业智能
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 5: 朱恩庆_skill_5 - 物联智能
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 6: 朱恩庆_skill_6 - 持续迭代
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 7: 朱恩庆_skill_7 - 软件系统开发
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 8: 朱恩庆_skill_8 - 通讯系统开发
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 9: 朱恩庆_skill_9 - 嵌入式系统开发
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 10: 朱恩庆_skill_10 - Linux系统技术应用
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 11: 朱恩庆_skill_11 - 云计算
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 12: 朱恩庆_skill_12 - 移动互联网基础服务
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 13: 朱恩庆_skill_13 - 研发工具链
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 14: 朱恩庆_skill_14 - 全栈开发
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 15: 朱恩庆_skill_15 - 企业架构
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 16: 朱恩庆_skill_16 - 智能产品架构
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 17: 朱恩庆_skill_17 - 智能算法
+2025-10-21 16:21:38,327 INFO resume_processor.py:541 创建技能知识条目 18: 朱恩庆_skill_18 - 团队管理
+2025-10-21 16:21:38,327 INFO resume_processor.py:544 创建成就知识条目，成就数量: 11
+2025-10-21 16:21:38,327 INFO resume_processor.py:555 创建成就知识条目 1: 朱恩庆_ach_1 - 2024年大模型工程和智能体技术相关专利6篇
+2025-10-21 16:21:38,327 INFO resume_processor.py:555 创建成就知识条目 2: 朱恩庆_ach_2 - 2023年大模型工程相关专利10篇
+2025-10-21 16:21:38,327 INFO resume_processor.py:555 创建成就知识条目 3: 朱恩庆_ach_3 - 2022年CV识别算法专利5篇
+2025-10-21 16:21:38,328 INFO resume_processor.py:555 创建成就知识条目 4: 朱恩庆_ach_4 - 2022年获得《创值标兵》称号
+2025-10-21 16:21:38,328 INFO resume_processor.py:555 创建成就知识条目 5: 朱恩庆_ach_5 - 2020年携程无线质量优秀个人技术贡献奖
+2025-10-21 16:21:38,328 INFO resume_processor.py:555 创建成就知识条目 6: 朱恩庆_ach_6 - 2016年携程MCD平台获得携程突出技术贡献奖
+2025-10-21 16:21:38,328 INFO resume_processor.py:555 创建成就知识条目 7: 朱恩庆_ach_7 - 2015年在携程提交IOS应用集群打包专利两篇
+2025-10-21 16:21:38,328 INFO resume_processor.py:555 创建成就知识条目 8: 朱恩庆_ach_8 - 2013年阿尔卡特朗讯outstanding员工奖
+2025-10-21 16:21:38,328 INFO resume_processor.py:555 创建成就知识条目 9: 朱恩庆_ach_9 - 2010年发表《液冷源控制系统的研制》核心期刊
+2025-10-21 16:21:38,328 INFO resume_processor.py:555 创建成就知识条目 10: 朱恩庆_ach_10 - 2009年EI收录论文
+2025-10-21 16:21:38,328 INFO resume_processor.py:555 创建成就知识条目 11: 朱恩庆_ach_11 - 2004-2008年校奖学金、校“社会活动积极分子”、校“优秀团干”
+2025-10-21 16:21:38,328 INFO resume_processor.py:558 知识条目创建完成，总计 31 个条目
+2025-10-21 16:21:38,328 INFO resume_processor.py:562 保存个人知识库到文件: personal_kb/personal_info.json
+2025-10-21 16:21:38,330 INFO resume_processor.py:565 个人知识库文件保存成功
+2025-10-21 16:21:38,330 INFO resume_processor.py:567 为 朱恩庆 创建了个人知识库，包含 31 个知识条目
+2025-10-21 16:21:38,330 INFO test_resume_processor.py:352 ✅ 个人知识库创建成功: personal_kb
+2025-10-21 16:21:38,330 INFO test_resume_processor.py:367 ✅ 个人知识库包含 31 个知识条目
+2025-10-21 16:21:38,330 INFO test_resume_processor.py:368 ✅ 知识库创建测试通过
+2025-10-21 16:21:38,330 INFO test_resume_processor.py:493 ✅ 知识库创建 - 通过
+2025-10-21 16:21:38,330 INFO test_resume_processor.py:486 
+==================================================
+2025-10-21 16:21:38,330 INFO test_resume_processor.py:487 🧪 运行测试: 主知识库更新
+2025-10-21 16:21:38,331 INFO test_resume_processor.py:488 ==================================================
+2025-10-21 16:21:38,331 INFO test_resume_processor.py:377 🧪 测试主知识库更新...
+2025-10-21 16:21:38,331 INFO resume_processor.py:202 开始提取文件文本内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.docx
+2025-10-21 16:21:38,331 INFO resume_processor.py:211 文件大小: 71640 bytes
+2025-10-21 16:21:38,331 INFO resume_processor.py:225 检测到DOCX文件，使用python-docx解析
+2025-10-21 16:21:38,347 INFO resume_processor.py:139 DOCX解析完成，段落数: 76，字符数: 4861
+2025-10-21 16:21:38,348 INFO resume_processor.py:193 已保存Markdown内容: resumes/20251020_132537_ZHU_Enqings_resume_-202506.md
+2025-10-21 16:21:38,349 INFO resume_processor.py:325 开始AI信息提取，输入内容长度: 4861 字符
+2025-10-21 16:21:38,360 INFO resume_processor.py:334 调用LLM提供商: AZURE
+2025-10-21 16:21:51,811 INFO _client.py:1025 HTTP Request: POST https://ennew-openai-east-us-2.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview "HTTP/1.1 200 OK"
+2025-10-21 16:21:52,030 INFO resume_processor.py:380 LLM返回文本长度: 1949; 预览: {
+  "name": "朱恩庆",
+  "email": "zhu04303661@163.com",
+  "phone": "18217361837",
+  "experience": "拥有12年技术管理和研发经验，现任新奥集团智能技术负责人、智能技术架构师、智能产品研发群资深技术总监，带领90人团队专注于AI大模型、智能体、产业智能等领域。曾在携程担任无线技术专家、高级经理，负责移动端研发...
+2025-10-21 16:21:52,030 INFO resume_processor.py:397 LLM信息提取成功
+2025-10-21 16:21:52,030 INFO resume_processor.py:481 开始为 朱恩庆 创建个人知识库
+2025-10-21 16:21:52,031 INFO resume_processor.py:482 提取的信息: {'name': '朱恩庆', 'email': 'zhu04303661@163.com', 'phone': '18217361837', 'experience': '拥有12年技术管理和研发经验，现任新奥集团智能技术负责人、智能技术架构师、智能产品研发群资深技术总监，带领90人团队专注于AI大模型、智能体、产业智能等领域。曾在携程担任无线技术专家、高级经理，负责移动端研发效能、无线云平台及服务端开发。早期在爱立信、阿尔卡特朗讯贝尔实验室从事通讯技术、物理层算法仿真系统研发，并有英特尔Linux操作系统研发实习经历。具备丰富的团队管理、企业智能化升级、基础设施建设及算法平台开发经验。', 'education': '2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位', 'skills': ['人工智能', '大模型技术', '智能体Agent技术', '产业智能', '物联智能', '持续迭代', '软件系统开发', '通讯系统开发', '嵌入式系统', 'Linux系统技术应用', '云计算', '移动互联网基础服务', '研发工具链', 'CV/NLP算法', '智能模型研发平台', '企业架构', '全栈开发', '持续交付', '算法仿真', '团队管理'], 'achievements': ['2024年大模型工程和智能体技术相关专利6篇', '2023年大模型工程相关专利10篇', '2022年CV识别算法专利5篇', '2022年获得《创值标兵》称号', '2020年携程无线质量优秀个人技术贡献奖', '2016年携程MCD平台获得携程突出技术贡献奖', '2015年在携程提交IOS应用集群打包专利两篇', '2013年阿尔卡特朗讯outstanding员工奖', '2010年发表《液冷源控制系统的研制》核心期刊', '2009年发表论文被EI收录', '2004-2008年校奖学金、社会活动积极分子、优秀团干'], 'projects': ['2024年专家Copliot生成系统：开发长推理距离的大模型Agent，结合RAG知识辅助，沉淀2000+智能能力，实现行业场景智能能力爆发式增长。', '2023年新奥产业GPT大模型：打造视觉多模态和NLP大模型，建设高效率数据处理、模型训练、部署评估流水线，提升团队协同效率。', '2021年感知认知模型研发平台：创新建设算法组件化复用平台，交付大量行业特色CV算法，覆盖新奥80%场站，日均调用量800万次，打造SOP识别系统，获多项AI创新奖。', '调压器喘症、流量计误差物联算法模型：构建AIOT能力，实现销供产能一体化运筹智能。', '2015-2021年携程无线持续交付云平台（MCD）：集Android、IOS、hybrid代码检测、打包、测试、发布于一体，支持高并发分布式打包与发布，获得携程年度技术贡献奖。', '2020年携程无线服务质量监控平台APM：使用Strom与ES监控全球请求质量，提升产品能力。', '2014-2015年爱立信eMBMS模拟器开发及自动化CI系统搭建，参与K8S和Docker虚拟机环境及OpenStack云平台兼容维护。', '2011-2014年阿尔卡特朗讯LTE物理链路层仿真系统开发，担任仿真测试团队leader，赴美国贝尔实验室联合开发Light Radio LTE物理链路层仿真系统。', '2010年英特尔MeeGo操作系统Netbook QA及自动化测试工具开发。'], 'languages': ['中文（母语）', '英语（流利，具备海外工作经历）'], 'certifications': [], 'summary': '朱恩庆，硕士学历，12年AI及智能化技术研发与管理经验，现任新奥集团智能技术负责人，精通人工智能、大模型、智能体、产业智能、物联智能等领域。具备丰富的企业智能化升级、基础设施建设、算法平台开发及团队管理经验，曾在携程、爱立信、阿尔卡特朗讯等知名企业担任技术专家与管理岗位，拥有多项专利和技术奖项。'}
+2025-10-21 16:21:52,031 INFO resume_processor.py:487 创建个人知识库目录: personal_kb
+2025-10-21 16:21:52,031 INFO resume_processor.py:489 个人知识库目录创建成功
+2025-10-21 16:21:52,031 INFO resume_processor.py:499 初始化个人信息结构
+2025-10-21 16:21:52,031 INFO resume_processor.py:503 开始根据提取的信息创建知识条目
+2025-10-21 16:21:52,031 INFO resume_processor.py:515 创建工作经验知识条目: 朱恩庆_exp_1
+2025-10-21 16:21:52,031 INFO resume_processor.py:527 创建教育背景知识条目: 朱恩庆_edu_1
+2025-10-21 16:21:52,031 INFO resume_processor.py:530 创建技能知识条目，技能数量: 20
+2025-10-21 16:21:52,031 INFO resume_processor.py:541 创建技能知识条目 1: 朱恩庆_skill_1 - 人工智能
+2025-10-21 16:21:52,031 INFO resume_processor.py:541 创建技能知识条目 2: 朱恩庆_skill_2 - 大模型技术
+2025-10-21 16:21:52,031 INFO resume_processor.py:541 创建技能知识条目 3: 朱恩庆_skill_3 - 智能体Agent技术
+2025-10-21 16:21:52,031 INFO resume_processor.py:541 创建技能知识条目 4: 朱恩庆_skill_4 - 产业智能
+2025-10-21 16:21:52,031 INFO resume_processor.py:541 创建技能知识条目 5: 朱恩庆_skill_5 - 物联智能
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 6: 朱恩庆_skill_6 - 持续迭代
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 7: 朱恩庆_skill_7 - 软件系统开发
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 8: 朱恩庆_skill_8 - 通讯系统开发
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 9: 朱恩庆_skill_9 - 嵌入式系统
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 10: 朱恩庆_skill_10 - Linux系统技术应用
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 11: 朱恩庆_skill_11 - 云计算
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 12: 朱恩庆_skill_12 - 移动互联网基础服务
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 13: 朱恩庆_skill_13 - 研发工具链
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 14: 朱恩庆_skill_14 - CV/NLP算法
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 15: 朱恩庆_skill_15 - 智能模型研发平台
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 16: 朱恩庆_skill_16 - 企业架构
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 17: 朱恩庆_skill_17 - 全栈开发
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 18: 朱恩庆_skill_18 - 持续交付
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 19: 朱恩庆_skill_19 - 算法仿真
+2025-10-21 16:21:52,032 INFO resume_processor.py:541 创建技能知识条目 20: 朱恩庆_skill_20 - 团队管理
+2025-10-21 16:21:52,032 INFO resume_processor.py:544 创建成就知识条目，成就数量: 11
+2025-10-21 16:21:52,032 INFO resume_processor.py:555 创建成就知识条目 1: 朱恩庆_ach_1 - 2024年大模型工程和智能体技术相关专利6篇
+2025-10-21 16:21:52,032 INFO resume_processor.py:555 创建成就知识条目 2: 朱恩庆_ach_2 - 2023年大模型工程相关专利10篇
+2025-10-21 16:21:52,032 INFO resume_processor.py:555 创建成就知识条目 3: 朱恩庆_ach_3 - 2022年CV识别算法专利5篇
+2025-10-21 16:21:52,032 INFO resume_processor.py:555 创建成就知识条目 4: 朱恩庆_ach_4 - 2022年获得《创值标兵》称号
+2025-10-21 16:21:52,033 INFO resume_processor.py:555 创建成就知识条目 5: 朱恩庆_ach_5 - 2020年携程无线质量优秀个人技术贡献奖
+2025-10-21 16:21:52,033 INFO resume_processor.py:555 创建成就知识条目 6: 朱恩庆_ach_6 - 2016年携程MCD平台获得携程突出技术贡献奖
+2025-10-21 16:21:52,033 INFO resume_processor.py:555 创建成就知识条目 7: 朱恩庆_ach_7 - 2015年在携程提交IOS应用集群打包专利两篇
+2025-10-21 16:21:52,033 INFO resume_processor.py:555 创建成就知识条目 8: 朱恩庆_ach_8 - 2013年阿尔卡特朗讯outstanding员工奖
+2025-10-21 16:21:52,033 INFO resume_processor.py:555 创建成就知识条目 9: 朱恩庆_ach_9 - 2010年发表《液冷源控制系统的研制》核心期刊
+2025-10-21 16:21:52,033 INFO resume_processor.py:555 创建成就知识条目 10: 朱恩庆_ach_10 - 2009年发表论文被EI收录
+2025-10-21 16:21:52,033 INFO resume_processor.py:555 创建成就知识条目 11: 朱恩庆_ach_11 - 2004-2008年校奖学金、社会活动积极分子、优秀团干
+2025-10-21 16:21:52,033 INFO resume_processor.py:558 知识条目创建完成，总计 33 个条目
+2025-10-21 16:21:52,033 INFO resume_processor.py:562 保存个人知识库到文件: personal_kb/personal_info.json
+2025-10-21 16:21:52,034 INFO resume_processor.py:565 个人知识库文件保存成功
+2025-10-21 16:21:52,034 INFO resume_processor.py:567 为 朱恩庆 创建了个人知识库，包含 33 个知识条目
+2025-10-21 16:21:52,034 INFO resume_processor.py:576 开始更新主知识库，个人知识库路径: personal_kb, 姓名: 朱恩庆
+2025-10-21 16:21:52,034 INFO resume_processor.py:581 读取个人知识库文件: personal_kb/personal_info.json
+2025-10-21 16:21:52,034 INFO resume_processor.py:589 个人知识库文件读取成功，包含 33 个知识条目
+2025-10-21 16:21:52,034 INFO resume_processor.py:593 读取主知识库文件: data/playbook.json
+2025-10-21 16:21:52,034 INFO resume_processor.py:598 主知识库文件读取成功，当前包含 29 个条目
+2025-10-21 16:21:52,034 INFO resume_processor.py:614 开始添加 33 个个人知识条目到主知识库
+2025-10-21 16:21:52,034 INFO resume_processor.py:617 处理知识条目 1/33: 朱恩庆_exp_1
+2025-10-21 16:21:52,035 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_exp_1
+2025-10-21 16:21:52,035 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_exp_1
+2025-10-21 16:21:52,035 INFO resume_processor.py:643 添加bullet到section 工作经验: 朱恩庆_exp_1
+2025-10-21 16:21:52,035 INFO resume_processor.py:617 处理知识条目 2/33: 朱恩庆_edu_1
+2025-10-21 16:21:52,035 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_edu_1
+2025-10-21 16:21:52,035 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_edu_1
+2025-10-21 16:21:52,035 INFO resume_processor.py:643 添加bullet到section 教育背景: 朱恩庆_edu_1
+2025-10-21 16:21:52,035 INFO resume_processor.py:617 处理知识条目 3/33: 朱恩庆_skill_1
+2025-10-21 16:21:52,035 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_1
+2025-10-21 16:21:52,035 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_1
+2025-10-21 16:21:52,035 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_1
+2025-10-21 16:21:52,035 INFO resume_processor.py:617 处理知识条目 4/33: 朱恩庆_skill_2
+2025-10-21 16:21:52,035 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_2
+2025-10-21 16:21:52,035 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_2
+2025-10-21 16:21:52,035 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_2
+2025-10-21 16:21:52,035 INFO resume_processor.py:617 处理知识条目 5/33: 朱恩庆_skill_3
+2025-10-21 16:21:52,035 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_3
+2025-10-21 16:21:52,035 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_3
+2025-10-21 16:21:52,035 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_3
+2025-10-21 16:21:52,036 INFO resume_processor.py:617 处理知识条目 6/33: 朱恩庆_skill_4
+2025-10-21 16:21:52,036 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_4
+2025-10-21 16:21:52,036 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_4
+2025-10-21 16:21:52,036 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_4
+2025-10-21 16:21:52,037 INFO resume_processor.py:617 处理知识条目 7/33: 朱恩庆_skill_5
+2025-10-21 16:21:52,037 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_5
+2025-10-21 16:21:52,037 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_5
+2025-10-21 16:21:52,037 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_5
+2025-10-21 16:21:52,037 INFO resume_processor.py:617 处理知识条目 8/33: 朱恩庆_skill_6
+2025-10-21 16:21:52,037 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_6
+2025-10-21 16:21:52,037 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_6
+2025-10-21 16:21:52,037 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_6
+2025-10-21 16:21:52,037 INFO resume_processor.py:617 处理知识条目 9/33: 朱恩庆_skill_7
+2025-10-21 16:21:52,037 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_7
+2025-10-21 16:21:52,037 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_7
+2025-10-21 16:21:52,037 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_7
+2025-10-21 16:21:52,037 INFO resume_processor.py:617 处理知识条目 10/33: 朱恩庆_skill_8
+2025-10-21 16:21:52,037 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_8
+2025-10-21 16:21:52,037 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_8
+2025-10-21 16:21:52,038 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_8
+2025-10-21 16:21:52,038 INFO resume_processor.py:617 处理知识条目 11/33: 朱恩庆_skill_9
+2025-10-21 16:21:52,038 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_9
+2025-10-21 16:21:52,038 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_9
+2025-10-21 16:21:52,038 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_9
+2025-10-21 16:21:52,038 INFO resume_processor.py:617 处理知识条目 12/33: 朱恩庆_skill_10
+2025-10-21 16:21:52,038 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_10
+2025-10-21 16:21:52,038 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_10
+2025-10-21 16:21:52,038 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_10
+2025-10-21 16:21:52,038 INFO resume_processor.py:617 处理知识条目 13/33: 朱恩庆_skill_11
+2025-10-21 16:21:52,038 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_11
+2025-10-21 16:21:52,038 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_11
+2025-10-21 16:21:52,038 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_11
+2025-10-21 16:21:52,038 INFO resume_processor.py:617 处理知识条目 14/33: 朱恩庆_skill_12
+2025-10-21 16:21:52,038 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_12
+2025-10-21 16:21:52,038 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_12
+2025-10-21 16:21:52,038 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_12
+2025-10-21 16:21:52,038 INFO resume_processor.py:617 处理知识条目 15/33: 朱恩庆_skill_13
+2025-10-21 16:21:52,039 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_13
+2025-10-21 16:21:52,039 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_13
+2025-10-21 16:21:52,039 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_13
+2025-10-21 16:21:52,039 INFO resume_processor.py:617 处理知识条目 16/33: 朱恩庆_skill_14
+2025-10-21 16:21:52,039 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_14
+2025-10-21 16:21:52,039 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_14
+2025-10-21 16:21:52,039 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_14
+2025-10-21 16:21:52,039 INFO resume_processor.py:617 处理知识条目 17/33: 朱恩庆_skill_15
+2025-10-21 16:21:52,039 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_15
+2025-10-21 16:21:52,039 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_15
+2025-10-21 16:21:52,039 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_15
+2025-10-21 16:21:52,039 INFO resume_processor.py:617 处理知识条目 18/33: 朱恩庆_skill_16
+2025-10-21 16:21:52,039 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_16
+2025-10-21 16:21:52,039 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_16
+2025-10-21 16:21:52,039 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_16
+2025-10-21 16:21:52,039 INFO resume_processor.py:617 处理知识条目 19/33: 朱恩庆_skill_17
+2025-10-21 16:21:52,039 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_17
+2025-10-21 16:21:52,039 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_17
+2025-10-21 16:21:52,040 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_17
+2025-10-21 16:21:52,040 INFO resume_processor.py:617 处理知识条目 20/33: 朱恩庆_skill_18
+2025-10-21 16:21:52,040 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_18
+2025-10-21 16:21:52,040 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_18
+2025-10-21 16:21:52,040 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_18
+2025-10-21 16:21:52,040 INFO resume_processor.py:617 处理知识条目 21/33: 朱恩庆_skill_19
+2025-10-21 16:21:52,040 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_19
+2025-10-21 16:21:52,040 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_19
+2025-10-21 16:21:52,040 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_19
+2025-10-21 16:21:52,040 INFO resume_processor.py:617 处理知识条目 22/33: 朱恩庆_skill_20
+2025-10-21 16:21:52,040 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_skill_20
+2025-10-21 16:21:52,040 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_skill_20
+2025-10-21 16:21:52,040 INFO resume_processor.py:643 添加bullet到section 技能专长: 朱恩庆_skill_20
+2025-10-21 16:21:52,040 INFO resume_processor.py:617 处理知识条目 23/33: 朱恩庆_ach_1
+2025-10-21 16:21:52,040 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_ach_1
+2025-10-21 16:21:52,040 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_ach_1
+2025-10-21 16:21:52,040 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 朱恩庆_ach_1
+2025-10-21 16:21:52,040 INFO resume_processor.py:617 处理知识条目 24/33: 朱恩庆_ach_2
+2025-10-21 16:21:52,041 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_ach_2
+2025-10-21 16:21:52,041 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_ach_2
+2025-10-21 16:21:52,042 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 朱恩庆_ach_2
+2025-10-21 16:21:52,042 INFO resume_processor.py:617 处理知识条目 25/33: 朱恩庆_ach_3
+2025-10-21 16:21:52,042 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_ach_3
+2025-10-21 16:21:52,042 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_ach_3
+2025-10-21 16:21:52,042 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 朱恩庆_ach_3
+2025-10-21 16:21:52,042 INFO resume_processor.py:617 处理知识条目 26/33: 朱恩庆_ach_4
+2025-10-21 16:21:52,042 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_ach_4
+2025-10-21 16:21:52,042 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_ach_4
+2025-10-21 16:21:52,042 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 朱恩庆_ach_4
+2025-10-21 16:21:52,042 INFO resume_processor.py:617 处理知识条目 27/33: 朱恩庆_ach_5
+2025-10-21 16:21:52,042 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_ach_5
+2025-10-21 16:21:52,042 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_ach_5
+2025-10-21 16:21:52,042 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 朱恩庆_ach_5
+2025-10-21 16:21:52,043 INFO resume_processor.py:617 处理知识条目 28/33: 朱恩庆_ach_6
+2025-10-21 16:21:52,043 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_ach_6
+2025-10-21 16:21:52,043 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_ach_6
+2025-10-21 16:21:52,043 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 朱恩庆_ach_6
+2025-10-21 16:21:52,043 INFO resume_processor.py:617 处理知识条目 29/33: 朱恩庆_ach_7
+2025-10-21 16:21:52,043 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_ach_7
+2025-10-21 16:21:52,043 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_ach_7
+2025-10-21 16:21:52,043 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 朱恩庆_ach_7
+2025-10-21 16:21:52,043 INFO resume_processor.py:617 处理知识条目 30/33: 朱恩庆_ach_8
+2025-10-21 16:21:52,043 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_ach_8
+2025-10-21 16:21:52,043 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_ach_8
+2025-10-21 16:21:52,043 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 朱恩庆_ach_8
+2025-10-21 16:21:52,043 INFO resume_processor.py:617 处理知识条目 31/33: 朱恩庆_ach_9
+2025-10-21 16:21:52,043 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_ach_9
+2025-10-21 16:21:52,043 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_ach_9
+2025-10-21 16:21:52,043 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 朱恩庆_ach_9
+2025-10-21 16:21:52,043 INFO resume_processor.py:617 处理知识条目 32/33: 朱恩庆_ach_10
+2025-10-21 16:21:52,043 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_ach_10
+2025-10-21 16:21:52,043 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_ach_10
+2025-10-21 16:21:52,044 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 朱恩庆_ach_10
+2025-10-21 16:21:52,044 INFO resume_processor.py:617 处理知识条目 33/33: 朱恩庆_ach_11
+2025-10-21 16:21:52,044 INFO resume_processor.py:630 创建ACE兼容的bullet数据: 朱恩庆_ach_11
+2025-10-21 16:21:52,044 INFO resume_processor.py:634 添加bullet到主知识库: 朱恩庆_ach_11
+2025-10-21 16:21:52,044 INFO resume_processor.py:643 添加bullet到section 成就荣誉: 朱恩庆_ach_11
+2025-10-21 16:21:52,044 INFO resume_processor.py:645 所有个人知识条目已添加到主知识库
+2025-10-21 16:21:52,044 INFO resume_processor.py:646 更新后的主知识库包含 62 个条目
+2025-10-21 16:21:52,044 INFO resume_processor.py:647 更新后的sections: ['defaults', 'guidelines', 'test', 'application_guide', '技能专长', '工作经验', '教育背景', '成就荣誉']
+2025-10-21 16:21:52,044 INFO resume_processor.py:650 保存更新后的主知识库到文件: data/playbook.json
+2025-10-21 16:21:52,046 INFO resume_processor.py:653 主知识库文件保存成功
+2025-10-21 16:21:52,046 INFO resume_processor.py:655 已将 朱恩庆 的个人知识库更新到主知识库
+2025-10-21 16:21:52,046 INFO test_resume_processor.py:404 ✅ 主知识库更新成功
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:413 ✅ 主知识库包含 62 个条目
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:417 ✅ 主知识库更新测试通过
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:493 ✅ 主知识库更新 - 通过
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:486 
+==================================================
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:487 🧪 运行测试: 安全预览功能
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:488 ==================================================
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:426 🧪 测试安全预览功能...
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:457 ✅ 安全预览功能测试通过
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:493 ✅ 安全预览功能 - 通过
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:501 
+==================================================
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:502 📊 测试结果汇总
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:503 ==================================================
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:504 总测试数: 7
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:505 通过数: 7
+2025-10-21 16:21:52,047 INFO test_resume_processor.py:506 失败数: 0
+2025-10-21 16:21:52,048 INFO test_resume_processor.py:507 通过率: 100.0%
+2025-10-21 16:21:52,048 INFO test_resume_processor.py:510 🎉 所有测试通过！
+2025-10-21 16:21:55,628 INFO test_resume_processor.py:518 🧹 清理测试数据...
+2025-10-21 16:21:55,628 INFO test_resume_processor.py:525 ✅ 测试文件清理完成
+2025-10-21 16:21:55,630 INFO test_resume_processor.py:551 ✅ 主知识库清理完成
