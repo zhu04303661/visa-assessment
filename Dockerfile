@@ -5,13 +5,13 @@ FROM node:18-alpine AS frontend-builder
 WORKDIR /app
 
 # 复制前端依赖文件
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml .npmrc ./
 
 # 安装pnpm
 RUN npm install -g pnpm
 
-# 安装前端依赖（使用legacy-peer-deps解决React 19兼容性问题）
-RUN pnpm install --frozen-lockfile --legacy-peer-deps
+# 安装前端依赖（使用.npmrc配置解决React 19兼容性问题）
+RUN pnpm install --frozen-lockfile
 
 # 复制前端源代码
 COPY . .
@@ -47,6 +47,8 @@ RUN mkdir -p data personal_kb resumes
 COPY --from=frontend-builder /app/.next ./.next
 COPY --from=frontend-builder /app/public ./public
 COPY --from=frontend-builder /app/package.json ./package.json
+COPY --from=frontend-builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=frontend-builder /app/.npmrc ./.npmrc
 COPY --from=frontend-builder /app/next.config.mjs ./next.config.mjs
 COPY --from=frontend-builder /app/tsconfig.json ./tsconfig.json
 COPY --from=frontend-builder /app/postcss.config.mjs ./postcss.config.mjs
@@ -63,7 +65,7 @@ RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists
 RUN npm install -g pnpm
 
 # 安装前端运行时依赖（使用现有的package.json和pnpm-lock.yaml）
-RUN pnpm install --frozen-lockfile --legacy-peer-deps
+RUN pnpm install --frozen-lockfile
 
 # 创建启动脚本
 RUN echo '#!/bin/bash\n\

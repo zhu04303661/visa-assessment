@@ -16,11 +16,11 @@ RUN apk add --no-cache \
 # 安装pnpm
 RUN npm install -g pnpm
 
-# 复制package.json和pnpm-lock.yaml
-COPY package.json pnpm-lock.yaml ./
+# 复制package.json、pnpm-lock.yaml和.npmrc
+COPY package.json pnpm-lock.yaml .npmrc ./
 
-# 安装前端依赖（使用legacy-peer-deps解决React 19兼容性问题）
-RUN pnpm install --legacy-peer-deps
+# 安装前端依赖（使用.npmrc配置解决React 19兼容性问题）
+RUN pnpm install
 
 # 复制Python依赖文件
 COPY ace_gtv/requirements.txt ./
