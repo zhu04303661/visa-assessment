@@ -10,8 +10,8 @@ COPY package.json pnpm-lock.yaml ./
 # 安装pnpm
 RUN npm install -g pnpm
 
-# 安装前端依赖
-RUN pnpm install --frozen-lockfile
+# 安装前端依赖（使用legacy-peer-deps解决React 19兼容性问题）
+RUN pnpm install --frozen-lockfile --legacy-peer-deps
 
 # 复制前端源代码
 COPY . .
@@ -58,11 +58,12 @@ COPY --from=frontend-builder /app/lib ./lib
 COPY --from=frontend-builder /app/hooks ./hooks
 COPY --from=frontend-builder /app/styles ./styles
 
-# 安装Node.js用于运行Next.js
+# 安装Node.js和pnpm用于运行Next.js
 RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
+RUN npm install -g pnpm
 
-# 安装前端运行时依赖
-RUN npm install next@15.2.4 react@^19 react-dom@^19
+# 安装前端运行时依赖（使用现有的package.json和pnpm-lock.yaml）
+RUN pnpm install --frozen-lockfile --legacy-peer-deps
 
 # 创建启动脚本
 RUN echo '#!/bin/bash\n\
@@ -75,7 +76,7 @@ python api_server.py &\n\
 sleep 5\n\
 \n\
 # 启动Next.js前端\n\
-npx next start -p 3000\n\
+pnpm start\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
 # 暴露端口
