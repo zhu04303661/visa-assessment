@@ -97,6 +97,7 @@ Thumbs.db
 # Git
 .git/
 .gitignore
+.gitmodules
 
 # Docker
 Dockerfile*

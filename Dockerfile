@@ -50,7 +50,7 @@ COPY --from=frontend-builder /app/package.json ./package.json
 COPY --from=frontend-builder /app/next.config.mjs ./next.config.mjs
 COPY --from=frontend-builder /app/tsconfig.json ./tsconfig.json
 COPY --from=frontend-builder /app/postcss.config.mjs ./postcss.config.mjs
-COPY --from=frontend-builder /app/tailwind.config.js ./tailwind.config.js
+# Tailwind CSS v4 不需要配置文件
 COPY --from=frontend-builder /app/components.json ./components.json
 COPY --from=frontend-builder /app/app ./app
 COPY --from=frontend-builder /app/components ./components

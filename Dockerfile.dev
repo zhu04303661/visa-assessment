@@ -28,7 +28,7 @@ COPY ace_gtv/requirements.txt ./
 # 安装Python依赖
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# 复制所有源代码
+# 复制所有源代码（排除不存在的tailwind.config.js）
 COPY . .
 
 # 创建必要的目录
