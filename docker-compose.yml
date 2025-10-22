@@ -15,6 +15,8 @@ services:
       - ./ace_gtv/data:/app/data
       - ./ace_gtv/resumes:/app/resumes
       - ./ace_gtv/personal_kb:/app/personal_kb
+    env_file:
+      - .env.local
     depends_on:
       - backend
     restart: unless-stopped
@@ -34,7 +36,8 @@ services:
       - ./ace_gtv/data:/app/data
       - ./ace_gtv/resumes:/app/resumes
       - ./ace_gtv/personal_kb:/app/personal_kb
-      - ./.env.local:/app/.env.local
+    env_file:
+      - .env.local
     restart: unless-stopped
 
   # 开发环境服务（可选）
@@ -53,12 +56,15 @@ services:
       - .:/app
       - /app/node_modules
       - /app/ace_gtv/__pycache__
+    env_file:
+      - .env.local
     command: >
       sh -c "
+        source /opt/venv/bin/activate &&
         cd /app/ace_gtv &&
         python resume_processor.py &
         python api_server.py &
         cd /app &&
-        npm run dev
+        pnpm dev
       "
     restart: unless-stopped

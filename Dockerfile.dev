@@ -25,10 +25,12 @@ RUN pnpm install
 # 复制Python依赖文件
 COPY ace_gtv/requirements.txt ./
 
-# 安装Python依赖
-RUN pip3 install --no-cache-dir -r requirements.txt
+# 创建Python虚拟环境并安装依赖
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --no-cache-dir -r requirements.txt
 
-# 复制所有源代码（排除不存在的tailwind.config.js）
+# 复制所有源代码（包括.env.local）
 COPY . .
 
 # 创建必要的目录
@@ -36,10 +38,13 @@ RUN mkdir -p ace_gtv/data ace_gtv/personal_kb ace_gtv/resumes
 
 # 创建开发环境启动脚本
 RUN echo '#!/bin/sh\n\
+# 激活Python虚拟环境\n\
+source /opt/venv/bin/activate\n\
+\n\
 # 启动后端服务\n\
 cd /app/ace_gtv\n\
-python3 resume_processor.py &\n\
-python3 api_server.py &\n\
+python resume_processor.py &\n\
+python api_server.py &\n\
 \n\
 # 等待后端服务启动\n\
 sleep 5\n\

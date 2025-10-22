@@ -40,6 +40,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制后端源代码
 COPY ace_gtv/ ./
 
+# 复制环境变量文件
+COPY .env.local ./
+
 # 创建必要的目录
 RUN mkdir -p data personal_kb resumes
 
