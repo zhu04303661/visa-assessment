@@ -116,7 +116,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
 # 确保上传目录存在
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+try:
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    logger.info(f"上传目录已创建/确认存在: {os.path.abspath(UPLOAD_FOLDER)}")
+except Exception as e:
+    logger.error(f"创建上传目录失败: {e}")
+    raise
 
 def allowed_file(filename):
     """检查文件类型是否允许"""
@@ -999,6 +1004,9 @@ def upload_resume():
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{timestamp}_{filename}"
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        # 再次确保目录存在
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
         
         logger.info(f"[{request_id}] 保存文件到: {file_path}")
         file.save(file_path)

@@ -26,6 +26,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/i18n"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { PurePDFButton } from "@/components/pure-pdf-button"
 
 type CriterionStatus = "met" | "partial" | "notmet"
 
@@ -340,7 +341,7 @@ export function AssessmentResults() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div id="assessment-results" className="container mx-auto px-4 py-12">
       <div className="mx-auto max-w-5xl">
         {/* Header */}
         <div className="mb-8">
@@ -351,7 +352,14 @@ export function AssessmentResults() {
                 {t("results.back")}
               </Link>
             </Button>
-            <LanguageSwitcher />
+            <div className="flex items-center gap-4">
+              {data && (
+                <PurePDFButton 
+                  assessmentData={data}
+                />
+              )}
+              <LanguageSwitcher />
+            </div>
           </div>
           <h1 className="mb-2 text-balance text-3xl font-bold tracking-tight text-foreground md:text-4xl">
             {t("results.title")}
