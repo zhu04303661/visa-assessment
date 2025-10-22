@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # 前端服务
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:5002
+    volumes:
+      - ./ace_gtv/data:/app/data
+      - ./ace_gtv/resumes:/app/resumes
+      - ./ace_gtv/personal_kb:/app/personal_kb
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # 后端服务
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "5001:5001"
+      - "5002:5002"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FLASK_ENV=production
+    volumes:
+      - ./ace_gtv/data:/app/data
+      - ./ace_gtv/resumes:/app/resumes
+      - ./ace_gtv/personal_kb:/app/personal_kb
+      - ./.env.local:/app/.env.local
+    restart: unless-stopped
+
+  # 开发环境服务（可选）
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+      - "5001:5001"
+      - "5002:5002"
+    environment:
+      - NODE_ENV=development
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/ace_gtv/__pycache__
+    command: >
+      sh -c "
+        cd /app/ace_gtv &&
+        python resume_processor.py &
+        python api_server.py &
+        cd /app &&
+        npm run dev
+      "
+    restart: unless-stopped
