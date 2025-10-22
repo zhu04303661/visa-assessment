@@ -40,3 +40,4 @@ ace_gtv/*.log
 *.md
 test-*.html
 test-*.js
+*.log
