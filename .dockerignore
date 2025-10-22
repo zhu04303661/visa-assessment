@@ -13,6 +13,7 @@ build
 # 环境文件
 .env*
 !.env.example
+!.env.local
 
 # 日志文件
 *.log
