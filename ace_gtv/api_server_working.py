@@ -16,7 +16,7 @@ from datetime import datetime
 # 添加当前目录到Python路径
 sys.path.append(os.path.dirname(__file__))
 
-from gtv_ace_with_responses import GTVACEAgent
+from gtv_ace_with_claude_code import GTVACEAgentWithClaudeCode
 
 # 配置日志（支持环境变量 LOG_LEVEL）
 _level_name = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -79,8 +79,8 @@ def get_ace_agent():
     """获取ACE代理实例（单例模式）"""
     global ace_agent
     if ace_agent is None:
-        ace_agent = GTVACEAgent()
-        logger.info("ACE代理已初始化")
+        ace_agent = GTVACEAgentWithClaudeCode(default_mode="ace")
+        logger.info("ACE代理已初始化（默认ACE模式）")
     return ace_agent
 
 @app.route('/health', methods=['GET'])
@@ -112,6 +112,20 @@ def ace_chat():
         
         # 处理问题
         result = agent.process_question(question, context)
+        
+        # 如果评估成功，自动保存到数据库
+        if result.get("success") and result.get("assessment_data"):
+            try:
+                from assessment_database import save_assessment_to_database
+                assessment_data = result.get("assessment_data", {})
+                if assessment_data:
+                    # 生成评估ID
+                    assessment_id = save_assessment_to_database(assessment_data)
+                    logger.info(f"评估完成后自动保存到数据库: {assessment_id}")
+                    # 将评估ID添加到响应中
+                    result["assessment_id"] = assessment_id
+            except Exception as e:
+                logger.warning(f"自动保存到数据库失败: {e}")
         
         # 构建响应 - 支持新的结构化格式
         if result.get("knowledge_base"):
@@ -344,7 +358,54 @@ def not_found(error):
 
 @app.errorhandler(500)
 def internal_error(error):
-    return jsonify({"error": "服务器内部错误"}), 500
+    return jsonify({"error": "服务器内部错误"        }), 500
+
+@app.route('/api/ace/mode', methods=['GET', 'POST'])
+def manage_mode():
+    """获取或设置评估模式"""
+    try:
+        agent = get_ace_agent()
+        
+        if request.method == 'GET':
+            # 获取当前模式
+            current_mode = agent.get_current_mode()
+            return jsonify({
+                "success": True,
+                "current_mode": current_mode,
+                "available_modes": ["ace", "claude_code"]
+            })
+        
+        elif request.method == 'POST':
+            # 设置模式
+            data = request.get_json()
+            if not data or 'mode' not in data:
+                return jsonify({
+                    "success": False,
+                    "error": "请提供mode参数"
+                }), 400
+            
+            mode = data['mode']
+            if mode not in ['ace', 'claude_code']:
+                return jsonify({
+                    "success": False,
+                    "error": "无效的模式，支持的模式: ace, claude_code"
+                }), 400
+            
+            agent.set_default_mode(mode)
+            logger.info(f"评估模式已切换为: {mode}")
+            
+            return jsonify({
+                "success": True,
+                "message": f"评估模式已切换为: {mode}",
+                "current_mode": agent.get_current_mode()
+            })
+            
+    except Exception as e:
+        logger.error(f"模式管理失败: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 if __name__ == '__main__':
     print("🚀 启动GTV ACE API服务器...")
@@ -352,5 +413,6 @@ if __name__ == '__main__':
     print("🔗 健康检查: http://localhost:5001/health")
     print("💬 聊天接口: http://localhost:5001/api/ace/chat")
     print("📚 知识库状态: http://localhost:5001/api/ace/playbook")
+    print("⚙️  模式管理: http://localhost:5001/api/ace/mode")
     
     app.run(host='0.0.0.0', port=5001, debug=True)

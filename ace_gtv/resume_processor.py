@@ -12,20 +12,52 @@ from datetime import datetime
 from typing import Dict, Any, Optional, Tuple
 import requests
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from openai import OpenAI
 from anthropic import Anthropic
 
+# 导入PDF报告生成器
+try:
+    from pdf_report_generator import generate_gtv_pdf_report
+    print("✅ PDF报告生成器导入成功")
+except Exception as e:
+    print(f"❌ PDF报告生成器导入失败: {e}")
+    generate_gtv_pdf_report = None
+
+# 导入数据库管理器
+try:
+    from assessment_database import save_assessment_to_database, load_assessment_from_database, list_all_assessments
+    print("✅ 评估数据库管理器导入成功")
+except Exception as e:
+    print(f"❌ 评估数据库管理器导入失败: {e}")
+    save_assessment_to_database = None
+    load_assessment_from_database = None
+    list_all_assessments = None
+
+# 导入Markdown保存器（保留作为备用）
+try:
+    from markdown_saver import save_assessment_to_markdown, GTVMarkdownSaver
+    print("✅ Markdown保存器导入成功")
+except Exception as e:
+    print(f"❌ Markdown保存器导入失败: {e}")
+    save_assessment_to_markdown = None
+    GTVMarkdownSaver = None
+
 # 可选依赖的占位导入（在运行环境安装后启用）
 try:
     from pdfminer.high_level import extract_text as pdf_extract_text
-except Exception:
+    print(f"✅ pdfminer.six 导入成功")
+except Exception as e:
+    print(f"❌ pdfminer.six 导入失败: {e}")
     pdf_extract_text = None  # type: ignore
 
 try:
     import docx  # python-docx
-except Exception:
+    print(f"✅ python-docx 导入成功，版本: {docx.__version__}")
+except Exception as e:
+    print(f"❌ python-docx 导入失败: {e}")
     docx = None  # type: ignore
 
 # 加载环境变量（优先加载项目根目录的.env.local，然后.env）
@@ -101,6 +133,7 @@ def safe_preview(value: Any, max_len: int = 200) -> str:
     return result
 
 app = Flask(__name__)
+CORS(app)  # 启用CORS支持
 
 # 配置
 UPLOAD_FOLDER = 'resumes'
@@ -978,6 +1011,14 @@ def upload_resume():
         logger.info(f"[{request_id}] 请求来源: {request.remote_addr}")
         logger.info(f"[{request_id}] 请求头: {dict(request.headers)}")
         
+        # 获取表单数据
+        form_name = request.form.get('name', '').strip()
+        form_email = request.form.get('email', '').strip()
+        form_field = request.form.get('field', 'digital-technology').strip()
+        form_additional_info = request.form.get('additionalInfo', '').strip()
+        
+        logger.info(f"[{request_id}] 表单数据 - 姓名: {form_name}, 邮箱: {form_email}, 领域: {form_field}")
+        
         # 检查文件是否存在
         if 'resume' not in request.files:
             logger.error(f"[{request_id}] 错误: 没有上传文件")
@@ -1031,14 +1072,23 @@ def upload_resume():
             
         logger.info(f"[{request_id}] AI信息提取成功")
         logger.info(f"[{request_id}] 提取的信息: {extracted_info}")
+        
+        # 优先使用表单中的姓名，如果表单姓名为空则使用AI提取的姓名
+        ai_name = extracted_info.get("name", "").strip()
+        final_name = form_name if form_name else ai_name
+        if not final_name:
+            final_name = "未知用户"
             
-        # 获取姓名
-        name = extracted_info.get("name", "未知用户")
-        logger.info(f"[{request_id}] 提取的姓名: {name}")
+        logger.info(f"[{request_id}] 最终使用的姓名: {final_name} (表单: {form_name}, AI提取: {ai_name})")
+        
+        # 如果表单提供了邮箱，也更新到提取信息中
+        if form_email:
+            extracted_info["email"] = form_email
+            logger.info(f"[{request_id}] 使用表单邮箱: {form_email}")
         
         # 创建个人知识库
         logger.info(f"[{request_id}] 开始创建个人知识库")
-        personal_kb_path = create_personal_knowledge_base(name, extracted_info)
+        personal_kb_path = create_personal_knowledge_base(final_name, extracted_info)
         if not personal_kb_path:
             logger.error(f"[{request_id}] 错误: 创建个人知识库失败")
             return jsonify({"success": False, "error": "创建个人知识库失败"}), 500
@@ -1047,7 +1097,7 @@ def upload_resume():
             
         # 更新主知识库
         logger.info(f"[{request_id}] 开始更新主知识库，个人知识库路径: {personal_kb_path}")
-        update_result = update_main_knowledge_base(personal_kb_path, name)
+        update_result = update_main_knowledge_base(personal_kb_path, final_name)
         logger.info(f"[{request_id}] 主知识库更新结果: {update_result}")
         
         # 清理临时文件
@@ -1062,7 +1112,7 @@ def upload_resume():
             "success": True,
             "analysis": extracted_info,
             "personal_kb_path": personal_kb_path,
-            "message": f"简历分析完成，已为 {name} 创建个人知识库"
+            "message": f"简历分析完成，已为 {final_name} 创建个人知识库"
         })
         
     except Exception as e:
@@ -1086,11 +1136,27 @@ def gtv_assessment():
         # 提取必要参数
         extracted_info = data.get('extracted_info', {})
         field = data.get('field', 'digital-technology')
-        name = data.get('name', '')
-        email = data.get('email', '')
+        form_name = data.get('name', '').strip()
+        form_email = data.get('email', '').strip()
         
-        logger.info(f"[{request_id}] 评估参数 - 姓名: {name}, 邮箱: {email}, 领域: {field}")
+        # 优先使用表单中的姓名，如果表单姓名为空则使用AI提取的姓名
+        ai_name = extracted_info.get("name", "").strip()
+        final_name = form_name if form_name else ai_name
+        if not final_name:
+            final_name = "未知用户"
+            
+        logger.info(f"[{request_id}] 评估参数 - 最终姓名: {final_name} (表单: {form_name}, AI提取: {ai_name}), 邮箱: {form_email}, 领域: {field}")
         logger.info(f"[{request_id}] 提取的信息: {extracted_info}")
+        
+        # 如果表单提供了姓名，更新到提取信息中
+        if form_name:
+            extracted_info["name"] = form_name
+            logger.info(f"[{request_id}] 使用表单姓名更新提取信息: {form_name}")
+        
+        # 如果表单提供了邮箱，也更新到提取信息中
+        if form_email:
+            extracted_info["email"] = form_email
+            logger.info(f"[{request_id}] 使用表单邮箱更新提取信息: {form_email}")
         
         # 使用AI进行GTV评估
         logger.info(f"[{request_id}] 开始AI GTV评估")
@@ -1099,11 +1165,35 @@ def gtv_assessment():
         logger.info(f"[{request_id}] GTV评估完成")
         logger.info(f"[{request_id}] 评估结果预览: {safe_preview(str(gtv_analysis))}")
         
-        return jsonify({
+        # 评估完成后自动生成PDF
+        pdf_file_path = None
+        pdf_filename = None
+        try:
+            logger.info(f"[{request_id}] 开始自动生成PDF报告...")
+            if generate_gtv_pdf_report:
+                pdf_file_path = generate_gtv_pdf_report(gtv_analysis)
+                pdf_filename = os.path.basename(pdf_file_path)
+                logger.info(f"[{request_id}] PDF报告自动生成成功: {pdf_filename}")
+            else:
+                logger.warning(f"[{request_id}] PDF报告生成器未安装，跳过自动生成")
+        except Exception as pdf_error:
+            logger.error(f"[{request_id}] 自动生成PDF报告失败: {pdf_error}")
+            # PDF生成失败不影响评估结果返回
+        
+        # 构建响应数据
+        response_data = {
             "success": True,
             "gtvAnalysis": gtv_analysis,
             "message": f"GTV资格评估完成"
-        })
+        }
+        
+        # 如果PDF生成成功，添加到响应中
+        if pdf_file_path and pdf_filename:
+            response_data["pdf_file_path"] = pdf_file_path
+            response_data["pdf_filename"] = pdf_filename
+            response_data["message"] = f"GTV资格评估完成，PDF报告已自动生成"
+        
+        return jsonify(response_data)
         
     except Exception as e:
         logger.error(f"[{request_id}] GTV评估失败: {e}", exc_info=True)
@@ -1160,11 +1250,297 @@ def list_personal_kbs():
         logger.error(f"列出个人知识库失败: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route('/api/resume/generate-pdf', methods=['POST'])
+def generate_pdf_report():
+    """生成PDF评估报告"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "请求数据不能为空"
+            }), 400
+        
+        if not generate_gtv_pdf_report:
+            return jsonify({
+                "success": False,
+                "error": "PDF报告生成器未安装"
+            }), 500
+        
+        # 检查是否提供了评估ID
+        assessment_id = data.get('assessment_id')
+        markdown_filepath = None  # 初始化变量
+        
+        if assessment_id and load_assessment_from_database:
+            # 如果提供了评估ID，从数据库加载数据生成PDF
+            logger.info(f"从数据库加载评估数据生成PDF: {assessment_id}")
+            try:
+                assessment_data = load_assessment_from_database(assessment_id)
+                if not assessment_data:
+                    return jsonify({
+                        "success": False,
+                        "error": f"未找到评估ID: {assessment_id}"
+                    }), 404
+                
+                output_path = generate_gtv_pdf_report(assessment_data)
+                logger.info(f"从数据库数据生成PDF成功: {output_path}")
+            except Exception as e:
+                logger.error(f"从数据库生成PDF失败: {e}")
+                return jsonify({
+                    "success": False,
+                    "error": f"从数据库生成PDF失败: {str(e)}"
+                }), 500
+        else:
+            # 如果没有提供评估ID，检查是否有Markdown文件路径
+            markdown_filepath = data.get('markdown_filepath')
+            
+            if markdown_filepath and os.path.exists(markdown_filepath):
+                # 如果提供了Markdown文件路径且文件存在，从Markdown文件生成PDF
+                logger.info(f"从Markdown文件生成PDF: {markdown_filepath}")
+                try:
+                    from pdf_report_generator import GTVPDFReportGenerator
+                    generator = GTVPDFReportGenerator()
+                    output_path = generator.generate_report_from_markdown(markdown_filepath)
+                except Exception as e:
+                    logger.error(f"从Markdown文件生成PDF失败: {e}")
+                    return jsonify({
+                        "success": False,
+                        "error": f"从Markdown文件生成PDF失败: {str(e)}"
+                    }), 500
+            else:
+                # 如果都没有提供，先保存到数据库，然后生成PDF
+                logger.info("未提供评估ID或Markdown文件路径，先保存到数据库")
+                if save_assessment_to_database:
+                    try:
+                        assessment_id = save_assessment_to_database(data)
+                        logger.info(f"评估结果已保存到数据库: {assessment_id}")
+                        # 从数据库重新加载数据生成PDF
+                        assessment_data = load_assessment_from_database(assessment_id)
+                        output_path = generate_gtv_pdf_report(assessment_data)
+                    except Exception as e:
+                        logger.warning(f"保存到数据库失败: {e}")
+                        # 回退到直接生成PDF
+                        output_path = generate_gtv_pdf_report(data)
+                else:
+                    # 直接生成PDF
+                    output_path = generate_gtv_pdf_report(data)
+        
+        # 检查文件是否生成成功
+        if os.path.exists(output_path):
+            response_data = {
+                "success": True,
+                "message": "PDF报告生成成功",
+                "file_path": output_path,
+                "file_name": os.path.basename(output_path)
+            }
+            
+            # 如果使用了评估ID，返回评估ID
+            if assessment_id:
+                response_data["assessment_id"] = assessment_id
+            
+            # 如果Markdown文件存在，也返回其路径（向后兼容）
+            if markdown_filepath and os.path.exists(markdown_filepath):
+                response_data["markdown_filepath"] = markdown_filepath
+                response_data["markdown_filename"] = os.path.basename(markdown_filepath)
+            
+            return jsonify(response_data)
+        else:
+            return jsonify({
+                "success": False,
+                "error": "PDF文件生成失败"
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"生成PDF报告失败: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/resume/download-pdf/<path:filename>', methods=['GET'])
+def download_pdf_report(filename):
+    """下载PDF报告"""
+    try:
+        # 解码URL编码的文件名
+        import urllib.parse
+        decoded_filename = urllib.parse.unquote(filename)
+        
+        # 确保文件名安全
+        safe_filename = secure_filename(decoded_filename)
+        file_path = os.path.join('reports', safe_filename)
+        
+        logger.info(f"尝试下载文件: {file_path}")
+        
+        if not os.path.exists(file_path):
+            logger.error(f"文件不存在: {file_path}")
+            return jsonify({
+                "success": False,
+                "error": "文件不存在"
+            }), 404
+        
+        # 返回文件
+        from flask import send_file
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=safe_filename,
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        logger.error(f"下载PDF报告失败: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/resume/generate-pdf-from-markdown', methods=['POST'])
+def generate_pdf_from_markdown():
+    """从Markdown文件生成PDF报告"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "请求数据不能为空"
+            }), 400
+        
+        markdown_filepath = data.get('markdown_filepath')
+        if not markdown_filepath:
+            return jsonify({
+                "success": False,
+                "error": "Markdown文件路径不能为空"
+            }), 400
+        
+        if not generate_gtv_pdf_report:
+            return jsonify({
+                "success": False,
+                "error": "PDF报告生成器未安装"
+            }), 500
+        
+        # 检查Markdown文件是否存在
+        if not os.path.exists(markdown_filepath):
+            return jsonify({
+                "success": False,
+                "error": f"Markdown文件不存在: {markdown_filepath}"
+            }), 404
+        
+        # 从Markdown文件生成PDF报告
+        from pdf_report_generator import GTVPDFReportGenerator
+        generator = GTVPDFReportGenerator()
+        output_path = generator.generate_report_from_markdown(markdown_filepath)
+        
+        # 检查文件是否生成成功
+        if os.path.exists(output_path):
+            return jsonify({
+                "success": True,
+                "message": "PDF报告生成成功",
+                "file_path": output_path,
+                "file_name": os.path.basename(output_path)
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": "PDF文件生成失败"
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"从Markdown生成PDF报告失败: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/resume/list-assessments', methods=['GET'])
+def list_assessments():
+    """列出所有评估结果"""
+    try:
+        if not list_all_assessments:
+            return jsonify({
+                "success": False,
+                "error": "数据库管理器未安装"
+            }), 500
+        
+        # 从数据库获取评估列表
+        assessments = list_all_assessments()
+        
+        return jsonify({
+            "success": True,
+            "assessments": assessments
+        })
+        
+    except Exception as e:
+        logger.error(f"列出评估结果失败: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/resume/get-assessment/<assessment_id>', methods=['GET'])
+def get_assessment(assessment_id):
+    """获取指定评估ID的详细结果"""
+    try:
+        if not load_assessment_from_database:
+            return jsonify({
+                "success": False,
+                "error": "数据库管理器未安装"
+            }), 500
+        
+        assessment_data = load_assessment_from_database(assessment_id)
+        if not assessment_data:
+            return jsonify({
+                "success": False,
+                "error": f"未找到评估ID: {assessment_id}"
+            }), 404
+        
+        return jsonify({
+            "success": True,
+            "assessment": assessment_data
+        })
+        
+    except Exception as e:
+        logger.error(f"获取评估结果失败: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/resume/delete-assessment/<assessment_id>', methods=['DELETE'])
+def delete_assessment(assessment_id):
+    """删除指定评估ID的结果"""
+    try:
+        from assessment_database import assessment_db
+        
+        success = assessment_db.delete_assessment(assessment_id)
+        if success:
+            return jsonify({
+                "success": True,
+                "message": f"评估结果 {assessment_id} 已删除"
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": f"删除评估结果 {assessment_id} 失败"
+            }), 500
+        
+    except Exception as e:
+        logger.error(f"删除评估结果失败: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 if __name__ == '__main__':
     logger.info("🚀 启动简历处理服务...")
     logger.info("📡 API地址: http://localhost:5002")
     logger.info("🔗 健康检查: http://localhost:5002/health")
     logger.info("📄 简历上传: http://localhost:5002/api/resume/upload")
     logger.info("📚 个人知识库: http://localhost:5002/api/resume/personal/<name>")
+    logger.info("📊 PDF报告生成: http://localhost:5002/api/resume/generate-pdf")
+    logger.info("📥 PDF报告下载: http://localhost:5002/api/resume/download-pdf/<filename>")
+    logger.info("📝 从Markdown生成PDF: http://localhost:5002/api/resume/generate-pdf-from-markdown")
+    logger.info("📋 列出评估结果: http://localhost:5002/api/resume/list-assessments")
+    logger.info("🔍 获取评估详情: http://localhost:5002/api/resume/get-assessment/<assessment_id>")
+    logger.info("🗑️ 删除评估结果: http://localhost:5002/api/resume/delete-assessment/<assessment_id>")
     
     app.run(host='0.0.0.0', port=5002, debug=True)

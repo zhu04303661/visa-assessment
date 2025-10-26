@@ -293,12 +293,12 @@
     "朱恩庆_exp_1": {
       "id": "朱恩庆_exp_1",
       "section": "工作经验",
-      "content": "拥有12年技术管理及研发经验，现任新奥集团智能技术负责人，智能技术架构师，智能产品研发群资深技术总监，带领90人团队专注于AI智能、大模型技术及产业智能升级。曾在携程担任无线技术专家、高级经理，负责移动端研发效能及云平台开发，支撑亿级流程服务入口。早期在爱立信、阿尔卡特朗讯贝尔实验室从事核心通讯技术及4G物理层算法仿真系统研发，具备丰富的算法、云计算、嵌入式系统及Linux系统开发经验。管理团队规模从5人到90人，涵盖算法、工程研发等多领域，推动企业智能化升级及基础设施建设。",
+      "content": "拥有12年技术管理及研发经验，现任新奥集团智能技术负责人、智能技术架构师、智能产品研发群资深技术总监，带领90人团队专注于AI智能、大模型研发及产业智能升级。曾任携程无线技术专家、高级经理，负责移动端研发效能、无线服务端开发及云平台建设。此前在爱立信担任软件工程师，参与LTE eMBMS模拟器及自动化CI系统开发。早期在阿尔卡特朗讯-贝尔实验室担任算法研发工程师及团队leader，主导LTE物理层仿真系统开发并赴美国贝尔实验室联合研发。曾于英特尔亚太研发中心实习，参与MeeGo开源操作系统测试与自动化工具开发。",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.649350",
-      "updated_at": "2025-10-22T14:12:02.649357"
+      "created_at": "2025-10-25T13:53:34.841030",
+      "updated_at": "2025-10-25T13:53:34.841033"
     },
     "朱恩庆_edu_1": {
       "id": "朱恩庆_edu_1",
@@ -307,8 +307,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.649481",
-      "updated_at": "2025-10-22T14:12:02.649483"
+      "created_at": "2025-10-25T13:53:34.841111",
+      "updated_at": "2025-10-25T13:53:34.841113"
     },
     "朱恩庆_skill_1": {
       "id": "朱恩庆_skill_1",
@@ -317,8 +317,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.649601",
-      "updated_at": "2025-10-22T14:12:02.649603"
+      "created_at": "2025-10-25T13:53:34.841230",
+      "updated_at": "2025-10-25T13:53:34.841232"
     },
     "朱恩庆_skill_2": {
       "id": "朱恩庆_skill_2",
@@ -327,8 +327,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.649715",
-      "updated_at": "2025-10-22T14:12:02.649717"
+      "created_at": "2025-10-25T13:53:34.841309",
+      "updated_at": "2025-10-25T13:53:34.841310"
     },
     "朱恩庆_skill_3": {
       "id": "朱恩庆_skill_3",
@@ -337,8 +337,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.649828",
-      "updated_at": "2025-10-22T14:12:02.649830"
+      "created_at": "2025-10-25T13:53:34.841431",
+      "updated_at": "2025-10-25T13:53:34.841433"
     },
     "朱恩庆_skill_4": {
       "id": "朱恩庆_skill_4",
@@ -347,8 +347,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.649941",
-      "updated_at": "2025-10-22T14:12:02.649943"
+      "created_at": "2025-10-25T13:53:34.841533",
+      "updated_at": "2025-10-25T13:53:34.841535"
     },
     "朱恩庆_skill_5": {
       "id": "朱恩庆_skill_5",
@@ -357,8 +357,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.650055",
-      "updated_at": "2025-10-22T14:12:02.650057"
+      "created_at": "2025-10-25T13:53:34.841634",
+      "updated_at": "2025-10-25T13:53:34.841635"
     },
     "朱恩庆_skill_6": {
       "id": "朱恩庆_skill_6",
@@ -367,8 +367,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.650168",
-      "updated_at": "2025-10-22T14:12:02.650170"
+      "created_at": "2025-10-25T13:53:34.841747",
+      "updated_at": "2025-10-25T13:53:34.841749"
     },
     "朱恩庆_skill_7": {
       "id": "朱恩庆_skill_7",
@@ -377,8 +377,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.650285",
-      "updated_at": "2025-10-22T14:12:02.650287"
+      "created_at": "2025-10-25T13:53:34.841833",
+      "updated_at": "2025-10-25T13:53:34.841834"
     },
     "朱恩庆_skill_8": {
       "id": "朱恩庆_skill_8",
@@ -387,8 +387,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.650398",
-      "updated_at": "2025-10-22T14:12:02.650400"
+      "created_at": "2025-10-25T13:53:34.841914",
+      "updated_at": "2025-10-25T13:53:34.841915"
     },
     "朱恩庆_skill_9": {
       "id": "朱恩庆_skill_9",
@@ -397,8 +397,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.650511",
-      "updated_at": "2025-10-22T14:12:02.650513"
+      "created_at": "2025-10-25T13:53:34.842019",
+      "updated_at": "2025-10-25T13:53:34.842021"
     },
     "朱恩庆_skill_10": {
       "id": "朱恩庆_skill_10",
@@ -407,8 +407,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.650630",
-      "updated_at": "2025-10-22T14:12:02.650632"
+      "created_at": "2025-10-25T13:53:34.842096",
+      "updated_at": "2025-10-25T13:53:34.842098"
     },
     "朱恩庆_skill_11": {
       "id": "朱恩庆_skill_11",
@@ -417,8 +417,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.650743",
-      "updated_at": "2025-10-22T14:12:02.650745"
+      "created_at": "2025-10-25T13:53:34.842202",
+      "updated_at": "2025-10-25T13:53:34.842204"
     },
     "朱恩庆_skill_12": {
       "id": "朱恩庆_skill_12",
@@ -427,8 +427,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.650857",
-      "updated_at": "2025-10-22T14:12:02.650859"
+      "created_at": "2025-10-25T13:53:34.842303",
+      "updated_at": "2025-10-25T13:53:34.842305"
     },
     "朱恩庆_skill_13": {
       "id": "朱恩庆_skill_13",
@@ -437,8 +437,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.650971",
-      "updated_at": "2025-10-22T14:12:02.650973"
+      "created_at": "2025-10-25T13:53:34.842422",
+      "updated_at": "2025-10-25T13:53:34.842424"
     },
     "朱恩庆_skill_14": {
       "id": "朱恩庆_skill_14",
@@ -447,18 +447,18 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.651084",
-      "updated_at": "2025-10-22T14:12:02.651086"
+      "created_at": "2025-10-25T13:53:34.842508",
+      "updated_at": "2025-10-25T13:53:34.842509"
     },
     "朱恩庆_skill_15": {
       "id": "朱恩庆_skill_15",
       "section": "技能专长",
-      "content": "全栈工程",
+      "content": "智能模型研发平台",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.651197",
-      "updated_at": "2025-10-22T14:12:02.651199"
+      "created_at": "2025-10-25T13:53:34.842594",
+      "updated_at": "2025-10-25T13:53:34.842596"
     },
     "朱恩庆_skill_16": {
       "id": "朱恩庆_skill_16",
@@ -467,28 +467,28 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.651311",
-      "updated_at": "2025-10-22T14:12:02.651313"
+      "created_at": "2025-10-25T13:53:34.842757",
+      "updated_at": "2025-10-25T13:53:34.842759"
     },
     "朱恩庆_skill_17": {
       "id": "朱恩庆_skill_17",
       "section": "技能专长",
-      "content": "智能产品架构",
+      "content": "全栈开发",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.651432",
-      "updated_at": "2025-10-22T14:12:02.651434"
+      "created_at": "2025-10-25T13:53:34.842847",
+      "updated_at": "2025-10-25T13:53:34.842848"
     },
     "朱恩庆_skill_18": {
       "id": "朱恩庆_skill_18",
       "section": "技能专长",
-      "content": "智能算法研发",
+      "content": "团队管理",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.651549",
-      "updated_at": "2025-10-22T14:12:02.651551"
+      "created_at": "2025-10-25T13:53:34.842974",
+      "updated_at": "2025-10-25T13:53:34.842976"
     },
     "朱恩庆_skill_19": {
       "id": "朱恩庆_skill_19",
@@ -507,8 +507,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.651780",
-      "updated_at": "2025-10-22T14:12:02.651782"
+      "created_at": "2025-10-25T13:53:34.843107",
+      "updated_at": "2025-10-25T13:53:34.843108"
     },
     "朱恩庆_ach_2": {
       "id": "朱恩庆_ach_2",
@@ -517,8 +517,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.651889",
-      "updated_at": "2025-10-22T14:12:02.651891"
+      "created_at": "2025-10-25T13:53:34.843320",
+      "updated_at": "2025-10-25T13:53:34.843323"
     },
     "朱恩庆_ach_3": {
       "id": "朱恩庆_ach_3",
@@ -527,8 +527,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.651997",
-      "updated_at": "2025-10-22T14:12:02.651999"
+      "created_at": "2025-10-25T13:53:34.843429",
+      "updated_at": "2025-10-25T13:53:34.843430"
     },
     "朱恩庆_ach_4": {
       "id": "朱恩庆_ach_4",
@@ -537,8 +537,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.652107",
-      "updated_at": "2025-10-22T14:12:02.652109"
+      "created_at": "2025-10-25T13:53:34.843546",
+      "updated_at": "2025-10-25T13:53:34.843547"
     },
     "朱恩庆_ach_5": {
       "id": "朱恩庆_ach_5",
@@ -547,8 +547,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.652219",
-      "updated_at": "2025-10-22T14:12:02.652221"
+      "created_at": "2025-10-25T13:53:34.843603",
+      "updated_at": "2025-10-25T13:53:34.843604"
     },
     "朱恩庆_ach_6": {
       "id": "朱恩庆_ach_6",
@@ -557,8 +557,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.652331",
-      "updated_at": "2025-10-22T14:12:02.652333"
+      "created_at": "2025-10-25T13:53:34.843659",
+      "updated_at": "2025-10-25T13:53:34.843660"
     },
     "朱恩庆_ach_7": {
       "id": "朱恩庆_ach_7",
@@ -567,8 +567,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.652443",
-      "updated_at": "2025-10-22T14:12:02.652445"
+      "created_at": "2025-10-25T13:53:34.843715",
+      "updated_at": "2025-10-25T13:53:34.843716"
     },
     "朱恩庆_ach_8": {
       "id": "朱恩庆_ach_8",
@@ -577,8 +577,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.652556",
-      "updated_at": "2025-10-22T14:12:02.652558"
+      "created_at": "2025-10-25T13:53:34.843855",
+      "updated_at": "2025-10-25T13:53:34.843856"
     },
     "朱恩庆_ach_9": {
       "id": "朱恩庆_ach_9",
@@ -587,18 +587,18 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.652669",
-      "updated_at": "2025-10-22T14:12:02.652671"
+      "created_at": "2025-10-25T13:53:34.843957",
+      "updated_at": "2025-10-25T13:53:34.843958"
     },
     "朱恩庆_ach_10": {
       "id": "朱恩庆_ach_10",
       "section": "成就荣誉",
-      "content": "2009年发表论文被EI收录",
+      "content": "2009年发表《弹箭惯性主轴测试方法研究》EI收录",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.652781",
-      "updated_at": "2025-10-22T14:12:02.652782"
+      "created_at": "2025-10-25T13:53:34.844096",
+      "updated_at": "2025-10-25T13:53:34.844097"
     },
     "朱恩庆_ach_11": {
       "id": "朱恩庆_ach_11",
@@ -607,8 +607,468 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-22T14:12:02.652901",
-      "updated_at": "2025-10-22T14:12:02.652903"
+      "created_at": "2025-10-25T13:53:34.844223",
+      "updated_at": "2025-10-25T13:53:34.844224"
+    },
+    "_exp_1": {
+      "id": "_exp_1",
+      "section": "工作经验",
+      "content": "Currently working at Lenovo-ar as a Graphic Engine (ZEngine) Developer since July 2023, responsible for developing the ZEngine graphic engine, supporting Markdown/HTML rendering, creating UI and control systems, and delivering commercial projects. Previously developed AR-VR glasses applications at Lenovo-ar (2019/09 - 2022/07), including a Blueprint Editor in VR, VR training applications for BMW repairmen, and AR applications for virtual screens. Worked as a Mobile Games Developer at Beijing ChuangYouTianDi Network Technology Co., Ltd (2016/06 - 2019/06), developing games such as 'A Dream of a Girl', 'Labyrinth', and 'Adventure On Road'. Earlier experience at Softstar Technology (Beijing) Co., Ltd (2008/07 - 2016/06) includes developing mobile clients for online card games, stand-alone games (PALS, PALSA, PAL6), and server-side development for large online games.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792017",
+      "updated_at": "2025-10-25T13:51:56.792020"
+    },
+    "_edu_1": {
+      "id": "_edu_1",
+      "section": "教育背景",
+      "content": "Bachelor's degree in Electronic and Information Engineering from Beijing University of Chemical Technology (2004/09 - 2008/07). Completed high school at The High School Attached to Beijing Jiaotong University (2001/09 - 2004/07), both in Beijing, China.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792079",
+      "updated_at": "2025-10-25T13:51:56.792080"
+    },
+    "_skill_1": {
+      "id": "_skill_1",
+      "section": "技能专长",
+      "content": "C++",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792135",
+      "updated_at": "2025-10-25T13:51:56.792136"
+    },
+    "_skill_2": {
+      "id": "_skill_2",
+      "section": "技能专长",
+      "content": "C#",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792190",
+      "updated_at": "2025-10-25T13:51:56.792191"
+    },
+    "_skill_3": {
+      "id": "_skill_3",
+      "section": "技能专长",
+      "content": "Python",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792244",
+      "updated_at": "2025-10-25T13:51:56.792245"
+    },
+    "_skill_4": {
+      "id": "_skill_4",
+      "section": "技能专长",
+      "content": "JavaScript",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792298",
+      "updated_at": "2025-10-25T13:51:56.792299"
+    },
+    "_skill_5": {
+      "id": "_skill_5",
+      "section": "技能专长",
+      "content": "Windows",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792352",
+      "updated_at": "2025-10-25T13:51:56.792353"
+    },
+    "_skill_6": {
+      "id": "_skill_6",
+      "section": "技能专长",
+      "content": "Linux",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792407",
+      "updated_at": "2025-10-25T13:51:56.792408"
+    },
+    "_skill_7": {
+      "id": "_skill_7",
+      "section": "技能专长",
+      "content": "Unity3D",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792462",
+      "updated_at": "2025-10-25T13:51:56.792463"
+    },
+    "_skill_8": {
+      "id": "_skill_8",
+      "section": "技能专长",
+      "content": "DX12",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792515",
+      "updated_at": "2025-10-25T13:51:56.792516"
+    },
+    "_skill_9": {
+      "id": "_skill_9",
+      "section": "技能专长",
+      "content": "Vulkan",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792568",
+      "updated_at": "2025-10-25T13:51:56.792569"
+    },
+    "_skill_10": {
+      "id": "_skill_10",
+      "section": "技能专长",
+      "content": "AR-VR Glasses",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792622",
+      "updated_at": "2025-10-25T13:51:56.792623"
+    },
+    "_skill_11": {
+      "id": "_skill_11",
+      "section": "技能专长",
+      "content": "Mobile Games",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792678",
+      "updated_at": "2025-10-25T13:51:56.792679"
+    },
+    "_ach_1": {
+      "id": "_ach_1",
+      "section": "成就荣誉",
+      "content": "Delivered the first commercial project generated by ZEngine.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792737",
+      "updated_at": "2025-10-25T13:51:56.792738"
+    },
+    "_ach_2": {
+      "id": "_ach_2",
+      "section": "成就荣誉",
+      "content": "Created a dynamic type system for ZEngine.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792797",
+      "updated_at": "2025-10-25T13:51:56.792798"
+    },
+    "_ach_3": {
+      "id": "_ach_3",
+      "section": "成就荣誉",
+      "content": "Constructed a Blueprint Editor (Unity3D) in VR.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792854",
+      "updated_at": "2025-10-25T13:51:56.792855"
+    },
+    "_ach_4": {
+      "id": "_ach_4",
+      "section": "成就荣誉",
+      "content": "Developed VR application for BMW repairman training.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792910",
+      "updated_at": "2025-10-25T13:51:56.792911"
+    },
+    "_ach_5": {
+      "id": "_ach_5",
+      "section": "成就荣誉",
+      "content": "Developed AR application for virtual screens.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.792966",
+      "updated_at": "2025-10-25T13:51:56.792967"
+    },
+    "_ach_6": {
+      "id": "_ach_6",
+      "section": "成就荣誉",
+      "content": "Developed mobile games: 'A Dream of a Girl', 'Labyrinth', 'Adventure On Road'.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.793020",
+      "updated_at": "2025-10-25T13:51:56.793021"
+    },
+    "_ach_7": {
+      "id": "_ach_7",
+      "section": "成就荣誉",
+      "content": "Participated in development of three stand-alone games: PALS, PALSA, PAL6.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.793073",
+      "updated_at": "2025-10-25T13:51:56.793074"
+    },
+    "_ach_8": {
+      "id": "_ach_8",
+      "section": "成就荣誉",
+      "content": "Developed server for a giant online game (Windows and Red Hat).",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.793127",
+      "updated_at": "2025-10-25T13:51:56.793128"
+    },
+    "_ach_9": {
+      "id": "_ach_9",
+      "section": "成就荣誉",
+      "content": "Received full points and highest grade for a statistical modeling project using GPGPU (Vulkan) in MIT MicroMasters program.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:51:56.793179",
+      "updated_at": "2025-10-25T13:51:56.793180"
+    },
+    "_ach_10": {
+      "id": "_ach_10",
+      "section": "成就荣誉",
+      "content": "Received full points and 100% grade for a data science project using GPGPU (Vulkan) acceleration and statistical modeling.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T13:46:44.078431",
+      "updated_at": "2025-10-25T13:46:44.078432"
+    },
+    "龚_exp_1": {
+      "id": "龚_exp_1",
+      "section": "工作经验",
+      "content": "Graphic Engine (ZEngine), Lenovo-ar, 2023/07 - Present, Beijing: Partially supported the development of the self-developed graphic engine ZEngine, focusing on rendering, UI system, control system via WebSocket and Browser Client for cloud rendering, Linux compatibility, linking ZEngine Server, bug fixing, delivering first commercial project, dynamic type system. Applications on AR-VR Glasses, Lenovo-ar, 2019/09 - 2022/07: Constructed Blueprint Editor (Unity3D) in VR, developed VR and AR applications (Unity3D, VC++, DX12) for virtual screens. Mobile Games Developer, Beijing ChuangYouTianDi Network Technology Co., Ltd, 2016/06 - 2019/06, Beijing: Developed mobile games including 'A Dream of a Girl', 'Labyrinth', and 'Adventure On Road' (cooperative mobile game). Developed Various Types of Games, Softstar Technology (Beijing) Co., Ltd, 2015/07 - 2016/06: Developed mobile client for online cards game, participated in development of three stand-alone games (PAL6, PALSA), and server development for a giant online game (Windows and Red Hat).",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.135129",
+      "updated_at": "2025-10-25T15:02:15.135135"
+    },
+    "龚_edu_1": {
+      "id": "龚_edu_1",
+      "section": "教育背景",
+      "content": "Electronic and Information Engineering, Beijing University of Chemical Technology, 2004/09 - 2008/07, Beijing, China. High School Course, The High School Attached to Beijing Jiaotong University, 2001/09 - 2004/07, Beijing, China.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.135259",
+      "updated_at": "2025-10-25T15:02:15.135261"
+    },
+    "龚_skill_1": {
+      "id": "龚_skill_1",
+      "section": "技能专长",
+      "content": "C++",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.135378",
+      "updated_at": "2025-10-25T15:02:15.135380"
+    },
+    "龚_skill_2": {
+      "id": "龚_skill_2",
+      "section": "技能专长",
+      "content": "C#",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.135495",
+      "updated_at": "2025-10-25T15:02:15.135498"
+    },
+    "龚_skill_3": {
+      "id": "龚_skill_3",
+      "section": "技能专长",
+      "content": "Python",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.135614",
+      "updated_at": "2025-10-25T15:02:15.135616"
+    },
+    "龚_skill_4": {
+      "id": "龚_skill_4",
+      "section": "技能专长",
+      "content": "JavaScript",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.135734",
+      "updated_at": "2025-10-25T15:02:15.135736"
+    },
+    "龚_skill_5": {
+      "id": "龚_skill_5",
+      "section": "技能专长",
+      "content": "Windows",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.135850",
+      "updated_at": "2025-10-25T15:02:15.135852"
+    },
+    "龚_skill_6": {
+      "id": "龚_skill_6",
+      "section": "技能专长",
+      "content": "Linux",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.136013",
+      "updated_at": "2025-10-25T15:02:15.136015"
+    },
+    "龚_skill_7": {
+      "id": "龚_skill_7",
+      "section": "技能专长",
+      "content": "Unity3D",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.136130",
+      "updated_at": "2025-10-25T15:02:15.136132"
+    },
+    "龚_skill_8": {
+      "id": "龚_skill_8",
+      "section": "技能专长",
+      "content": "DX12",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.136246",
+      "updated_at": "2025-10-25T15:02:15.136249"
+    },
+    "龚_skill_9": {
+      "id": "龚_skill_9",
+      "section": "技能专长",
+      "content": "Vulkan",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.136363",
+      "updated_at": "2025-10-25T15:02:15.136365"
+    },
+    "龚_skill_10": {
+      "id": "龚_skill_10",
+      "section": "技能专长",
+      "content": "AR",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.136480",
+      "updated_at": "2025-10-25T15:02:15.136482"
+    },
+    "龚_skill_11": {
+      "id": "龚_skill_11",
+      "section": "技能专长",
+      "content": "Glasses",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.136597",
+      "updated_at": "2025-10-25T15:02:15.136599"
+    },
+    "龚_ach_1": {
+      "id": "龚_ach_1",
+      "section": "成就荣誉",
+      "content": "Delivered the first commercial project generated by ZEngine.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.136868",
+      "updated_at": "2025-10-25T15:02:15.136870"
+    },
+    "龚_ach_2": {
+      "id": "龚_ach_2",
+      "section": "成就荣誉",
+      "content": "Created a dynamic type system for ZEngine.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.137001",
+      "updated_at": "2025-10-25T15:02:15.137003"
+    },
+    "龚_ach_3": {
+      "id": "龚_ach_3",
+      "section": "成就荣誉",
+      "content": "Constructed a Blueprint Editor (Unity3D) in VR.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.137117",
+      "updated_at": "2025-10-25T15:02:15.137119"
+    },
+    "龚_ach_4": {
+      "id": "龚_ach_4",
+      "section": "成就荣誉",
+      "content": "Developed AR application (VC++, DX12) for virtual screens.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.137234",
+      "updated_at": "2025-10-25T15:02:15.137236"
+    },
+    "龚_ach_5": {
+      "id": "龚_ach_5",
+      "section": "成就荣誉",
+      "content": "Developed mobile games: 'A Dream of a Girl', 'Labyrinth', 'Adventure On Road'.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.137351",
+      "updated_at": "2025-10-25T15:02:15.137353"
+    },
+    "龚_ach_6": {
+      "id": "龚_ach_6",
+      "section": "成就荣誉",
+      "content": "Developed mobile client for online cards game.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.137468",
+      "updated_at": "2025-10-25T15:02:15.137470"
+    },
+    "龚_ach_7": {
+      "id": "龚_ach_7",
+      "section": "成就荣誉",
+      "content": "Participated in development of three stand-alone games (PAL6, PALSA).",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.137584",
+      "updated_at": "2025-10-25T15:02:15.137586"
+    },
+    "龚_ach_8": {
+      "id": "龚_ach_8",
+      "section": "成就荣誉",
+      "content": "Participated in server development for a giant online game.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.137701",
+      "updated_at": "2025-10-25T15:02:15.137703"
+    },
+    "龚_ach_9": {
+      "id": "龚_ach_9",
+      "section": "成就荣誉",
+      "content": "Contributed to the server development for a giant online game (Windows and Red Hat).",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T14:46:25.372746",
+      "updated_at": "2025-10-25T14:46:25.372747"
+    },
+    "龚_skill_12": {
+      "id": "龚_skill_12",
+      "section": "技能专长",
+      "content": "Mobile",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-25T15:02:15.136714",
+      "updated_at": "2025-10-25T15:02:15.136716"
     }
   },
   "sections": {
@@ -667,17 +1127,44 @@
       "朱恩庆_skill_16",
       "朱恩庆_skill_17",
       "朱恩庆_skill_18",
-      "朱恩庆_skill_19"
+      "朱恩庆_skill_19",
+      "_skill_1",
+      "_skill_2",
+      "_skill_3",
+      "_skill_4",
+      "_skill_5",
+      "_skill_6",
+      "_skill_7",
+      "_skill_8",
+      "_skill_9",
+      "_skill_10",
+      "_skill_11",
+      "龚_skill_1",
+      "龚_skill_2",
+      "龚_skill_3",
+      "龚_skill_4",
+      "龚_skill_5",
+      "龚_skill_6",
+      "龚_skill_7",
+      "龚_skill_8",
+      "龚_skill_9",
+      "龚_skill_10",
+      "龚_skill_11",
+      "龚_skill_12"
     ],
     "工作经验": [
       "个人简历_exp_1",
       "张三_exp_1",
-      "朱恩庆_exp_1"
+      "朱恩庆_exp_1",
+      "_exp_1",
+      "龚_exp_1"
     ],
     "教育背景": [
       "个人简历_edu_1",
       "张三_edu_1",
-      "朱恩庆_edu_1"
+      "朱恩庆_edu_1",
+      "_edu_1",
+      "龚_edu_1"
     ],
     "成就荣誉": [
       "张三_ach_1",
@@ -694,7 +1181,26 @@
       "朱恩庆_ach_8",
       "朱恩庆_ach_9",
       "朱恩庆_ach_10",
-      "朱恩庆_ach_11"
+      "朱恩庆_ach_11",
+      "_ach_1",
+      "_ach_2",
+      "_ach_3",
+      "_ach_4",
+      "_ach_5",
+      "_ach_6",
+      "_ach_7",
+      "_ach_8",
+      "_ach_9",
+      "_ach_10",
+      "龚_ach_1",
+      "龚_ach_2",
+      "龚_ach_3",
+      "龚_ach_4",
+      "龚_ach_5",
+      "龚_ach_6",
+      "龚_ach_7",
+      "龚_ach_8",
+      "龚_ach_9"
     ]
   },
   "next_id": 3

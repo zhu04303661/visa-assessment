@@ -57,14 +57,21 @@ export function AssessmentForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    console.log("[v0] 表单提交开始...")
+    console.log("[v0] 表单数据:", formData)
+    console.log("[v0] 当前URL:", window.location.href)
 
     if (!formData.resumeText || formData.resumeText.trim().length < 50) {
+      console.log("[v0] 简历文本长度不足")
       alert(t("form.upload.resume.error") || "Please provide a valid resume with at least 50 characters.")
       return
     }
 
+    console.log("[v0] 开始设置状态...")
     setIsSubmitting(true)
     setIsAnalyzing(true)
+    console.log("[v0] 状态已设置，开始API调用...")
 
     try {
       console.log("[v0] Submitting resume for analysis...")
@@ -112,10 +119,49 @@ export function AssessmentForm() {
       // 存储正确的数据结构到sessionStorage
       if (analysisResult.gtvAnalysis) {
         sessionStorage.setItem("assessmentData", JSON.stringify(analysisResult.gtvAnalysis))
+        // 同时存储完整的响应数据，包括PDF文件信息
+        sessionStorage.setItem("fullAssessmentData", JSON.stringify(analysisResult))
       } else {
         sessionStorage.setItem("assessmentData", JSON.stringify(analysisResult))
+        sessionStorage.setItem("fullAssessmentData", JSON.stringify(analysisResult))
       }
-      router.push("/results")
+      
+      // 重置状态
+      setIsSubmitting(false)
+      setIsAnalyzing(false)
+      
+      console.log("[v0] 准备跳转到结果页面...")
+      console.log("[v0] 当前URL:", window.location.href)
+      
+      // 立即尝试跳转，不等待
+      console.log("[v0] 立即执行页面跳转...")
+      console.log("[v0] 跳转前URL:", window.location.href)
+      
+      // 方法1: 使用router.push
+      try {
+        console.log("[v0] 尝试使用router.push...")
+        router.push("/results")
+        console.log("[v0] router.push调用成功")
+      } catch (error) {
+        console.error("[v0] router.push失败:", error)
+      }
+      
+      // 方法2: 使用window.location.href作为备用
+      setTimeout(() => {
+        console.log("[v0] 检查当前URL是否已跳转...")
+        console.log("[v0] 当前URL:", window.location.href)
+        console.log("[v0] 当前路径:", window.location.pathname)
+        
+        if (window.location.pathname !== "/results") {
+          console.log("[v0] 页面未跳转，使用window.location.href强制跳转")
+          window.location.href = "/results"
+        } else {
+          console.log("[v0] 页面已成功跳转到结果页面")
+        }
+      }, 500)
+      
+      // 方法3: 添加一个测试按钮来手动跳转
+      console.log("[v0] 如果页面没有跳转，请检查浏览器控制台错误信息")
     } catch (error) {
       console.error("[v0] Error analyzing resume:", error)
       alert("分析失败，请重试 / Analysis failed, please try again")
@@ -304,7 +350,7 @@ export function AssessmentForm() {
         </Card>
 
         {/* Submit Button */}
-        <div className="flex justify-end pt-6">
+        <div className="flex justify-end pt-6 gap-4">
           <Button type="submit" disabled={isSubmitting} size="lg" className="group">
             {isSubmitting ? (
               <>
@@ -317,6 +363,20 @@ export function AssessmentForm() {
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </>
             )}
+          </Button>
+          
+          {/* 测试跳转按钮 */}
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="lg"
+            onClick={() => {
+              console.log("[v0] 测试跳转按钮被点击")
+              console.log("[v0] 当前URL:", window.location.href)
+              router.push("/results")
+            }}
+          >
+            测试跳转
           </Button>
         </div>
       </div>

@@ -26,7 +26,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/i18n"
 import { LanguageSwitcher } from "@/components/language-switcher"
-import { PurePDFButton } from "@/components/pure-pdf-button"
+import { AssessmentProfessionalPDFButton } from "@/components/professional-pdf-button"
 
 type CriterionStatus = "met" | "partial" | "notmet"
 
@@ -131,17 +131,31 @@ export function AssessmentResults() {
   const router = useRouter()
   const { t, language } = useLanguage()
   const [data, setData] = useState<AnalysisResult | null>(null)
+  const [fullData, setFullData] = useState<any>(null)
   const [showDebug, setShowDebug] = useState(false)
 
   useEffect(() => {
+    // 首先尝试获取完整的评估数据（包含PDF信息）
+    const fullStoredData = sessionStorage.getItem("fullAssessmentData")
     const storedData = sessionStorage.getItem("assessmentData")
-    if (!storedData) {
+    
+    if (!storedData && !fullStoredData) {
       router.push("/assessment")
       return
     }
 
-    const parsedData = JSON.parse(storedData)
-    setData(parsedData)
+    // 优先使用完整数据，回退到基础数据
+    const dataToUse = fullStoredData || storedData
+    const parsedData = JSON.parse(dataToUse)
+    
+    // 如果是从fullAssessmentData获取的，需要提取gtvAnalysis部分
+    if (fullStoredData && parsedData.gtvAnalysis) {
+      setData(parsedData.gtvAnalysis)
+      setFullData(parsedData) // 保存完整数据用于PDF下载
+    } else {
+      setData(parsedData)
+      setFullData(parsedData)
+    }
 
     if (parsedData.debug) {
       const debugRecords = JSON.parse(localStorage.getItem("debugRecords") || "[]")
@@ -353,11 +367,15 @@ export function AssessmentResults() {
               </Link>
             </Button>
             <div className="flex items-center gap-4">
-              {data && (
-                <PurePDFButton 
-                  assessmentData={data}
-                />
-              )}
+  {data && (
+    <AssessmentProfessionalPDFButton 
+      assessmentData={data}
+      assessmentId={fullData?.assessment_id}
+      markdownFilePath={fullData?.markdown_filepath}
+      pdfFilePath={fullData?.pdf_file_path}
+      pdfFilename={fullData?.pdf_filename}
+    />
+  )}
               <LanguageSwitcher />
             </div>
           </div>

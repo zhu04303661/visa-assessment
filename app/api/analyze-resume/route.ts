@@ -162,7 +162,10 @@ export async function POST(request: Request) {
           },
           gtvAnalysis: gtvAnalysis,
           personal_kb_path: pythonData.personal_kb_path,
-          message: pythonData.message
+          message: gtvData.message || pythonData.message,
+          // 添加PDF文件信息
+          pdf_file_path: gtvData.pdf_file_path,
+          pdf_filename: gtvData.pdf_filename
         })
         
       } catch (pythonError) {
