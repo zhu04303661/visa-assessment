@@ -16,7 +16,11 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from openai import OpenAI
-from anthropic import Anthropic
+try:
+    from openai import AzureOpenAI
+except Exception:
+    AzureOpenAI = None  # type: ignore
+ 
 
 # 导入PDF报告生成器
 try:
@@ -315,68 +319,52 @@ def extract_text_from_file(file_path: str) -> str:
         return ""
 
 def _get_llm_client() -> Optional[Any]:
-    """获取配置的LLM客户端实例。"""
-    # 兼容性处理：支持AI_PROVIDER和LLM_PROVIDER两种配置方式
-    ai_provider = os.getenv("AI_PROVIDER", "").lower()
-    llm_provider = os.getenv("LLM_PROVIDER", "").upper()
-    
-    if ai_provider:
-        # 优先使用AI_PROVIDER的值，覆盖LLM_PROVIDER
-        if ai_provider == "openai":
-            os.environ["LLM_PROVIDER"] = "OPENAI"
-        elif ai_provider == "azure":
-            os.environ["LLM_PROVIDER"] = "AZURE"
-        elif ai_provider == "anthropic":
-            os.environ["LLM_PROVIDER"] = "ANTHROPIC"
-        print(f"🔄 使用AI_PROVIDER={ai_provider} -> LLM_PROVIDER={os.environ['LLM_PROVIDER']}")
-    
-    # 兼容性处理：支持AZURE_API_KEY和AZURE_OPENAI_API_KEY
-    azure_api_key = os.getenv("AZURE_API_KEY")
-    azure_openai_api_key = os.getenv("AZURE_OPENAI_API_KEY")
-    if azure_api_key and not azure_openai_api_key:
-        os.environ["AZURE_OPENAI_API_KEY"] = azure_api_key
+    """返回 Azure OpenAI 客户端（仅支持 Azure）。"""
+    # 兼容变量映射
+    if os.getenv("AZURE_API_KEY") and not os.getenv("AZURE_OPENAI_API_KEY"):
+        os.environ["AZURE_OPENAI_API_KEY"] = os.getenv("AZURE_API_KEY", "")
         logger.info("自动映射AZURE_API_KEY -> AZURE_OPENAI_API_KEY")
-    
-    # 兼容性处理：支持AZURE_OPENAI_DEPLOYMENT_NAME和AZURE_OPENAI_DEPLOYMENT
-    azure_deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
-    azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT")
-    if azure_deployment_name and not azure_deployment:
-        os.environ["AZURE_OPENAI_DEPLOYMENT"] = azure_deployment_name
-        logger.info(f"自动映射AZURE_OPENAI_DEPLOYMENT_NAME -> AZURE_OPENAI_DEPLOYMENT")
-    
-    provider = os.getenv("LLM_PROVIDER", "OPENAI").upper()
-    
-    if provider == "OPENAI":
-        api_key = os.getenv("OPENAI_API_KEY")
-        base_url = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
-        if not api_key:
-            logger.warning("未配置OPENAI_API_KEY，跳过LLM提取")
-            return None
-        return OpenAI(api_key=api_key, base_url=base_url)
-    
-    elif provider == "AZURE":
-        endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
-        api_key = os.getenv("AZURE_OPENAI_API_KEY", "")
-        api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview")
-        if not (endpoint and api_key):
-            logger.warning("未配置Azure OpenAI参数，跳过LLM提取")
-            return None
-        return OpenAI(
-            api_key=api_key,
-            base_url=f"{endpoint}/openai/deployments/{os.getenv('AZURE_OPENAI_DEPLOYMENT', '')}",
-            default_query={"api-version": api_version}
-        )
-    
-    elif provider == "ANTHROPIC":
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            logger.warning("未配置ANTHROPIC_API_KEY，跳过LLM提取")
-            return None
-        return Anthropic(api_key=api_key)
-    
-    else:
-        logger.warning(f"不支持的LLM提供商: {provider}")
+    if os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME") and not os.getenv("AZURE_OPENAI_DEPLOYMENT"):
+        os.environ["AZURE_OPENAI_DEPLOYMENT"] = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "")
+        logger.info("自动映射AZURE_OPENAI_DEPLOYMENT_NAME -> AZURE_OPENAI_DEPLOYMENT")
+    if os.getenv("AZURE_OPENAI_ENDPOINT") and not os.getenv("ENDPOINT_URL"):
+        os.environ["ENDPOINT_URL"] = os.getenv("AZURE_OPENAI_ENDPOINT", "")
+        logger.info("自动映射AZURE_OPENAI_ENDPOINT -> ENDPOINT_URL")
+    if os.getenv("AZURE_OPENAI_DEPLOYMENT") and not os.getenv("DEPLOYMENT_NAME"):
+        os.environ["DEPLOYMENT_NAME"] = os.getenv("AZURE_OPENAI_DEPLOYMENT", "")
+        logger.info("自动映射AZURE_OPENAI_DEPLOYMENT -> DEPLOYMENT_NAME")
+
+    # httpx 版本守护（与 openai 客户端兼容）
+    try:
+        import httpx
+        httpx_version = getattr(httpx, "__version__", "0.0.0").split(".")
+        major = int(httpx_version[0]) if len(httpx_version) > 0 and httpx_version[0].isdigit() else 0
+        minor = int(httpx_version[1]) if len(httpx_version) > 1 and httpx_version[1].isdigit() else 0
+        if major == 0 and minor >= 28:
+            msg = (
+                "检测到 httpx>=0.28，与当前 openai 版本可能不兼容（移除了 proxies）。"
+                "请固定 httpx 到 0.27.x（如 0.27.2）或升级 openai 到兼容版本。"
+            )
+            logger.error(msg)
+            raise RuntimeError(msg)
+    except RuntimeError:
+        raise
+    except Exception as _e:
+        logger.debug(f"httpx 版本检查跳过: {_e}")
+
+    endpoint = os.getenv("ENDPOINT_URL", "").rstrip("/")
+    api_key = os.getenv("AZURE_OPENAI_API_KEY", "")
+    api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
+    if not (endpoint and api_key):
+        logger.warning("未配置 Azure OpenAI 参数，跳过LLM提取")
         return None
+    if AzureOpenAI is None:
+        raise RuntimeError("当前 openai 版本不支持 AzureOpenAI，请升级 openai 到支持 Azure 的版本")
+    return AzureOpenAI(
+        azure_endpoint=endpoint,
+        api_key=api_key,
+        api_version=api_version,
+    )
 
 
 def _parse_llm_json(text: str) -> Dict[str, Any]:
@@ -404,9 +392,6 @@ def call_ai_for_extraction(content: str) -> Dict[str, Any]:
         return _extract_with_local_rules(content)
     
     try:
-        provider = os.getenv("LLM_PROVIDER", "OPENAI").upper()
-        logger.info(f"调用LLM提供商: {provider}")
-        
         system_prompt = (
             "你是资深签证顾问，请从简历全文中提炼结构化信息。"
             "严格返回JSON对象，不要包含多余说明或Markdown围栏。"
@@ -417,39 +402,38 @@ def call_ai_for_extraction(content: str) -> Dict[str, Any]:
             "languages(数组), certifications(数组), summary(摘要)。\n\n简历全文:\n" + content
         )
 
-        if provider in ["OPENAI", "AZURE"]:
-            # 使用OpenAI客户端
-            model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-            if provider == "AZURE":
-                deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "")
-                if not deployment:
-                    raise ValueError("Azure OpenAI需要配置AZURE_OPENAI_DEPLOYMENT")
-                model = deployment
-            
-            response = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                temperature=0.2,
-                timeout=LLM_TIMEOUT_SEC
-            )
-            llm_text = response.choices[0].message.content
-            
-        elif provider == "ANTHROPIC":
-            # 使用Anthropic客户端
-            response = client.messages.create(
-                model="claude-3-sonnet-20240229",
-                max_tokens=1500,
-                temperature=0.2,
-                system=system_prompt,
-                messages=[{"role": "user", "content": user_prompt}],
-                timeout=LLM_TIMEOUT_SEC
-            )
-            llm_text = response.content[0].text
-        else:
-            raise ValueError(f"不支持的LLM提供商: {provider}")
+        deployment = os.getenv("DEPLOYMENT_NAME", os.getenv("AZURE_OPENAI_DEPLOYMENT", ""))
+        if not deployment:
+            raise ValueError("Azure OpenAI 需要配置 DEPLOYMENT_NAME 或 AZURE_OPENAI_DEPLOYMENT")
+
+        messages = [
+            {
+                "role": "system",
+                "content": [
+                    {"type": "text", "text": system_prompt}
+                ]
+            },
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": user_prompt}
+                ]
+            }
+        ]
+
+        response = client.chat.completions.create(
+            model=deployment,
+            messages=messages,
+            max_tokens=1638,
+            temperature=0.7,
+            top_p=0.95,
+            frequency_penalty=0,
+            presence_penalty=0,
+            stop=None,
+            stream=False,
+            timeout=LLM_TIMEOUT_SEC
+        )
+        llm_text = response.choices[0].message.content
 
         logger.info(f"LLM返回文本长度: {len(llm_text)}; 预览: {safe_preview(llm_text)}")
         parsed = _parse_llm_json(llm_text)
@@ -485,8 +469,6 @@ def call_ai_for_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> Di
         return _get_default_gtv_assessment(extracted_info, field)
     
     try:
-        provider = os.getenv("LLM_PROVIDER", "OPENAI").upper()
-        logger.info(f"调用LLM提供商进行GTV评估: {provider}")
         
         # 构建评估提示
         system_prompt = (
@@ -597,39 +579,38 @@ def call_ai_for_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> Di
 }}
 """
 
-        if provider in ["OPENAI", "AZURE"]:
-            # 使用OpenAI客户端
-            model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-            if provider == "AZURE":
-                deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "")
-                if not deployment:
-                    raise ValueError("Azure OpenAI需要配置AZURE_OPENAI_DEPLOYMENT")
-                model = deployment
-            
-            response = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                temperature=0.3,
-                timeout=LLM_TIMEOUT_SEC
-            )
-            llm_text = response.choices[0].message.content
-            
-        elif provider == "ANTHROPIC":
-            # 使用Anthropic客户端
-            response = client.messages.create(
-                model="claude-3-sonnet-20240229",
-                max_tokens=2000,
-                temperature=0.3,
-                system=system_prompt,
-                messages=[{"role": "user", "content": user_prompt}],
-                timeout=LLM_TIMEOUT_SEC
-            )
-            llm_text = response.content[0].text
-        else:
-            raise ValueError(f"不支持的LLM提供商: {provider}")
+        deployment = os.getenv("DEPLOYMENT_NAME", os.getenv("AZURE_OPENAI_DEPLOYMENT", ""))
+        if not deployment:
+            raise ValueError("Azure OpenAI 需要配置 DEPLOYMENT_NAME 或 AZURE_OPENAI_DEPLOYMENT")
+
+        messages = [
+            {
+                "role": "system",
+                "content": [
+                    {"type": "text", "text": system_prompt}
+                ]
+            },
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": user_prompt}
+                ]
+            }
+        ]
+
+        response = client.chat.completions.create(
+            model=deployment,
+            messages=messages,
+            max_tokens=1638,
+            temperature=0.7,
+            top_p=0.95,
+            frequency_penalty=0,
+            presence_penalty=0,
+            stop=None,
+            stream=False,
+            timeout=LLM_TIMEOUT_SEC
+        )
+        llm_text = response.choices[0].message.content
 
         logger.info(f"GTV评估LLM返回文本长度: {len(llm_text)}; 预览: {safe_preview(llm_text)}")
         parsed = _parse_llm_json(llm_text)

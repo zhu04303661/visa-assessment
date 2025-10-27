@@ -1,6 +1,11 @@
 import { generateText } from "ai"
 import { getAIModel, getAIOptions, validateAIConfig } from "@/lib/ai-config"
 
+const PYTHON_API_BASE_URL =
+  process.env.RESUME_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5002"
+
 export async function POST(request: Request) {
   const requestId = Date.now().toString()
   console.log(`[${requestId}] 开始处理简历分析请求`)
@@ -65,9 +70,10 @@ export async function POST(request: Request) {
       pythonFormData.append('additionalInfo', additionalInfo)
       
       try {
-        console.log(`[${requestId}] 调用Python API: http://localhost:5002/api/resume/upload`)
+        const uploadUrl = `${PYTHON_API_BASE_URL.replace(/\/$/, '')}/api/resume/upload`
+        console.log(`[${requestId}] 调用Python API: ${uploadUrl}`)
         
-        const pythonResponse = await fetch('http://localhost:5002/api/resume/upload', {
+        const pythonResponse = await fetch(uploadUrl, {
           method: 'POST',
           body: pythonFormData
         })
@@ -116,7 +122,8 @@ export async function POST(request: Request) {
 
         // 调用Python服务的GTV评估API
         console.log("[v0] 开始调用GTV评估API...")
-        const gtvResponse = await fetch('http://localhost:5002/api/resume/gtv-assessment', {
+        const gtvUrl = `${PYTHON_API_BASE_URL.replace(/\/$/, '')}/api/resume/gtv-assessment`
+        const gtvResponse = await fetch(gtvUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

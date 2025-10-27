@@ -29,7 +29,7 @@ echo "⚛️ 启动 Next.js 应用..."
 pnpm dev &
 NEXTJS_PID=$!
 echo "Next.js 应用已启动，PID: $NEXTJS_PID"
-echo "🌐 http://localhost:3000"
+echo "🌐 http://0.0.0.0:3000"
 echo "🛑 停止前端: kill $NEXTJS_PID"
 
 wait $NEXTJS_PID

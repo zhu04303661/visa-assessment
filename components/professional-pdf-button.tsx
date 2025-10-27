@@ -26,13 +26,14 @@ export function ProfessionalPDFButton({
   size = 'default'
 }: ProfessionalPDFButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false)
+  const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002').replace(/\/$/, '')
 
   const handleDownloadPDF = async () => {
     // 如果已有生成的PDF文件，直接下载
     if (pdfFilename) {
       console.log('直接下载已生成的PDF文件:', pdfFilename)
       try {
-        const downloadUrl = `http://localhost:5002/api/resume/download-pdf/${pdfFilename}`
+        const downloadUrl = `${API_BASE}/api/resume/download-pdf/${pdfFilename}`
         
         // 创建隐藏的下载链接
         const link = document.createElement('a')
@@ -75,7 +76,7 @@ export function ProfessionalPDFButton({
       }
       
       // 调用后台Python服务生成PDF
-      const response = await fetch('http://localhost:5002/api/resume/generate-pdf', {
+      const response = await fetch(`${API_BASE}/api/resume/generate-pdf`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,7 +94,7 @@ export function ProfessionalPDFButton({
 
       // 下载生成的PDF文件
       if (result.success && result.file_name) {
-        const downloadUrl = `http://localhost:5002/api/resume/download-pdf/${result.file_name}`
+        const downloadUrl = `${API_BASE}/api/resume/download-pdf/${result.file_name}`
         
         // 创建隐藏的下载链接
         const link = document.createElement('a')

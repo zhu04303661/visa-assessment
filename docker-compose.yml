@@ -10,7 +10,6 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost:5002
     volumes:
       - ./ace_gtv/data:/app/data
       - ./ace_gtv/resumes:/app/resumes

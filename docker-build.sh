@@ -23,7 +23,8 @@ if [ ! -f .env.local ]; then
     echo "📝 创建环境变量文件..."
     cat > .env.local << EOF
 # 前端环境变量
-NEXT_PUBLIC_API_URL=http://localhost:5002
+NEXT_PUBLIC_API_URL=http://<your-server-ip-or-domain>:5002
+RESUME_API_URL=http://127.0.0.1:5002
 NODE_ENV=production
 
 # Python后端环境变量
@@ -89,6 +90,6 @@ echo "  - 停止容器: docker stop <container_id>"
 echo "  - 进入容器: docker exec -it <container_id> /bin/bash"
 echo ""
 echo "🌐 访问地址："
-echo "  - 前端: http://localhost:3000"
-echo "  - ACE API: http://localhost:5001"
-echo "  - 简历处理: http://localhost:5002"
+echo "  - 前端: http://0.0.0.0:3000"
+echo "  - ACE API: http://0.0.0.0:5001"
+echo "  - 简历处理: http://0.0.0.0:5002"

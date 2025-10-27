@@ -409,10 +409,10 @@ def manage_mode():
 
 if __name__ == '__main__':
     print("🚀 启动GTV ACE API服务器...")
-    print("📡 API地址: http://localhost:5001")
-    print("🔗 健康检查: http://localhost:5001/health")
-    print("💬 聊天接口: http://localhost:5001/api/ace/chat")
-    print("📚 知识库状态: http://localhost:5001/api/ace/playbook")
-    print("⚙️  模式管理: http://localhost:5001/api/ace/mode")
+    print("📡 API地址: http://0.0.0.0:5001")
+    print("🔗 健康检查: http://0.0.0.0:5001/health")
+    print("💬 聊天接口: http://0.0.0.0:5001/api/ace/chat")
+    print("📚 知识库状态: http://0.0.0.0:5001/api/ace/playbook")
+    print("⚙️  模式管理: http://0.0.0.0:5001/api/ace/mode")
     
     app.run(host='0.0.0.0', port=5001, debug=True)

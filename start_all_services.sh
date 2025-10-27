@@ -76,9 +76,9 @@ sleep 3
 
 echo ""
 echo "✅ 所有服务已启动！"
-echo "📡 ACE API: http://localhost:5001"
-echo "📄 简历处理: http://localhost:5002"
-echo "🌐 Next.js: http://localhost:3000"
+echo "📡 ACE API: http://0.0.0.0:5001"
+echo "📄 简历处理: http://0.0.0.0:5002"
+echo "🌐 Next.js: http://0.0.0.0:3000"
 echo ""
 echo "📋 服务PID:"
 echo "  - ACE API: $ACE_PID"

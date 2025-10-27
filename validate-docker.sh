@@ -58,7 +58,8 @@ else
     echo "📝 创建示例环境变量文件..."
     cat > .env.local << 'EOF'
 # 前端环境变量
-NEXT_PUBLIC_API_URL=http://localhost:5002
+NEXT_PUBLIC_API_URL=http://<your-server-ip-or-domain>:5002
+RESUME_API_URL=http://127.0.0.1:5002
 NODE_ENV=production
 
 # Python后端环境变量

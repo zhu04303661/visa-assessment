@@ -166,9 +166,9 @@ def internal_error(error):
 
 if __name__ == '__main__':
     print("🚀 启动GTV ACE API服务器...")
-    print("📡 API地址: http://localhost:5000")
-    print("🔗 健康检查: http://localhost:5000/health")
-    print("💬 聊天接口: http://localhost:5000/api/ace/chat")
-    print("📚 知识库状态: http://localhost:5000/api/ace/playbook")
+    print("📡 API地址: http://0.0.0.0:5000")
+    print("🔗 健康检查: http://0.0.0.0:5000/health")
+    print("💬 聊天接口: http://0.0.0.0:5000/api/ace/chat")
+    print("📚 知识库状态: http://0.0.0.0:5000/api/ace/playbook")
     
     app.run(host='0.0.0.0', port=5000, debug=True)
