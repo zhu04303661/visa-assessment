@@ -408,11 +408,16 @@ def manage_mode():
         }), 500
 
 if __name__ == '__main__':
+    import socket
+    # 获取本地IP地址
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+
     print("🚀 启动GTV ACE API服务器...")
-    print("📡 API地址: http://0.0.0.0:5001")
-    print("🔗 健康检查: http://0.0.0.0:5001/health")
-    print("💬 聊天接口: http://0.0.0.0:5001/api/ace/chat")
-    print("📚 知识库状态: http://0.0.0.0:5001/api/ace/playbook")
-    print("⚙️  模式管理: http://0.0.0.0:5001/api/ace/mode")
-    
+    print(f"📡 API地址: http://{local_ip}:5001")
+    print(f"🔗 健康检查: http://{local_ip}:5001/health")
+    print(f"💬 聊天接口: http://{local_ip}:5001/api/ace/chat")
+    print(f"📚 知识库状态: http://{local_ip}:5001/api/ace/playbook")
+    print(f"⚙️  模式管理: http://{local_ip}:5001/api/ace/mode")
+
     app.run(host='0.0.0.0', port=5001, debug=True)

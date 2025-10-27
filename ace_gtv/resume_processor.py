@@ -1512,16 +1512,21 @@ def delete_assessment(assessment_id):
         }), 500
 
 if __name__ == '__main__':
+    import socket
+    # 获取本地IP地址
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+
     logger.info("🚀 启动简历处理服务...")
-    logger.info("📡 API地址: http://localhost:5002")
-    logger.info("🔗 健康检查: http://localhost:5002/health")
-    logger.info("📄 简历上传: http://localhost:5002/api/resume/upload")
-    logger.info("📚 个人知识库: http://localhost:5002/api/resume/personal/<name>")
-    logger.info("📊 PDF报告生成: http://localhost:5002/api/resume/generate-pdf")
-    logger.info("📥 PDF报告下载: http://localhost:5002/api/resume/download-pdf/<filename>")
-    logger.info("📝 从Markdown生成PDF: http://localhost:5002/api/resume/generate-pdf-from-markdown")
-    logger.info("📋 列出评估结果: http://localhost:5002/api/resume/list-assessments")
-    logger.info("🔍 获取评估详情: http://localhost:5002/api/resume/get-assessment/<assessment_id>")
-    logger.info("🗑️ 删除评估结果: http://localhost:5002/api/resume/delete-assessment/<assessment_id>")
-    
+    logger.info(f"📡 API地址: http://{local_ip}:5002")
+    logger.info(f"🔗 健康检查: http://{local_ip}:5002/health")
+    logger.info(f"📄 简历上传: http://{local_ip}:5002/api/resume/upload")
+    logger.info(f"📚 个人知识库: http://{local_ip}:5002/api/resume/personal/<name>")
+    logger.info(f"📊 PDF报告生成: http://{local_ip}:5002/api/resume/generate-pdf")
+    logger.info(f"📥 PDF报告下载: http://{local_ip}:5002/api/resume/download-pdf/<filename>")
+    logger.info(f"📝 从Markdown生成PDF: http://{local_ip}:5002/api/resume/generate-pdf-from-markdown")
+    logger.info(f"📋 列出评估结果: http://{local_ip}:5002/api/resume/list-assessments")
+    logger.info(f"🔍 获取评估详情: http://{local_ip}:5002/api/resume/get-assessment/<assessment_id>")
+    logger.info(f"🗑️ 删除评估结果: http://{local_ip}:5002/api/resume/delete-assessment/<assessment_id>")
+
     app.run(host='0.0.0.0', port=5002, debug=True)

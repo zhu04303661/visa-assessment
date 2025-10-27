@@ -53,8 +53,9 @@ else
   echo "❌ 未找到可用的 Python 解释器"; exit 1
 fi
 
-# 解析参数 --debug 或 --log-level=<LEVEL>
+# 解析参数 --debug, --log-level=<LEVEL>, --background
 LOG_LEVEL=${LOG_LEVEL:-INFO}
+BACKGROUND_MODE=false
 for arg in "$@"; do
   case $arg in
     --debug)
@@ -63,6 +64,10 @@ for arg in "$@"; do
       ;;
     --log-level=*)
       LOG_LEVEL="${arg#*=}"
+      shift
+      ;;
+    --background)
+      BACKGROUND_MODE=true
       shift
       ;;
     *)
@@ -92,15 +97,29 @@ echo "⏳ 等待服务启动..."
 sleep 5
 
 echo "🔍 健康检查..."
-curl -s http://localhost:5001/health | jq '.status' 2>/dev/null || echo "ACE服务未就绪"
-curl -s http://localhost:5002/health | jq '.status' 2>/dev/null || echo "简历处理服务未就绪"
+if command -v jq >/dev/null 2>&1; then
+    curl -s http://localhost:5001/health | jq '.status' 2>/dev/null || echo "ACE服务未就绪"
+    curl -s http://localhost:5002/health | jq '.status' 2>/dev/null || echo "简历处理服务未就绪"
+else
+    curl -s http://localhost:5001/health >/dev/null 2>&1 && echo "ACE服务健康检查通过" || echo "ACE服务未就绪"
+    curl -s http://localhost:5002/health >/dev/null 2>&1 && echo "简历处理服务健康检查通过" || echo "简历处理服务未就绪"
+fi
+
+# 获取本地IP地址
+LOCAL_IP=$(hostname -I | awk '{print $1}')
 
 echo "✅ 后端服务已启动！"
-echo "📡 ACE API: http://0.0.0.0:5001"
-echo "📄 简历处理: http://0.0.0.0:5002"
-echo "🛑 停止后端服务: kill $ACE_PID $RESUME_PID"
+echo "📡 ACE API: http://$LOCAL_IP:5001"
+echo "📄 简历处理: http://$LOCAL_IP:5002"
+#echo "🛑 停止后端服务: kill $ACE_PID $RESUME_PID"
 
-# 保持脚本运行（可选）
-wait $ACE_PID $RESUME_PID
+# 根据参数决定是否保持脚本运行
+if [ "$BACKGROUND_MODE" = true ]; then
+    echo "🔄 后台模式运行中，PID: $ACE_PID (ACE), $RESUME_PID (简历处理)"
+    exit 0
+else
+    # 保持脚本运行（可选）
+    wait $ACE_PID $RESUME_PID
+fi
 
 
