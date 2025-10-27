@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # 复制后端源代码
 COPY ace_gtv/ ./
+COPY start_backend.sh ./
 
 # 复制环境变量文件
 COPY .env.local ./
@@ -28,16 +29,11 @@ RUN mkdir -p data personal_kb resumes
 
 # 创建启动脚本
 RUN echo '#!/bin/bash\n\
-# 启动ACE API服务器\n\
-cd /app\n\
-python api_server.py &\n\
+echo "🚀 启动后端服务 (ACE API + 简历处理)..."\n\
 \n\
-# 等待ACE API启动\n\
-sleep 3\n\
-\n\
-# 启动简历处理服务\n\
-python resume_processor.py\n\
-' > /app/start_backend.sh && chmod +x /app/start_backend.sh
+# 使用项目根目录的启动脚本\n\
+bash /app/start_backend.sh\n\
+' > /app/docker_start.sh && chmod +x /app/docker_start.sh
 
 # 暴露端口
 EXPOSE 5001 5002
@@ -51,4 +47,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:5001/health && curl -f http://localhost:5002/health || exit 1
 
 # 启动服务
-CMD ["/app/start_backend.sh"]
+CMD ["/app/docker_start.sh"]
