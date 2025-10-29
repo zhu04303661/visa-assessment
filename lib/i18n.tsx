@@ -309,6 +309,17 @@ const translations = {
     "form.upload.formats": "TXT, PDF, DOC, DOCX (max 10MB)",
     "form.upload.remove": "Remove",
 
+    // Error Dialog
+    "error.title": "Error",
+    "error.failed": "Operation Failed",
+    "error.invalidResume": "Invalid Resume",
+    "error.networkError": "Network Connection Failed",
+    "error.tryAgain": "Please try again later or check your network connection",
+    "error.serviceUnavailable": "Service temporarily unavailable",
+    "error.copy": "Copy Error",
+    "error.copied": "Copied",
+    "error.close": "OK",
+
     // Debug Page
     "debug.title": "Debug Console",
     "debug.subtitle": "View AI prompts and responses from assessment analyses for optimization",
@@ -595,6 +606,17 @@ const translations = {
     "form.upload.or.drag": "或拖拽文件到此处",
     "form.upload.formats": "支持 TXT, PDF, DOC, DOCX（最大10MB）",
     "form.upload.remove": "移除",
+
+    // Error Dialog
+    "error.title": "错误",
+    "error.failed": "操作失败",
+    "error.invalidResume": "无效简历",
+    "error.networkError": "网络连接失败",
+    "error.tryAgain": "请稍后再试或检查您的网络连接",
+    "error.serviceUnavailable": "服务暂时不可用",
+    "error.copy": "复制失败",
+    "error.copied": "已复制",
+    "error.close": "确定",
 
     // Debug Page
     "debug.title": "调试控制台",

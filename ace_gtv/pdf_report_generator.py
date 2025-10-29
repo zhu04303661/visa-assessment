@@ -34,7 +34,7 @@ except ImportError as e:
     load_assessment_from_markdown = None
 
 # 配置日志（支持环境变量 LOG_LEVEL）
-_level_name = os.getenv("LOG_LEVEL", "DEBUG").upper()
+_level_name = os.getenv("LOG_LEVEL", "INFO").upper()
 _level = getattr(logging, _level_name, logging.INFO)
 # 统一日志（UTF-8、文件+控制台、包含文件与行号）
 logger = logging.getLogger("resume_processor")

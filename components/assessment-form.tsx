@@ -13,6 +13,7 @@ import { ArrowRight, Loader2, FileText, Upload } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/i18n"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { ErrorDialog } from "@/components/error-dialog"
 
 type FormData = {
   name: string
@@ -23,6 +24,13 @@ type FormData = {
   additionalInfo: string
 }
 
+type ErrorState = {
+  isOpen: boolean
+  title: string
+  message: string
+  errorDetails?: string
+}
+
 export function AssessmentForm() {
   const router = useRouter()
   const { t } = useLanguage()
@@ -30,6 +38,12 @@ export function AssessmentForm() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [uploadMethod, setUploadMethod] = useState<"paste" | "upload">("upload")
+  const [errorState, setErrorState] = useState<ErrorState>({
+    isOpen: false,
+    title: "",
+    message: "",
+    errorDetails: undefined,
+  })
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -64,7 +78,11 @@ export function AssessmentForm() {
 
     if (!formData.resumeText || formData.resumeText.trim().length < 50) {
       console.log("[v0] 简历文本长度不足")
-      alert(t("form.upload.resume.error") || "Please provide a valid resume with at least 50 characters.")
+      setErrorState({
+        isOpen: true,
+        title: "简历无效",
+        message: t("form.upload.resume.error") || "请提供至少50个字符的有效简历",
+      })
       return
     }
 
@@ -112,9 +130,39 @@ export function AssessmentForm() {
         })
       }
 
+      // 检查HTTP响应状态
+      if (!response.ok) {
+        console.error(`[v0] 后端服务返回错误: ${response.status} ${response.statusText}`)
+        const errorText = await response.text()
+        
+        setErrorState({
+          isOpen: true,
+          title: "分析失败",
+          message: "后端服务调用失败，请稍后重试",
+          errorDetails: `HTTP ${response.status}: ${response.statusText}\n${errorText.substring(0, 500)}`,
+        })
+        setIsSubmitting(false)
+        setIsAnalyzing(false)
+        return
+      }
+
       const analysisResult = await response.json()
 
       console.log("[v0] Analysis result received:", analysisResult)
+
+      // 检查响应数据中的错误
+      if (analysisResult.error) {
+        console.error("[v0] 分析结果包含错误:", analysisResult.error)
+        setErrorState({
+          isOpen: true,
+          title: "分析处理失败",
+          message: analysisResult.error || "分析过程中出现错误，请稍后重试",
+          errorDetails: analysisResult.details || undefined,
+        })
+        setIsSubmitting(false)
+        setIsAnalyzing(false)
+        return
+      }
 
       // 存储正确的数据结构到sessionStorage
       if (analysisResult.gtvAnalysis) {
@@ -164,7 +212,28 @@ export function AssessmentForm() {
       console.log("[v0] 如果页面没有跳转，请检查浏览器控制台错误信息")
     } catch (error) {
       console.error("[v0] Error analyzing resume:", error)
-      alert("分析失败，请重试 / Analysis failed, please try again")
+      
+      // 提取详细的错误信息
+      let errorMessage = "分析简历时发生错误，请稍后重试"
+      let errorDetails = ""
+      
+      if (error instanceof TypeError) {
+        errorMessage = "网络连接失败，请检查您的网络连接"
+        errorDetails = error.message
+      } else if (error instanceof Error) {
+        errorMessage = error.message || errorMessage
+        errorDetails = error.stack?.substring(0, 500) || ""
+      } else {
+        errorDetails = String(error)
+      }
+      
+      setErrorState({
+        isOpen: true,
+        title: "分析失败",
+        message: errorMessage,
+        errorDetails: errorDetails || undefined,
+      })
+      
       setIsSubmitting(false)
       setIsAnalyzing(false)
     }
@@ -380,6 +449,13 @@ export function AssessmentForm() {
           </Button>
         </div>
       </div>
+      <ErrorDialog
+        isOpen={errorState.isOpen}
+        onClose={() => setErrorState({ ...errorState, isOpen: false })}
+        title={errorState.title}
+        message={errorState.message}
+        errorDetails={errorState.errorDetails}
+      />
     </form>
   )
 }

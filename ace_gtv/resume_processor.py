@@ -375,11 +375,142 @@ def _parse_llm_json(text: str) -> Dict[str, Any]:
         cleaned = cleaned[3:]
     if cleaned.endswith("```"):
         cleaned = cleaned[:-3]
+    cleaned = cleaned.strip()
+
+    # 额外的清理步骤：移除可能的BOM标记
+    if cleaned.startswith('\ufeff'):
+        cleaned = cleaned[1:]
+
+    # 尝试多次修复常见的JSON问题
+    # 1. 移除末尾的逗号（在对象/数组的最后一个元素之后）
+    import re
+    cleaned = re.sub(r',(\s*[}\]])', r'\1', cleaned)
+
+    # 2. 处理未终止的字符串（截断的JSON）
+    # 如果JSON看起来被截断了，尝试修复它
+    if cleaned.count('"') % 2 != 0:  # 奇数个引号，说明有未终止的字符串
+        # 找到最后一个开始的引号位置
+        last_quote_pos = cleaned.rfind('"')
+        if last_quote_pos != -1:
+            # 检查这个引号是否在正确的上下文中（不在转义序列中）
+            escape_count = 0
+            pos = last_quote_pos - 1
+            while pos >= 0 and cleaned[pos] == '\\':
+                escape_count += 1
+                pos -= 1
+            # 如果是偶数个反斜杠，说明引号没有被转义，需要修复
+            if escape_count % 2 == 0:
+                # 尝试找到可以安全结束JSON的位置
+                if cleaned.rfind('{') > cleaned.rfind('}'):
+                    # 最后有未闭合的对象，尝试闭合它
+                    cleaned = cleaned[:last_quote_pos] + '"}'
+                elif cleaned.rfind('[') > cleaned.rfind(']'):
+                    # 最后有未闭合的数组，尝试闭合它
+                    cleaned = cleaned[:last_quote_pos] + '"]'
+                else:
+                    # 简单地在引号后闭合
+                    cleaned = cleaned[:last_quote_pos + 1] + '}'
+
+    # 3. 检查未闭合的括号结构
+    open_braces = cleaned.count('{')
+    close_braces = cleaned.count('}')
+    if open_braces > close_braces:
+        # 缺少闭合括号，尝试添加
+        cleaned += '}' * (open_braces - close_braces)
+    elif close_braces > open_braces:
+        # 多余的闭合括号，移除一些
+        for _ in range(close_braces - open_braces):
+            pos = cleaned.rfind('}')
+            if pos != -1:
+                cleaned = cleaned[:pos] + cleaned[pos+1:]
+
+    open_brackets = cleaned.count('[')
+    close_brackets = cleaned.count(']')
+    if open_brackets > close_brackets:
+        cleaned += ']' * (open_brackets - close_brackets)
+    elif close_brackets > open_brackets:
+        for _ in range(close_brackets - open_brackets):
+            pos = cleaned.rfind(']')
+            if pos != -1:
+                cleaned = cleaned[:pos] + cleaned[pos+1:]
+
     try:
         return json.loads(cleaned)
-    except Exception as e:
+    except json.JSONDecodeError as e:
         logger.error(f"LLM JSON解析失败: {e}; 预览: {safe_preview(cleaned)}")
-        raise
+        logger.debug(f"完整JSON文本: {cleaned[:1000]}")  # 记录前1000个字符用于调试
+
+        # 如果仍然失败，尝试返回一个最小的有效JSON对象
+        logger.warning("JSON解析失败，尝试返回最小有效对象")
+        try:
+            # 尝试提取有效的JSON片段 - 从里到外逐层恢复
+            # 策略1：寻找第一个完整的JSON对象
+            start_pos = cleaned.find('{')
+            if start_pos != -1:
+                bracket_count = 0
+                last_valid_pos = -1
+                in_string = False
+                escape_next = False
+                
+                for i, char in enumerate(cleaned[start_pos:], start_pos):
+                    if escape_next:
+                        escape_next = False
+                        continue
+                    
+                    if char == '\\':
+                        escape_next = True
+                        continue
+                    
+                    if char == '"':
+                        in_string = not in_string
+                        continue
+                    
+                    if not in_string:
+                        if char == '{':
+                            bracket_count += 1
+                        elif char == '}':
+                            bracket_count -= 1
+                            if bracket_count == 0:
+                                # 找到一个完整的JSON对象
+                                partial_json = cleaned[start_pos:i+1]
+                                try:
+                                    return json.loads(partial_json)
+                                except:
+                                    last_valid_pos = i
+                
+                # 如果找不到完整对象，尝试从最后一个有效位置截断
+                if last_valid_pos > start_pos:
+                    # 从最后一个关闭的括号处截断并补全
+                    partial_json = cleaned[start_pos:last_valid_pos+1]
+                    # 补全任何未关闭的括号
+                    open_b = partial_json.count('{') - partial_json.count('}')
+                    partial_json += '}' * open_b
+                    try:
+                        return json.loads(partial_json)
+                    except:
+                        pass
+        except Exception as extract_error:
+            logger.error(f"提取JSON片段也失败: {extract_error}")
+
+        # 策略2：尝试从数组中恢复
+        try:
+            start_pos = cleaned.find('[')
+            if start_pos != -1:
+                bracket_count = 0
+                for i, char in enumerate(cleaned[start_pos:], start_pos):
+                    if char == '[':
+                        bracket_count += 1
+                    elif char == ']':
+                        bracket_count -= 1
+                        if bracket_count == 0:
+                            partial_json = cleaned[start_pos:i+1]
+                            return json.loads(partial_json)
+        except Exception as arr_error:
+            logger.debug(f"数组恢复失败: {arr_error}")
+
+        # 最后手段：返回一个空对象
+        logger.error("无法解析任何有效的JSON，返回空对象")
+        return {"error": "JSON parsing failed", "original_error": str(e)}
 
 
 def call_ai_for_extraction(content: str) -> Dict[str, Any]:
@@ -424,7 +555,7 @@ def call_ai_for_extraction(content: str) -> Dict[str, Any]:
         response = client.chat.completions.create(
             model=deployment,
             messages=messages,
-            max_tokens=1638,
+            max_tokens=2048,
             temperature=0.7,
             top_p=0.95,
             frequency_penalty=0,
@@ -520,7 +651,7 @@ def call_ai_for_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> Di
     "sector": "行业领域",
     "yearsInIndustry": "行业经验年数",
     "keyCompanies": ["关键公司列表"],
-    "industryImpact": 行业影响力评分(1-10),
+    "industryImpact": "行业影响力评分(1-10)",
     "analysis": "行业背景分析"
   }},
   "workExperience": {{
@@ -562,18 +693,18 @@ def call_ai_for_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> Di
     {{
       "name": "评估标准名称",
       "status": "状态(Met/Partially Met/Not Met)",
-      "score": 评分(0-100),
+      "score": "评分(0-100)",
       "evidence": "评估证据"
     }}
   ],
-  "overallScore": 总体评分(0-100),
+  "overallScore": "总体评分(0-100)",
   "recommendation": "申请建议",
   "professionalAdvice": ["专业建议列表"],
   "timeline": "申请时间线",
   "requiredDocuments": ["所需文档列表"],
   "estimatedBudget": {{
-    "min": 最低预算,
-    "max": 最高预算,
+    "min": "最低预算",
+    "max": "最高预算",
     "currency": "货币单位"
   }}
 }}
@@ -601,7 +732,7 @@ def call_ai_for_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> Di
         response = client.chat.completions.create(
             model=deployment,
             messages=messages,
-            max_tokens=1638,
+            max_tokens=4096,
             temperature=0.7,
             top_p=0.95,
             frequency_penalty=0,
@@ -613,6 +744,8 @@ def call_ai_for_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> Di
         llm_text = response.choices[0].message.content
 
         logger.info(f"GTV评估LLM返回文本长度: {len(llm_text)}; 预览: {safe_preview(llm_text)}")
+        logger.info(f"GTV评估LLM返回文本: {llm_text}")
+
         parsed = _parse_llm_json(llm_text)
         
         logger.info("GTV资格评估成功")

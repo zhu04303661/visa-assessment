@@ -117,8 +117,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.570008",
-      "updated_at": "2025-10-21T16:15:37.570018"
+      "created_at": "2025-10-29T04:44:17.821779",
+      "updated_at": "2025-10-29T04:44:17.821786"
     },
     "张三_edu_1": {
       "id": "张三_edu_1",
@@ -127,8 +127,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.570670",
-      "updated_at": "2025-10-21T16:15:37.570675"
+      "created_at": "2025-10-29T04:44:17.821982",
+      "updated_at": "2025-10-29T04:44:17.821987"
     },
     "张三_skill_1": {
       "id": "张三_skill_1",
@@ -137,8 +137,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.570893",
-      "updated_at": "2025-10-21T16:15:37.570895"
+      "created_at": "2025-10-29T04:44:17.822133",
+      "updated_at": "2025-10-29T04:44:17.822136"
     },
     "张三_skill_2": {
       "id": "张三_skill_2",
@@ -147,8 +147,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.571099",
-      "updated_at": "2025-10-21T16:15:37.571101"
+      "created_at": "2025-10-29T04:44:17.822255",
+      "updated_at": "2025-10-29T04:44:17.822258"
     },
     "张三_skill_3": {
       "id": "张三_skill_3",
@@ -157,8 +157,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.571404",
-      "updated_at": "2025-10-21T16:15:37.571406"
+      "created_at": "2025-10-29T04:44:17.822399",
+      "updated_at": "2025-10-29T04:44:17.822401"
     },
     "张三_skill_4": {
       "id": "张三_skill_4",
@@ -167,8 +167,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.571990",
-      "updated_at": "2025-10-21T16:15:37.571993"
+      "created_at": "2025-10-29T04:44:17.822522",
+      "updated_at": "2025-10-29T04:44:17.822532"
     },
     "张三_skill_5": {
       "id": "张三_skill_5",
@@ -177,8 +177,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.572447",
-      "updated_at": "2025-10-21T16:15:37.572450"
+      "created_at": "2025-10-29T04:44:17.822650",
+      "updated_at": "2025-10-29T04:44:17.822653"
     },
     "张三_skill_6": {
       "id": "张三_skill_6",
@@ -187,8 +187,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.574114",
-      "updated_at": "2025-10-21T16:15:37.574130"
+      "created_at": "2025-10-29T04:44:17.822778",
+      "updated_at": "2025-10-29T04:44:17.822780"
     },
     "张三_skill_7": {
       "id": "张三_skill_7",
@@ -197,8 +197,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.575136",
-      "updated_at": "2025-10-21T16:15:37.575151"
+      "created_at": "2025-10-29T04:44:17.822917",
+      "updated_at": "2025-10-29T04:44:17.822919"
     },
     "张三_skill_8": {
       "id": "张三_skill_8",
@@ -207,8 +207,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.575986",
-      "updated_at": "2025-10-21T16:15:37.575995"
+      "created_at": "2025-10-29T04:44:17.823060",
+      "updated_at": "2025-10-29T04:44:17.823064"
     },
     "张三_skill_9": {
       "id": "张三_skill_9",
@@ -217,8 +217,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.577000",
-      "updated_at": "2025-10-21T16:15:37.577008"
+      "created_at": "2025-10-29T04:44:17.823192",
+      "updated_at": "2025-10-29T04:44:17.823195"
     },
     "张三_skill_10": {
       "id": "张三_skill_10",
@@ -227,8 +227,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.577231",
-      "updated_at": "2025-10-21T16:15:37.577234"
+      "created_at": "2025-10-29T04:44:17.823316",
+      "updated_at": "2025-10-29T04:44:17.823319"
     },
     "张三_skill_11": {
       "id": "张三_skill_11",
@@ -237,8 +237,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.577469",
-      "updated_at": "2025-10-21T16:15:37.577472"
+      "created_at": "2025-10-29T04:44:17.823441",
+      "updated_at": "2025-10-29T04:44:17.823443"
     },
     "张三_skill_12": {
       "id": "张三_skill_12",
@@ -247,8 +247,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.577696",
-      "updated_at": "2025-10-21T16:15:37.577698"
+      "created_at": "2025-10-29T04:44:17.823560",
+      "updated_at": "2025-10-29T04:44:17.823563"
     },
     "张三_ach_1": {
       "id": "张三_ach_1",
@@ -257,8 +257,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.577924",
-      "updated_at": "2025-10-21T16:15:37.577927"
+      "created_at": "2025-10-29T04:44:17.823701",
+      "updated_at": "2025-10-29T04:44:17.823704"
     },
     "张三_ach_2": {
       "id": "张三_ach_2",
@@ -267,8 +267,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.578210",
-      "updated_at": "2025-10-21T16:15:37.578212"
+      "created_at": "2025-10-29T04:44:17.823823",
+      "updated_at": "2025-10-29T04:44:17.823826"
     },
     "张三_ach_3": {
       "id": "张三_ach_3",
@@ -277,8 +277,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.578665",
-      "updated_at": "2025-10-21T16:15:37.578676"
+      "created_at": "2025-10-29T04:44:17.823965",
+      "updated_at": "2025-10-29T04:44:17.823969"
     },
     "张三_ach_4": {
       "id": "张三_ach_4",
@@ -287,8 +287,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-21T16:15:37.579480",
-      "updated_at": "2025-10-21T16:15:37.579483"
+      "created_at": "2025-10-29T04:44:17.824106",
+      "updated_at": "2025-10-29T04:44:17.824109"
     },
     "朱恩庆_exp_1": {
       "id": "朱恩庆_exp_1",
@@ -1073,192 +1073,1162 @@
     "zhu_exp_1": {
       "id": "zhu_exp_1",
       "section": "工作经验",
-      "content": "Graphic Engine (ZEngine) at Lenovo-ar (2023/07 - Present, Beijing): Developed ZEngine graphic engine; worked on rendering, UI system, control system via WebSocket and Browser Client for cloud rendering; made it work on Linux; linked ZEngine Server, render, exe Client; fixed bugs; delivered first commercial project generated by ZEngine; created dynamic type system. Applications on AR-VR Glasses at Lenovo-ar (2019/09 - 2022/07): Constructed Blueprint Editor (Unity3D) in VR; developed VR Application (Unity3D) and AR Application (VC++, DX12) for Virtual Screens. Mobile Games Developer at Beijing ChuangYouTianDi Network Technology (2016/06 - 2019/06): Developed mobile game 'A Dream of a Girl' (training BMW Repairman); 'Labyrinth' (escaping labyrinths with traps); 'Adventure On Road' (co-op game driving and operating vehicle weapon). Developer at Softstar Technology (Beijing) Co., Ltd (2013/07 - 2016/06): Developed mobile client for online CardsGame; participated in development of three stand-alone games (PAL6, PALSA, PALSB); participated in server development (Windows and Red Hat) for a giant online game.",
+      "content": "拥有12年技术管理和研发经验。现任新奥集团智能化技术负责人、智能大模型工程资深架构师、智能群资深技术总监，带领大模型研发团队，负责能源集团智能化升级及大模型研发。曾在携程担任无线技术专家、高级经理，负责移动端研发效能、无线服务端开发与云平台建设，团队规模20-30人。在爱立信从事核心通讯技术研发和云平台自动化。早年在阿尔卡特朗讯贝尔实验室担任算法工程师、仿真系统研发经理，负责4G物理层算法仿真系统研发，并赴美国贝尔实验室联合研发。曾在英特尔实习，参与MeeGo开源操作系统自动化测试工具研发。",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.531508",
-      "updated_at": "2025-10-27T10:51:44.531515"
+      "created_at": "2025-10-29T18:12:08.740792",
+      "updated_at": "2025-10-29T18:12:08.740800"
     },
     "zhu_skill_1": {
       "id": "zhu_skill_1",
+      "section": "技能专长",
+      "content": "人工智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.741107",
+      "updated_at": "2025-10-29T18:12:08.741111"
+    },
+    "zhu_edu_1": {
+      "id": "zhu_edu_1",
+      "section": "教育背景",
+      "content": "硕士学位，南京理工大学，测控技术与仪器（2008.9-2011.4）；学士学位，南京理工大学，测控技术与仪器（2004.9-2008.6）。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.740953",
+      "updated_at": "2025-10-29T18:12:08.740957"
+    },
+    "zhu_skill_2": {
+      "id": "zhu_skill_2",
+      "section": "技能专长",
+      "content": "大模型技术",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.741249",
+      "updated_at": "2025-10-29T18:12:08.741252"
+    },
+    "zhu_skill_3": {
+      "id": "zhu_skill_3",
+      "section": "技能专长",
+      "content": "智能体Agent技术",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.741383",
+      "updated_at": "2025-10-29T18:12:08.741386"
+    },
+    "zhu_skill_4": {
+      "id": "zhu_skill_4",
+      "section": "技能专长",
+      "content": "产业智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.741516",
+      "updated_at": "2025-10-29T18:12:08.741519"
+    },
+    "zhu_skill_5": {
+      "id": "zhu_skill_5",
+      "section": "技能专长",
+      "content": "物联智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.741644",
+      "updated_at": "2025-10-29T18:12:08.741647"
+    },
+    "zhu_skill_6": {
+      "id": "zhu_skill_6",
+      "section": "技能专长",
+      "content": "持续迭代",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.741777",
+      "updated_at": "2025-10-29T18:12:08.741780"
+    },
+    "zhu_skill_7": {
+      "id": "zhu_skill_7",
+      "section": "技能专长",
+      "content": "软件系统开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.741929",
+      "updated_at": "2025-10-29T18:12:08.741933"
+    },
+    "zhu_skill_8": {
+      "id": "zhu_skill_8",
+      "section": "技能专长",
+      "content": "通讯系统开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.742070",
+      "updated_at": "2025-10-29T18:12:08.742074"
+    },
+    "zhu_skill_9": {
+      "id": "zhu_skill_9",
+      "section": "技能专长",
+      "content": "嵌入式系统开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.742210",
+      "updated_at": "2025-10-29T18:12:08.742213"
+    },
+    "zhu_skill_10": {
+      "id": "zhu_skill_10",
+      "section": "技能专长",
+      "content": "Linux系统技术应用",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.742347",
+      "updated_at": "2025-10-29T18:12:08.742351"
+    },
+    "zhu_skill_11": {
+      "id": "zhu_skill_11",
+      "section": "技能专长",
+      "content": "云计算",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.742478",
+      "updated_at": "2025-10-29T18:12:08.742482"
+    },
+    "zhu_skill_12": {
+      "id": "zhu_skill_12",
+      "section": "技能专长",
+      "content": "移动互联网基础设施",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.742611",
+      "updated_at": "2025-10-29T18:12:08.742615"
+    },
+    "zhu_ach_1": {
+      "id": "zhu_ach_1",
+      "section": "成就荣誉",
+      "content": "2024年大模型工程和智能体技术相关专利6篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.743746",
+      "updated_at": "2025-10-29T18:12:08.743749"
+    },
+    "zhu_ach_2": {
+      "id": "zhu_ach_2",
+      "section": "成就荣誉",
+      "content": "2023年大模型工程相关专利10篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.743875",
+      "updated_at": "2025-10-29T18:12:08.743879"
+    },
+    "zhu_ach_3": {
+      "id": "zhu_ach_3",
+      "section": "成就荣誉",
+      "content": "2022年CV识别算法专利5篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.744115",
+      "updated_at": "2025-10-29T18:12:08.744119"
+    },
+    "zhu_ach_4": {
+      "id": "zhu_ach_4",
+      "section": "成就荣誉",
+      "content": "2022年获得《创值标兵》称号",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.744247",
+      "updated_at": "2025-10-29T18:12:08.744250"
+    },
+    "zhu_ach_5": {
+      "id": "zhu_ach_5",
+      "section": "成就荣誉",
+      "content": "2020年携程无线质量优秀个人技术贡献奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.744376",
+      "updated_at": "2025-10-29T18:12:08.744379"
+    },
+    "zhu_skill_13": {
+      "id": "zhu_skill_13",
+      "section": "技能专长",
+      "content": "研发工具链",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.742740",
+      "updated_at": "2025-10-29T18:12:08.742743"
+    },
+    "N/A_exp_1": {
+      "id": "N/A_exp_1",
+      "section": "工作经验",
+      "content": "Currently working at Lenovo-ar since July 2023, supporting the development of the ZEngine graphics engine, including rendering, UI system, control system via WebSocket and browser client, cloud rendering, Linux compatibility, bug fixing, and delivering commercial projects. Previously at Lenovo-ar (Sep 2019 - Jul 2022), constructed a Blueprint Editor in VR, developed VR (Unity3D) and AR (VC++/DX12) applications for virtual screens. Worked at Beijing ChuangYouTianDi Network Technology (Jun 2016 - Jun 2019) as a mobile games developer, creating games such as 'A Dream of a Girl', 'Labyrinth', and 'Adventure On Road'. Earlier at Softstar Technology (Beijing) (Jul 2008 - Jun 2016), developed mobile client for online card games, participated in development of standalone games (PAL6, PALSA), and server-side development for online games on Windows and Red Hat.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-28T09:53:59.266802",
+      "updated_at": "2025-10-28T09:53:59.266809"
+    },
+    "N/A_edu_1": {
+      "id": "N/A_edu_1",
+      "section": "教育背景",
+      "content": "Bachelor's degree in Electronic and Information Engineering from Beijing University of Chemical Technology (Sep 2004 - Jul 2008). High school at The High School Attached to Beijing Jiaotong University (Sep 2001 - Jul 2004).",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-28T09:53:59.266981",
+      "updated_at": "2025-10-28T09:53:59.266983"
+    },
+    "N/A_skill_1": {
+      "id": "N/A_skill_1",
       "section": "技能专长",
       "content": "C++",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.531844",
-      "updated_at": "2025-10-27T10:51:44.531849"
+      "created_at": "2025-10-28T09:53:59.267128",
+      "updated_at": "2025-10-28T09:53:59.267131"
     },
-    "zhu_edu_1": {
-      "id": "zhu_edu_1",
-      "section": "教育背景",
-      "content": "Beijing University of Chemical Technology, Electronic and Information Engineering, 2004/09 - 2008/07, Beijing, China. The High School Attached to Beijing Jiaotong University, 2001/09 - 2004/07, Beijing, China.",
-      "helpful": true,
-      "harmful": false,
-      "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.531658",
-      "updated_at": "2025-10-27T10:51:44.531663"
-    },
-    "zhu_skill_2": {
-      "id": "zhu_skill_2",
+    "N/A_skill_2": {
+      "id": "N/A_skill_2",
       "section": "技能专长",
       "content": "C#",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.532003",
-      "updated_at": "2025-10-27T10:51:44.532007"
+      "created_at": "2025-10-28T09:53:59.267290",
+      "updated_at": "2025-10-28T09:53:59.267292"
     },
-    "zhu_skill_3": {
-      "id": "zhu_skill_3",
+    "N/A_skill_3": {
+      "id": "N/A_skill_3",
       "section": "技能专长",
       "content": "Python",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.532185",
-      "updated_at": "2025-10-27T10:51:44.532188"
+      "created_at": "2025-10-28T09:53:59.267439",
+      "updated_at": "2025-10-28T09:53:59.267441"
     },
-    "zhu_skill_4": {
-      "id": "zhu_skill_4",
+    "N/A_skill_4": {
+      "id": "N/A_skill_4",
       "section": "技能专长",
       "content": "JavaScript",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.532364",
-      "updated_at": "2025-10-27T10:51:44.532368"
+      "created_at": "2025-10-28T09:53:59.267595",
+      "updated_at": "2025-10-28T09:53:59.267597"
     },
-    "zhu_skill_5": {
-      "id": "zhu_skill_5",
+    "N/A_skill_5": {
+      "id": "N/A_skill_5",
       "section": "技能专长",
       "content": "Windows",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.532564",
-      "updated_at": "2025-10-27T10:51:44.532569"
+      "created_at": "2025-10-28T09:53:59.267745",
+      "updated_at": "2025-10-28T09:53:59.267747"
     },
-    "zhu_skill_6": {
-      "id": "zhu_skill_6",
+    "N/A_skill_6": {
+      "id": "N/A_skill_6",
       "section": "技能专长",
       "content": "Linux",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.532760",
-      "updated_at": "2025-10-27T10:51:44.532764"
+      "created_at": "2025-10-28T09:53:59.268265",
+      "updated_at": "2025-10-28T09:53:59.268269"
     },
-    "zhu_skill_7": {
-      "id": "zhu_skill_7",
+    "N/A_skill_7": {
+      "id": "N/A_skill_7",
       "section": "技能专长",
       "content": "Unity3D",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.532950",
-      "updated_at": "2025-10-27T10:51:44.532954"
+      "created_at": "2025-10-28T09:53:59.268822",
+      "updated_at": "2025-10-28T09:53:59.268827"
     },
-    "zhu_skill_8": {
-      "id": "zhu_skill_8",
+    "N/A_skill_8": {
+      "id": "N/A_skill_8",
       "section": "技能专长",
       "content": "DX12",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.533136",
-      "updated_at": "2025-10-27T10:51:44.533140"
+      "created_at": "2025-10-28T09:53:59.269005",
+      "updated_at": "2025-10-28T09:53:59.269008"
     },
-    "zhu_skill_9": {
-      "id": "zhu_skill_9",
+    "N/A_skill_9": {
+      "id": "N/A_skill_9",
       "section": "技能专长",
       "content": "Vulkan",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.533314",
-      "updated_at": "2025-10-27T10:51:44.533318"
+      "created_at": "2025-10-28T09:53:59.269155",
+      "updated_at": "2025-10-28T09:53:59.269157"
     },
-    "zhu_skill_10": {
-      "id": "zhu_skill_10",
+    "N/A_skill_10": {
+      "id": "N/A_skill_10",
       "section": "技能专长",
       "content": "AR",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.533493",
-      "updated_at": "2025-10-27T10:51:44.533496"
+      "created_at": "2025-10-28T09:53:59.269303",
+      "updated_at": "2025-10-28T09:53:59.269305"
     },
-    "zhu_skill_11": {
-      "id": "zhu_skill_11",
+    "N/A_skill_11": {
+      "id": "N/A_skill_11",
+      "section": "技能专长",
+      "content": "VR",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-28T09:53:59.269456",
+      "updated_at": "2025-10-28T09:53:59.269458"
+    },
+    "N/A_skill_12": {
+      "id": "N/A_skill_12",
       "section": "技能专长",
       "content": "Glasses",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.533670",
-      "updated_at": "2025-10-27T10:51:44.533673"
+      "created_at": "2025-10-28T09:53:59.269601",
+      "updated_at": "2025-10-28T09:53:59.269603"
     },
-    "zhu_skill_12": {
-      "id": "zhu_skill_12",
+    "N/A_skill_13": {
+      "id": "N/A_skill_13",
       "section": "技能专长",
       "content": "Mobile",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.533860",
-      "updated_at": "2025-10-27T10:51:44.533864"
+      "created_at": "2025-10-28T09:53:59.269746",
+      "updated_at": "2025-10-28T09:53:59.269748"
     },
-    "zhu_ach_1": {
-      "id": "zhu_ach_1",
+    "N/A_ach_1": {
+      "id": "N/A_ach_1",
+      "section": "成就荣誉",
+      "content": "Partially supported the development of ZEngine graphics engine.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-28T09:53:59.269906",
+      "updated_at": "2025-10-28T09:53:59.269908"
+    },
+    "N/A_ach_2": {
+      "id": "N/A_ach_2",
+      "section": "成就荣誉",
+      "content": "Created control system integrating WebSocket and browser client for cloud rendering.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-28T09:53:59.270064",
+      "updated_at": "2025-10-28T09:53:59.270067"
+    },
+    "N/A_ach_3": {
+      "id": "N/A_ach_3",
+      "section": "成就荣誉",
+      "content": "Made ZEngine work on Linux and linked ZEngine Server and client.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-28T09:53:59.270214",
+      "updated_at": "2025-10-28T09:53:59.270216"
+    },
+    "N/A_ach_4": {
+      "id": "N/A_ach_4",
       "section": "成就荣誉",
       "content": "Delivered the first commercial project generated by ZEngine.",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.534070",
-      "updated_at": "2025-10-27T10:51:44.534074"
+      "created_at": "2025-10-28T09:53:59.270357",
+      "updated_at": "2025-10-28T09:53:59.270360"
     },
-    "zhu_ach_2": {
-      "id": "zhu_ach_2",
+    "N/A_ach_5": {
+      "id": "N/A_ach_5",
       "section": "成就荣誉",
-      "content": "Created dynamic type system for ZEngine.",
+      "content": "Created a dynamic type system.",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.534245",
-      "updated_at": "2025-10-27T10:51:44.534249"
+      "created_at": "2025-10-28T09:53:59.270503",
+      "updated_at": "2025-10-28T09:53:59.270506"
     },
-    "zhu_ach_3": {
-      "id": "zhu_ach_3",
+    "N/A_ach_6": {
+      "id": "N/A_ach_6",
       "section": "成就荣誉",
-      "content": "Used GPGPU (Vulkan) technology to accelerate calculation in statistics/data science project, achieving 100% grade after teacher's adjustment.",
+      "content": "Constructed VR Blueprint Editor (Unity3D).",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.534422",
-      "updated_at": "2025-10-27T10:51:44.534425"
+      "created_at": "2025-10-28T09:53:59.270647",
+      "updated_at": "2025-10-28T09:53:59.270649"
     },
-    "zhu_ach_4": {
-      "id": "zhu_ach_4",
+    "N/A_ach_7": {
+      "id": "N/A_ach_7",
       "section": "成就荣誉",
-      "content": "Only student using a model instead of naked eye to solve data analysis problem, recognized in peer review.",
+      "content": "Developed VR and AR applications for virtual screens.",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.534598",
-      "updated_at": "2025-10-27T10:51:44.534602"
+      "created_at": "2025-10-28T09:53:59.270798",
+      "updated_at": "2025-10-28T09:53:59.270801"
     },
-    "zhu_ach_5": {
-      "id": "zhu_ach_5",
+    "N/A_ach_8": {
+      "id": "N/A_ach_8",
       "section": "成就荣誉",
-      "content": "Full points on challenging AI assignment (Player AI for 2048 Puzzle Game).",
+      "content": "Developed multiple mobile games including 'A Dream of a Girl', 'Labyrinth', and 'Adventure On Road'.",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-10-27T10:51:44.534778",
-      "updated_at": "2025-10-27T10:51:44.534782"
+      "created_at": "2025-10-28T09:53:59.271410",
+      "updated_at": "2025-10-28T09:53:59.271414"
+    },
+    "N/A_ach_9": {
+      "id": "N/A_ach_9",
+      "section": "成就荣誉",
+      "content": "Participated in development of mobile client for online card game.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-28T09:53:59.272168",
+      "updated_at": "2025-10-28T09:53:59.272172"
+    },
+    "N/A_ach_10": {
+      "id": "N/A_ach_10",
+      "section": "成就荣誉",
+      "content": "Participated in development of three standalone games (PAL6, PALSA).",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-28T09:53:59.272326",
+      "updated_at": "2025-10-28T09:53:59.272329"
+    },
+    "N/A_ach_11": {
+      "id": "N/A_ach_11",
+      "section": "成就荣誉",
+      "content": "Worked on server-side development for large online game (Windows & Red Hat).",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-28T09:53:59.272472",
+      "updated_at": "2025-10-28T09:53:59.272474"
+    },
+    "zhu_ach_6": {
+      "id": "zhu_ach_6",
+      "section": "成就荣誉",
+      "content": "2016年携程MCD平台获得突出技术贡献奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.744506",
+      "updated_at": "2025-10-29T18:12:08.744509"
+    },
+    "xhu_exp_1": {
+      "id": "xhu_exp_1",
+      "section": "工作经验",
+      "content": "Currently working at Lenovo-ar since July 2023 in Beijing, focused on developing ZEngine, a self-developed graphic engine. Responsibilities include supporting rendering in Markdown/HTML, creating UI systems, control systems with WebSocket and Browser Client for cloud rendering, Linux compatibility, bug fixing, delivering commercial projects, and developing dynamic type systems. Previously worked at Lenovo-ar (Sep 2019 - Jul 2022) on AR-VR glasses, constructing a Blueprint Editor in VR (Unity3D), VR and AR applications using Unity3D, VC++, and DX12 for virtual screens. From Jun 2016 to Jun 2019 at Beijing ChuangYouTianDi Network Technology, developed multiple mobile games such as 'A Dream of a Girl,' 'Labyrinth,' and 'Adventure On Road.' Earlier, from Jul 2015 to Jun 2016 at Softstar Technology (Beijing) Co., Ltd, contributed to the mobile client of an online Cards Game, participated in the development of three stand-alone games (PAL6, PALSA), and worked on the server of a giant online game for both Windows and Red Hat.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.962684",
+      "updated_at": "2025-10-29T12:52:10.962693"
+    },
+    "xhu_edu_1": {
+      "id": "xhu_edu_1",
+      "section": "教育背景",
+      "content": "Bachelor's degree in Electronic and Information Engineering from Beijing University of Chemical Technology (Sep 2004 - Jul 2008). Completed high school at The High School Attached to Beijing Jiaotong University (Sep 2001 - Jul 2004), both in Beijing, China.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.962881",
+      "updated_at": "2025-10-29T12:52:10.962885"
+    },
+    "xhu_skill_1": {
+      "id": "xhu_skill_1",
+      "section": "技能专长",
+      "content": "C++",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.963082",
+      "updated_at": "2025-10-29T12:52:10.963086"
+    },
+    "xhu_skill_2": {
+      "id": "xhu_skill_2",
+      "section": "技能专长",
+      "content": "C#",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.963250",
+      "updated_at": "2025-10-29T12:52:10.963253"
+    },
+    "xhu_skill_3": {
+      "id": "xhu_skill_3",
+      "section": "技能专长",
+      "content": "Python",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.963410",
+      "updated_at": "2025-10-29T12:52:10.963413"
+    },
+    "xhu_skill_4": {
+      "id": "xhu_skill_4",
+      "section": "技能专长",
+      "content": "JavaScript",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.963581",
+      "updated_at": "2025-10-29T12:52:10.963584"
+    },
+    "xhu_skill_5": {
+      "id": "xhu_skill_5",
+      "section": "技能专长",
+      "content": "Windows",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.963739",
+      "updated_at": "2025-10-29T12:52:10.963742"
+    },
+    "xhu_skill_6": {
+      "id": "xhu_skill_6",
+      "section": "技能专长",
+      "content": "Linux",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.963892",
+      "updated_at": "2025-10-29T12:52:10.963910"
+    },
+    "xhu_skill_7": {
+      "id": "xhu_skill_7",
+      "section": "技能专长",
+      "content": "Unity3D",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.964059",
+      "updated_at": "2025-10-29T12:52:10.964061"
+    },
+    "xhu_skill_8": {
+      "id": "xhu_skill_8",
+      "section": "技能专长",
+      "content": "DX12",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.964207",
+      "updated_at": "2025-10-29T12:52:10.964210"
+    },
+    "xhu_skill_9": {
+      "id": "xhu_skill_9",
+      "section": "技能专长",
+      "content": "Vulkan",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.964361",
+      "updated_at": "2025-10-29T12:52:10.964364"
+    },
+    "xhu_skill_10": {
+      "id": "xhu_skill_10",
+      "section": "技能专长",
+      "content": "AR",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.964515",
+      "updated_at": "2025-10-29T12:52:10.964518"
+    },
+    "xhu_skill_11": {
+      "id": "xhu_skill_11",
+      "section": "技能专长",
+      "content": "Glasses",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.964666",
+      "updated_at": "2025-10-29T12:52:10.964669"
+    },
+    "xhu_skill_12": {
+      "id": "xhu_skill_12",
+      "section": "技能专长",
+      "content": "Mobile",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.964822",
+      "updated_at": "2025-10-29T12:52:10.964824"
+    },
+    "xhu_ach_1": {
+      "id": "xhu_ach_1",
+      "section": "成就荣誉",
+      "content": "Delivered the first commercial project generated by ZEngine.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.968423",
+      "updated_at": "2025-10-29T12:52:10.968430"
+    },
+    "xhu_ach_2": {
+      "id": "xhu_ach_2",
+      "section": "成就荣誉",
+      "content": "Created a dynamic type system for ZEngine.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.968635",
+      "updated_at": "2025-10-29T12:52:10.968639"
+    },
+    "xhu_ach_3": {
+      "id": "xhu_ach_3",
+      "section": "成就荣誉",
+      "content": "Constructed a Blueprint Editor in VR (Unity3D).",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.968828",
+      "updated_at": "2025-10-29T12:52:10.968832"
+    },
+    "xhu_ach_4": {
+      "id": "xhu_ach_4",
+      "section": "成就荣誉",
+      "content": "Developed AR application for virtual screens using VC++ and DX12.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.969036",
+      "updated_at": "2025-10-29T12:52:10.969041"
+    },
+    "xhu_ach_5": {
+      "id": "xhu_ach_5",
+      "section": "成就荣誉",
+      "content": "Developed multiple mobile games such as 'A Dream of a Girl', 'Labyrinth', and 'Adventure On Road'.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.969229",
+      "updated_at": "2025-10-29T12:52:10.969232"
+    },
+    "xhu_ach_6": {
+      "id": "xhu_ach_6",
+      "section": "成就荣誉",
+      "content": "Contributed to the development of three stand-alone games and a giant online game server.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T12:52:10.969407",
+      "updated_at": "2025-10-29T12:52:10.969410"
+    },
+    "zhu_ach_7": {
+      "id": "zhu_ach_7",
+      "section": "成就荣誉",
+      "content": "2015年提交IOS应用集群打包专利两篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.744635",
+      "updated_at": "2025-10-29T18:12:08.744638"
+    },
+    "zhu_ach_8": {
+      "id": "zhu_ach_8",
+      "section": "成就荣誉",
+      "content": "2013年阿尔卡特朗讯outstanding员工奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.744769",
+      "updated_at": "2025-10-29T18:12:08.744772"
+    },
+    "朱_exp_1": {
+      "id": "朱_exp_1",
+      "section": "工作经验",
+      "content": "Graphic Engine Developer at Lenovo-ar (2023/07 - Present): Partially supported the development of the self-developed graphic engine ZEngine, focusing on rendering in Markdown/HTML (Simplified) and ZEngine's UI system. Created a control system on WebSocket and Browser Client for cloud rendering, made it work on Linux, linked ZEngine Server and exe Client, fixed many bugs, delivered the first commercial project generated by ZEngine, and created a dynamic type system. Applications on AR-VR Glasses at Lenovo-ar (2019/09 - 2022/07): Constructed a Blueprint Editor (Unity3D) in VR, developed VR Application (Unity3D), AR Application (VC++, DX12) for Virtual Screens. Mobile Games Developer at Beijing ChuangYouTianDi Network Technology (2016/06 - 2019/06): Developed mobile games including 'A Dream of a Girl', 'Labyrinth', and 'Adventure On Road', focusing on cooperative gameplay and various genres. Game Developer at Softstar Technology (Beijing) Co., Ltd (2015/07 - 2016/06): Developed the mobile client of an online Cards Game, participated in development of three stand-alone games (PAL6, PALSA), and worked on the server (Windows and Red Hat) of a giant online game.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.685191",
+      "updated_at": "2025-10-29T13:11:50.685198"
+    },
+    "朱_edu_1": {
+      "id": "朱_edu_1",
+      "section": "教育背景",
+      "content": "Beijing University of Chemical Technology (2004/09 - 2008/07), major in Electronic and Information Engineering, Beijing, China. The High School Attached to Beijing Jiaotong University (2001/09 - 2004/07), Beijing, China.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.685376",
+      "updated_at": "2025-10-29T13:11:50.685380"
+    },
+    "朱_skill_1": {
+      "id": "朱_skill_1",
+      "section": "技能专长",
+      "content": "C++",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.685551",
+      "updated_at": "2025-10-29T13:11:50.685554"
+    },
+    "朱_skill_2": {
+      "id": "朱_skill_2",
+      "section": "技能专长",
+      "content": "C#",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.685719",
+      "updated_at": "2025-10-29T13:11:50.685722"
+    },
+    "朱_skill_3": {
+      "id": "朱_skill_3",
+      "section": "技能专长",
+      "content": "Python",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.685885",
+      "updated_at": "2025-10-29T13:11:50.685888"
+    },
+    "朱_skill_4": {
+      "id": "朱_skill_4",
+      "section": "技能专长",
+      "content": "JavaScript",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.686073",
+      "updated_at": "2025-10-29T13:11:50.686076"
+    },
+    "朱_skill_5": {
+      "id": "朱_skill_5",
+      "section": "技能专长",
+      "content": "Windows",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.686258",
+      "updated_at": "2025-10-29T13:11:50.686262"
+    },
+    "朱_skill_6": {
+      "id": "朱_skill_6",
+      "section": "技能专长",
+      "content": "Linux",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.686425",
+      "updated_at": "2025-10-29T13:11:50.686428"
+    },
+    "朱_skill_7": {
+      "id": "朱_skill_7",
+      "section": "技能专长",
+      "content": "Unity3D",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.686591",
+      "updated_at": "2025-10-29T13:11:50.686594"
+    },
+    "朱_skill_8": {
+      "id": "朱_skill_8",
+      "section": "技能专长",
+      "content": "DX12",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.686761",
+      "updated_at": "2025-10-29T13:11:50.686764"
+    },
+    "朱_skill_9": {
+      "id": "朱_skill_9",
+      "section": "技能专长",
+      "content": "Vulkan",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.687003",
+      "updated_at": "2025-10-29T13:11:50.687008"
+    },
+    "朱_skill_10": {
+      "id": "朱_skill_10",
+      "section": "技能专长",
+      "content": "AR",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.687186",
+      "updated_at": "2025-10-29T13:11:50.687189"
+    },
+    "朱_skill_11": {
+      "id": "朱_skill_11",
+      "section": "技能专长",
+      "content": "VR",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.687364",
+      "updated_at": "2025-10-29T13:11:50.687367"
+    },
+    "朱_skill_12": {
+      "id": "朱_skill_12",
+      "section": "技能专长",
+      "content": "Glasses",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.687532",
+      "updated_at": "2025-10-29T13:11:50.687535"
+    },
+    "朱_skill_13": {
+      "id": "朱_skill_13",
+      "section": "技能专长",
+      "content": "Mobile",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.687698",
+      "updated_at": "2025-10-29T13:11:50.687702"
+    },
+    "朱_ach_1": {
+      "id": "朱_ach_1",
+      "section": "成就荣誉",
+      "content": "Delivered the first commercial project generated by ZEngine",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.687864",
+      "updated_at": "2025-10-29T13:11:50.687867"
+    },
+    "朱_ach_2": {
+      "id": "朱_ach_2",
+      "section": "成就荣誉",
+      "content": "Created a dynamic type system for ZEngine",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.688049",
+      "updated_at": "2025-10-29T13:11:50.688052"
+    },
+    "朱_ach_3": {
+      "id": "朱_ach_3",
+      "section": "成就荣誉",
+      "content": "Accelerated statistical calculations using GPGPU (Vulkan) in a MicroMasters project, receiving full points after grade adjustment",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.688213",
+      "updated_at": "2025-10-29T13:11:50.688216"
+    },
+    "朱_ach_4": {
+      "id": "朱_ach_4",
+      "section": "成就荣誉",
+      "content": "Developed multiple mobile games including 'A Dream of a Girl', 'Labyrinth', and 'Adventure On Road'",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.688377",
+      "updated_at": "2025-10-29T13:11:50.688380"
+    },
+    "朱_ach_5": {
+      "id": "朱_ach_5",
+      "section": "成就荣誉",
+      "content": "Worked on high-profile online and stand-alone games at Softstar Technology",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:11:50.688553",
+      "updated_at": "2025-10-29T13:11:50.688556"
+    },
+    "xx_exp_1": {
+      "id": "xx_exp_1",
+      "section": "工作经验",
+      "content": "2023/07 - Present, Lenovo-ar, Beijing: Graphic Engine (ZEngine) development. Supported ZEngine's UI system, created control systems on WebSocket and Browser Client for cloud rendering, enabled Linux compatibility, fixed bugs, delivered first commercial project using ZEngine, created dynamic type system.\n2019/09 - 2022/07, Lenovo-ar: Applications on AR-VR Glasses. Constructed Blueprint Editor (Unity3D) in VR, developed VR and AR applications (Unity3D, VC++, DX12) for virtual screens.\n2016/06 - 2019/06, Beijing ChuangYouTianDi Network Technology Co., Ltd: Mobile Games Developer. Developed 'A Dream of a Girl', a mobile game for BMW Repairman training; 'Labyrinth', a mobile game with traps and triggers; 'Adventure On Road', a cooperative mobile game.\n2015/07 - 2016/06, Softstar Technology (Beijing) Co., Ltd: Developed mobile client for online cards game, participated in development of three stand-alone games (PAL6, PALSA), participated in development of server for giant online game (Windows and Red Hat).",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.736238",
+      "updated_at": "2025-10-29T13:16:03.736247"
+    },
+    "xx_edu_1": {
+      "id": "xx_edu_1",
+      "section": "教育背景",
+      "content": "2004/09 - 2008/07, Beijing University of Chemical Technology, Electronic and Information Engineering.\n2001/09 - 2004/07, The High School Attached to Beijing Jiaotong University.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.736423",
+      "updated_at": "2025-10-29T13:16:03.736426"
+    },
+    "xx_skill_1": {
+      "id": "xx_skill_1",
+      "section": "技能专长",
+      "content": "C++",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.736600",
+      "updated_at": "2025-10-29T13:16:03.736603"
+    },
+    "xx_skill_2": {
+      "id": "xx_skill_2",
+      "section": "技能专长",
+      "content": "C#",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.736770",
+      "updated_at": "2025-10-29T13:16:03.736773"
+    },
+    "xx_skill_3": {
+      "id": "xx_skill_3",
+      "section": "技能专长",
+      "content": "Python",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.736954",
+      "updated_at": "2025-10-29T13:16:03.736957"
+    },
+    "xx_skill_4": {
+      "id": "xx_skill_4",
+      "section": "技能专长",
+      "content": "JavaScript",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.737130",
+      "updated_at": "2025-10-29T13:16:03.737133"
+    },
+    "xx_skill_5": {
+      "id": "xx_skill_5",
+      "section": "技能专长",
+      "content": "Windows",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.737300",
+      "updated_at": "2025-10-29T13:16:03.737303"
+    },
+    "xx_skill_6": {
+      "id": "xx_skill_6",
+      "section": "技能专长",
+      "content": "Linux",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.737468",
+      "updated_at": "2025-10-29T13:16:03.737471"
+    },
+    "xx_skill_7": {
+      "id": "xx_skill_7",
+      "section": "技能专长",
+      "content": "Unity3D",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.737633",
+      "updated_at": "2025-10-29T13:16:03.737636"
+    },
+    "xx_skill_8": {
+      "id": "xx_skill_8",
+      "section": "技能专长",
+      "content": "DX12",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.737803",
+      "updated_at": "2025-10-29T13:16:03.737805"
+    },
+    "xx_skill_9": {
+      "id": "xx_skill_9",
+      "section": "技能专长",
+      "content": "Vulkan",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.737979",
+      "updated_at": "2025-10-29T13:16:03.737982"
+    },
+    "xx_skill_10": {
+      "id": "xx_skill_10",
+      "section": "技能专长",
+      "content": "AR",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.738152",
+      "updated_at": "2025-10-29T13:16:03.738155"
+    },
+    "xx_skill_11": {
+      "id": "xx_skill_11",
+      "section": "技能专长",
+      "content": "Glasses",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.738403",
+      "updated_at": "2025-10-29T13:16:03.738407"
+    },
+    "xx_skill_12": {
+      "id": "xx_skill_12",
+      "section": "技能专长",
+      "content": "Mobile",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.738586",
+      "updated_at": "2025-10-29T13:16:03.738590"
+    },
+    "xx_ach_1": {
+      "id": "xx_ach_1",
+      "section": "成就荣誉",
+      "content": "Delivered the first commercial project generated by ZEngine.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.739071",
+      "updated_at": "2025-10-29T13:16:03.739077"
+    },
+    "xx_ach_2": {
+      "id": "xx_ach_2",
+      "section": "成就荣誉",
+      "content": "Created a dynamic type system for ZEngine.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.739461",
+      "updated_at": "2025-10-29T13:16:03.739466"
+    },
+    "xx_ach_3": {
+      "id": "xx_ach_3",
+      "section": "成就荣誉",
+      "content": "Used GPGPU (Vulkan) to accelerate statistical calculation for a MicroMasters project, receiving full points.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.739647",
+      "updated_at": "2025-10-29T13:16:03.739650"
+    },
+    "xx_ach_4": {
+      "id": "xx_ach_4",
+      "section": "成就荣誉",
+      "content": "Created control system for cloud rendering integrating WebSocket and Browser Client.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.739818",
+      "updated_at": "2025-10-29T13:16:03.739821"
+    },
+    "xx_ach_5": {
+      "id": "xx_ach_5",
+      "section": "成就荣誉",
+      "content": "Developed Blueprint Editor for VR in Unity3D.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T13:16:03.740025",
+      "updated_at": "2025-10-29T13:16:03.740029"
+    },
+    "zhu_skill_14": {
+      "id": "zhu_skill_14",
+      "section": "技能专长",
+      "content": "CV/NLP算法",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.742868",
+      "updated_at": "2025-10-29T18:12:08.742871"
+    },
+    "zhu_skill_15": {
+      "id": "zhu_skill_15",
+      "section": "技能专长",
+      "content": "全栈工程",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.743053",
+      "updated_at": "2025-10-29T18:12:08.743056"
+    },
+    "zhu_skill_16": {
+      "id": "zhu_skill_16",
+      "section": "技能专长",
+      "content": "企业架构",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.743226",
+      "updated_at": "2025-10-29T18:12:08.743230"
+    },
+    "zhu_skill_17": {
+      "id": "zhu_skill_17",
+      "section": "技能专长",
+      "content": "智能产品架构",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.743401",
+      "updated_at": "2025-10-29T18:12:08.743405"
+    },
+    "zhu_skill_18": {
+      "id": "zhu_skill_18",
+      "section": "技能专长",
+      "content": "智能算法研发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.743574",
+      "updated_at": "2025-10-29T18:12:08.743577"
+    },
+    "zhu_ach_9": {
+      "id": "zhu_ach_9",
+      "section": "成就荣誉",
+      "content": "2010年发表《液冷源控制系统的研制》核心期刊",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.744913",
+      "updated_at": "2025-10-29T18:12:08.744917"
+    },
+    "zhu_ach_10": {
+      "id": "zhu_ach_10",
+      "section": "成就荣誉",
+      "content": "2009年发表《弹箭惯性主轴测试方法研究》EI收录",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.745083",
+      "updated_at": "2025-10-29T18:12:08.745086"
+    },
+    "zhu_ach_11": {
+      "id": "zhu_ach_11",
+      "section": "成就荣誉",
+      "content": "2004-2008年校奖学金、校“社会活动积极分子”、校“优秀团干”",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-10-29T18:12:08.745248",
+      "updated_at": "2025-10-29T18:12:08.745251"
     }
   },
   "sections": {
@@ -1352,7 +2322,63 @@
       "zhu_skill_9",
       "zhu_skill_10",
       "zhu_skill_11",
-      "zhu_skill_12"
+      "zhu_skill_12",
+      "zhu_skill_13",
+      "N/A_skill_1",
+      "N/A_skill_2",
+      "N/A_skill_3",
+      "N/A_skill_4",
+      "N/A_skill_5",
+      "N/A_skill_6",
+      "N/A_skill_7",
+      "N/A_skill_8",
+      "N/A_skill_9",
+      "N/A_skill_10",
+      "N/A_skill_11",
+      "N/A_skill_12",
+      "N/A_skill_13",
+      "xhu_skill_1",
+      "xhu_skill_2",
+      "xhu_skill_3",
+      "xhu_skill_4",
+      "xhu_skill_5",
+      "xhu_skill_6",
+      "xhu_skill_7",
+      "xhu_skill_8",
+      "xhu_skill_9",
+      "xhu_skill_10",
+      "xhu_skill_11",
+      "xhu_skill_12",
+      "朱_skill_1",
+      "朱_skill_2",
+      "朱_skill_3",
+      "朱_skill_4",
+      "朱_skill_5",
+      "朱_skill_6",
+      "朱_skill_7",
+      "朱_skill_8",
+      "朱_skill_9",
+      "朱_skill_10",
+      "朱_skill_11",
+      "朱_skill_12",
+      "朱_skill_13",
+      "xx_skill_1",
+      "xx_skill_2",
+      "xx_skill_3",
+      "xx_skill_4",
+      "xx_skill_5",
+      "xx_skill_6",
+      "xx_skill_7",
+      "xx_skill_8",
+      "xx_skill_9",
+      "xx_skill_10",
+      "xx_skill_11",
+      "xx_skill_12",
+      "zhu_skill_14",
+      "zhu_skill_15",
+      "zhu_skill_16",
+      "zhu_skill_17",
+      "zhu_skill_18"
     ],
     "工作经验": [
       "个人简历_exp_1",
@@ -1360,7 +2386,11 @@
       "朱恩庆_exp_1",
       "_exp_1",
       "龚_exp_1",
-      "zhu_exp_1"
+      "zhu_exp_1",
+      "N/A_exp_1",
+      "xhu_exp_1",
+      "朱_exp_1",
+      "xx_exp_1"
     ],
     "教育背景": [
       "个人简历_edu_1",
@@ -1368,7 +2398,11 @@
       "朱恩庆_edu_1",
       "_edu_1",
       "龚_edu_1",
-      "zhu_edu_1"
+      "zhu_edu_1",
+      "N/A_edu_1",
+      "xhu_edu_1",
+      "朱_edu_1",
+      "xx_edu_1"
     ],
     "成就荣誉": [
       "张三_ach_1",
@@ -1409,7 +2443,40 @@
       "zhu_ach_2",
       "zhu_ach_3",
       "zhu_ach_4",
-      "zhu_ach_5"
+      "zhu_ach_5",
+      "N/A_ach_1",
+      "N/A_ach_2",
+      "N/A_ach_3",
+      "N/A_ach_4",
+      "N/A_ach_5",
+      "N/A_ach_6",
+      "N/A_ach_7",
+      "N/A_ach_8",
+      "N/A_ach_9",
+      "N/A_ach_10",
+      "N/A_ach_11",
+      "zhu_ach_6",
+      "xhu_ach_1",
+      "xhu_ach_2",
+      "xhu_ach_3",
+      "xhu_ach_4",
+      "xhu_ach_5",
+      "xhu_ach_6",
+      "zhu_ach_7",
+      "zhu_ach_8",
+      "朱_ach_1",
+      "朱_ach_2",
+      "朱_ach_3",
+      "朱_ach_4",
+      "朱_ach_5",
+      "xx_ach_1",
+      "xx_ach_2",
+      "xx_ach_3",
+      "xx_ach_4",
+      "xx_ach_5",
+      "zhu_ach_9",
+      "zhu_ach_10",
+      "zhu_ach_11"
     ]
   },
   "next_id": 3

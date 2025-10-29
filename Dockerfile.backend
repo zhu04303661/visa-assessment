@@ -1,5 +1,5 @@
 # Python后端专用Dockerfile
-FROM python:3.10-slim
+FROM python:3.13-slim
 
 # 设置工作目录
 WORKDIR /app
@@ -19,21 +19,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # 复制后端源代码
 COPY ace_gtv/ ./
-COPY start_backend.sh ./
+COPY docker_start_backend.sh ./docker_start_backend.sh
+COPY env_validator.sh ./env_validator.sh
 
-# 复制环境变量文件
-COPY .env.local ./
+# 确保脚本有执行权限
+RUN chmod +x /app/docker_start_backend.sh /app/env_validator.sh
 
 # 创建必要的目录
 RUN mkdir -p data personal_kb resumes
-
-# 创建启动脚本
-RUN echo '#!/bin/bash\n\
-echo "🚀 启动后端服务 (ACE API + 简历处理)..."\n\
-\n\
-# 使用项目根目录的启动脚本\n\
-bash /app/start_backend.sh\n\
-' > /app/docker_start.sh && chmod +x /app/docker_start.sh
 
 # 暴露端口
 EXPOSE 5001 5002
@@ -47,4 +40,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:5001/health && curl -f http://localhost:5002/health || exit 1
 
 # 启动服务
-CMD ["/app/docker_start.sh"]
+CMD ["bash", "/app/docker_start_backend.sh"]
