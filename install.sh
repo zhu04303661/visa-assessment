@@ -91,6 +91,66 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# 处理 npm 权限错误
+handle_npm_permission_error() {
+    log_error "npm 全局安装失败 (EACCES 权限错误)"
+    echo
+    echo "可能原因:"
+    echo "  • 没有写入权限到 /usr/lib/node_modules/"
+    echo "  • npm 配置指向系统目录"
+    echo
+    echo "解决方案:"
+    echo
+    echo "方案 1: 修改 npm 默认目录 (推荐)"
+    echo "  mkdir -p ~/.npm-global"
+    echo "  npm config set prefix '~/.npm-global'"
+    echo "  echo 'export PATH=~/.npm-global/bin:\$PATH' >> ~/.bashrc"
+    echo "  source ~/.bashrc"
+    echo "  npm install -g pnpm@$PNPM_VERSION"
+    echo
+    echo "方案 2: 使用 sudo (不推荐)"
+    echo "  sudo npm install -g pnpm@$PNPM_VERSION"
+    echo
+    echo "方案 3: 使用修复脚本"
+    echo "  bash fix-npm-permissions.sh"
+    echo
+    
+    read -p "是否使用方案 1 自动修复？(y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        log_info "应用方案 1..."
+        mkdir -p ~/.npm-global
+        npm config set prefix '~/.npm-global'
+        
+        # 更新 PATH
+        if [ -f ~/.bashrc ]; then
+            if ! grep -q 'npm-global' ~/.bashrc; then
+                echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+            fi
+        fi
+        
+        if [ -f ~/.zshrc ]; then
+            if ! grep -q 'npm-global' ~/.zshrc; then
+                echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.zshrc
+            fi
+        fi
+        
+        export PATH=~/.npm-global/bin:$PATH
+        
+        log_info "重试安装 pnpm..."
+        if npm install -g pnpm@$PNPM_VERSION; then
+            log_success "pnpm $PNPM_VERSION 安装成功"
+            return 0
+        else
+            log_error "安装仍然失败"
+            return 1
+        fi
+    else
+        log_error "请解决权限问题后重试"
+        exit 1
+    fi
+}
+
 # 显示版本信息
 show_version_requirements() {
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -190,8 +250,15 @@ install_nodejs() {
         log_success "pnpm $PNPM_INSTALLED 已安装（推荐版本: $PNPM_VERSION）"
     else
         log_info "安装pnpm $PNPM_VERSION..."
-        npm install -g pnpm@$PNPM_VERSION
-        log_success "pnpm $PNPM_VERSION 安装完成"
+        
+        # 尝试全局安装 pnpm
+        if npm install -g pnpm@$PNPM_VERSION 2>/dev/null; then
+            log_success "pnpm $PNPM_VERSION 安装完成"
+        else
+            # 如果失败，可能是权限问题
+            log_warning "npm 全局安装失败，可能是权限问题"
+            handle_npm_permission_error
+        fi
     fi
 }
 
