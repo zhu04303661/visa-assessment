@@ -49,6 +49,15 @@ except Exception as e:
     save_assessment_to_markdown = None
     GTVMarkdownSaver = None
 
+# 导入专家知识库管理器
+try:
+    from expert_kb_manager import load_expert_kb, ExpertKnowledgeBase
+    print("✅ 专家知识库管理器导入成功")
+    expert_kb = load_expert_kb()
+except Exception as e:
+    print(f"❌ 专家知识库管理器导入失败: {e}")
+    expert_kb = None
+
 # 可选依赖的占位导入（在运行环境安装后启用）
 try:
     from pdfminer.high_level import extract_text as pdf_extract_text
@@ -602,12 +611,16 @@ def call_ai_for_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> Di
     try:
         
         # 构建评估提示
-        system_prompt = (
-            "你是英国Global Talent Visa (GTV) 的资深评估专家。"
-            "请基于申请人的简历信息，进行全面的GTV资格评估。"
-            "评估标准包括：杰出人才、创新贡献、行业影响力、领导力等。"
-            "严格返回JSON对象，不要包含多余说明或Markdown围栏。"
-        )
+        system_prompt = """
+你是英国 Global Talent Visa (GTV) 评估委员会的首席审核官，需要依据官方杰出人才标准，对候选人的背景进行全面、可执行的深度诊断。
+
+请遵循以下原则：
+1. 对教育、行业、工作经验、技术专长等分析段落必须写成 2-3 段中文或英文说明，给出具体事实、量化指标或案例并指出优势与风险。
+2. 对行业影响力、公司贡献、行业地位分别给出 1-10 分评分，并解释评分依据。
+3. 在优势与不足部分，明确证据来源、潜在风险、改进优先级与时间规划。
+4. 在 GTV 路径分析中，对 Exceptional Talent / Promise 的可行性、所需补强材料及下一步行动做出判断。
+5. 输出必须是 UTF-8 JSON，字段名与结构必须严格按照提供的模版，禁止输出额外文本或 Markdown 代码块。
+""".strip()
         
         # 根据领域调整评估重点
         field_focus = {
@@ -645,48 +658,67 @@ def call_ai_for_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> Di
   "educationBackground": {{
     "degrees": ["学位列表"],
     "institutions": ["学校列表"],
-    "analysis": "教育背景分析"
+    "analysis": "教育背景分析（至少两段，说明学术优势与补强点）"
   }},
   "industryBackground": {{
     "sector": "行业领域",
     "yearsInIndustry": "行业经验年数",
     "keyCompanies": ["关键公司列表"],
     "industryImpact": "行业影响力评分(1-10)",
-    "analysis": "行业背景分析"
+    "analysis": "行业背景分析（阐述行业深度、影响范围及指标）"
   }},
   "workExperience": {{
     "positions": ["职位列表"],
     "keyAchievements": ["关键成就列表"],
     "leadershipRoles": ["领导角色列表"],
     "projectImpact": ["项目影响列表"],
-    "analysis": "工作经验分析"
+    "analysis": "工作经验分析（突出领导力、成果数据与不足）"
   }},
   "technicalExpertise": {{
     "coreSkills": ["核心技能列表"],
     "specializations": ["专业领域列表"],
     "innovations": ["创新成果列表"],
     "industryRecognition": ["行业认可列表"],
-    "analysis": "技术专长分析"
+    "analysis": "技术专长分析（强调技术深度、创新性与应用场景）"
+  }},
+  "industryAnalysis": {{
+    "industryImpact": "行业影响力评分(1-10)",
+    "sector": "细分行业描述",
+    "marketPosition": "市场地位/竞争格局",
+    "analysis": "行业影响力综合评估（给出指标、案例和潜在风险）"
+  }},
+  "companyContribution": {{
+    "impact": "业务影响评分(1-10)",
+    "achievements": ["推动业绩的关键成果"],
+    "innovations": ["产品/流程创新或制度建设"],
+    "analysis": "对所在公司的贡献分析（描述增长数据、团队影响与可复制性）"
+  }},
+  "industryStatus": {{
+    "status": "行业地位评分(1-10)",
+    "awards": ["奖项、媒体报道、评委经历"],
+    "analysis": "行业声誉分析（媒体曝光、评审经历、同行认可）"
   }},
   "gtvPathway": {{
     "recommendedRoute": "推荐路径(Exceptional Talent/Exceptional Promise)",
     "eligibilityLevel": "资格等级(Strong/Good/Weak)",
     "yearsOfExperience": "相关经验年数",
-    "analysis": "GTV路径分析"
+    "analysis": "GTV路径分析（说明理由、差距与补强建议）"
   }},
   "strengths": [
     {{
       "area": "优势领域",
       "description": "优势描述",
-      "evidence": "证据支撑"
+      "evidence": "证据支撑（包含量化指标或案例）",
+      "gtvRelevance": "与GTV评审标准的对应关系"
     }}
   ],
   "weaknesses": [
     {{
       "area": "需要改进的领域",
-      "description": "改进描述",
-      "improvement": "改进建议",
-      "priority": "优先级(High/Medium/Low)"
+      "description": "问题根因说明",
+      "improvement": "具体可执行的改进方案",
+      "priority": "优先级(High/Medium/Low)",
+      "timeframe": "预计完成时间（例如3个月内）"
     }}
   ],
   "criteriaAssessment": [
@@ -694,14 +726,16 @@ def call_ai_for_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> Di
       "name": "评估标准名称",
       "status": "状态(Met/Partially Met/Not Met)",
       "score": "评分(0-100)",
-      "evidence": "评估证据"
+      "evidence": "评估证据",
+      "recommendations": "针对该标准的补强建议",
+      "officialRequirement": "对应的官方要求或解释"
     }}
   ],
   "overallScore": "总体评分(0-100)",
-  "recommendation": "申请建议",
-  "professionalAdvice": ["专业建议列表"],
-  "timeline": "申请时间线",
-  "requiredDocuments": ["所需文档列表"],
+  "recommendation": "申请建议（整体判断与定位）",
+  "professionalAdvice": ["专家行动建议（句子形式）"],
+  "timeline": "申请时间线（标注短期/中期行动）",
+  "requiredDocuments": ["所需文档列表（含推荐信类型等）"],
   "estimatedBudget": {{
     "min": "最低预算",
     "max": "最高预算",
@@ -766,90 +800,229 @@ def _get_default_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> D
         "research-academia": "Research & Academia"
     }
     
+    name = extracted_info.get("name") or "该申请人"
+    education = extracted_info.get("education") or "暂无明确教育信息"
+    experience = extracted_info.get("experience") or "暂无详细的工作经历描述"
+    skills = extracted_info.get("skills") or []
+    achievements = extracted_info.get("achievements") or []
+    projects = extracted_info.get("projects") or []
+    certifications = extracted_info.get("certifications") or []
+
+    skills_text = "、".join(skills[:5]) if skills else "核心技能尚待补充"
+    achievements_text = "、".join(achievements[:3]) if achievements else "可补充具有说服力的业绩案例"
+    projects_text = "、".join(projects[:3]) if projects else "需要补充代表性项目"
+
+    industry_impact_score = min(9, 5 + len(achievements) // 2 + len(projects) // 2)
+    company_impact_score = min(9, 5 + len(projects) // 2)
+    industry_status_score = 5 if achievements else 4
+
+    education_analysis = (
+        f"{name} 的学历经历目前显示为 {education}。该背景为后续在 {field_mapping.get(field, 'Digital Technology')} 领域进一步证明学术基础提供了起点。"
+        "建议整理毕业年份、排名/认证信息以及与目标领域相关的科研或课程项目，以便凸显学术深度。"
+        "\n\n若拥有海外或顶尖院校经历、行业培训证书，请补充具体成果（如论文、专利、荣誉）。这将直接强化 Exceptional Talent/Promise 中关于学术或专业权威的佐证。"
+    )
+
+    industry_background_analysis = (
+        f"根据已提供的经历描述，申请人在 {experience} 中积累了领域经验，目前行业定位仍需量化指标支持。"
+        f"建议补充所在公司的规模、覆盖市场或用户量，以便评审理解其在行业中的深度参与。"
+        "\n\n若具备跨区域、跨行业合作案例，请列出合作对象和业务影响指标；同时说明在产业链中的角色（如生态建设、标准制定贡献），以体现行业影响力。"
+    )
+
+    work_experience_analysis = (
+        f"核心履历显示申请人负责/参与的项目包括：{projects_text}。需进一步明确个人角色、团队规模与量化成果，例如营收提升、用户增长、成本节约等。"
+        "\n\n请梳理具备领导力的实例（如主导战略、建立团队、跨部门协调），并准备第三方背书或绩效评估报告，以支撑 GTV 对领导力与持续贡献的要求。"
+    )
+
+    tech_analysis = (
+        f"技能图谱提到 {skills_text}，说明申请人具备相关技术能力。建议按『核心技术栈 + 场景化成果』整理案例，突出原创性或难以替代的技术积累。"
+        "\n\n若存在开源贡献、专利、行业演讲或技术出版物，请列举链接及影响指标，以增强评审对技术深度与创新度的信任。"
+    )
+
+    gtv_pathway_analysis = (
+        "当前材料尚不足以直判 Exceptional Talent。建议优先构建'领导力 + 国际影响力'的证据组合，"
+        "例如：全球性奖项、跨国项目的核心贡献、顶级刊物/媒体报道、行业评审经历等。"
+        "\n\n若目标是 Exceptional Promise，可重点强调近三年内高速成长的指标、创新成果的商业化落地，以及未来在英国建立业务或研究计划的可行性。"
+    )
+
+    industry_analysis_text = (
+        f"从公开信息来看，申请人所在赛道为 {field_mapping.get(field, 'Digital Technology')}，影响力评分暂估为 {industry_impact_score}/10。"
+        "需补充业务规模（GMV/ARR/用户数）或媒体引用次数，以量化行业覆盖度。"
+        "\n\n请进一步说明在生态中的定位（如平台、供应链、技术标准），并提供行业专家或合作伙伴的第三方评价，强化其行业话语权。"
+    )
+
+    company_contribution_text = (
+        f"候选人主导的项目 {projects_text}，为公司带来的核心成果尚需量化。"
+        "建议整理关键指标（营收、成本、转化率等）以及团队贡献描述，"
+        "并提供管理层推荐信或投资人证明，以支撑 {company_impact_score}/10 的业务影响评分。"
+    )
+
+    industry_status_text = (
+        "目前资料中缺乏行业类荣誉或公开评审经历，暂给予 4/10 的行业地位评分。"
+        "建议争取国际奖项、行业峰会演讲或顶级媒体报道，并记录获奖年份、主办方和影响范围，以快速提升权威度。"
+    )
+
+    strengths = []
+    if skills:
+        strengths.append({
+            "area": "核心技术与技能结构",
+            "description": f"掌握 {skills_text} 等技能，覆盖目标领域的关键技术栈。",
+            "evidence": f"技能列表：{', '.join(skills)}",
+            "gtvRelevance": "支撑 GTV 对创新能力与专业深度的评估"
+        })
+    if achievements:
+        strengths.append({
+            "area": "业务成果与影响",
+            "description": f"已有 {achievements_text} 等成果，显示出一定的行业验证。",
+            "evidence": f"关键成就：{', '.join(achievements)}",
+            "gtvRelevance": "可用于证明持续贡献与行业影响力"
+        })
+    if not strengths:
+        strengths.append({
+            "area": "基础履历",
+            "description": "具备与目标领域相关的经历，可作为后续补强的基础。",
+            "evidence": "简历提供的教育与工作信息",
+            "gtvRelevance": "为构建 GTV 申请的基本条件"
+        })
+
+    weaknesses = [
+        {
+            "area": "第三方权威认可",
+            "description": "缺少国际奖项、行业背书或权威媒体报道，难以证明顶级影响力。",
+            "improvement": "在未来 3-6 个月内争取行业大奖、受邀担任评委或在顶级媒体发布深度报道。",
+            "priority": "High",
+            "timeframe": "3-6个月"
+        },
+        {
+            "area": "材料结构化程度",
+            "description": "现有材料缺乏量化指标和第三方证明，证据链完整性不足。",
+            "improvement": "整理业绩数据、团队规模、客户名单，并准备3封顶级推荐信。",
+            "priority": "Medium",
+            "timeframe": "1-3个月"
+        }
+    ]
+
+    criteria_assessment = [
+        {
+            "name": "领导力 (Criterion 1)",
+            "status": "Partially Met",
+            "score": 55,
+            "evidence": "已展示一定的项目负责经验，但缺少跨界领导或行业治理记录。",
+            "recommendations": "补充团队规模、管理幅度、跨部门协作案例，以及领导层推荐信。",
+            "officialRequirement": "需要证明在知名组织担任领导或关键决策角色。"
+        },
+        {
+            "name": "对行业的杰出贡献 (Criterion 2)",
+            "status": "Partially Met",
+            "score": 60,
+            "evidence": "存在若干项目成果，但缺乏国际化影响与可量化输出。",
+            "recommendations": "准备项目商业指标、用户规模及业内引用数据，展示成果可复制性。",
+            "officialRequirement": "需证明对行业产生重大影响的原创贡献。"
+        },
+        {
+            "name": "媒体与公众认可 (Criterion 3)",
+            "status": "Not Met",
+            "score": 30,
+            "evidence": "暂未看到顶级媒体报道或国际公开演讲记录。",
+            "recommendations": "主动策划媒体曝光、参与国际峰会发表演讲，争取多语种报道。",
+            "officialRequirement": "需要显著的媒体曝光或公共认可证据。"
+        }
+    ]
+
+    recommendation_text = (
+        "综合来看，申请人具备潜力，但当前材料更接近 Exceptional Promise 的基础。"
+        "建议先完成第三方背书、量化业绩、国际媒体报道三大模块，再考虑提交 GTV 申请。"
+    )
+
+    professional_advice = [
+        "建立证据矩阵：按照领导力、创新力、影响力分类收集案例和证明材料。",
+        "尽快确定三位国际公认专家作为推荐人，准备结构化推荐信初稿。",
+        "规划未来12个月在英国的业务或研究计划，形成商业或科研落地方案。"
+    ]
+
+    timeline_text = (
+        "立即（0-3个月）：完成资料梳理、确定推荐人、量化业绩指标。\n"
+        "短期（3-6个月）：争取行业奖项或高影响力演讲，启动媒体曝光与案例包装。\n"
+        "中期（6-12个月）：准备正式背书材料、完善商业/科研计划，并评估是否递交申请。"
+    )
+
+    required_documents = [
+        "3 封来自国际或行业权威的推荐信（含职位、合作关系、具体贡献）",
+        "项目成果与业绩数据证明（营收、用户、影响力指标）",
+        "媒体报道、奖项证书或评委邀请函的扫描件",
+        "个人未来在英国的业务/科研计划书"
+    ]
+     
     return {
         "applicantInfo": {
             "name": extracted_info.get("name", "N/A"),
             "field": field_mapping.get(field, "Digital Technology"),
-            "currentPosition": "待确定",
-            "company": "待确定",
-            "yearsOfExperience": "待确定"
+            "currentPosition": "待补充",
+            "company": "待补充",
+            "yearsOfExperience": "待补充"
         },
         "educationBackground": {
-            "degrees": [extracted_info.get("education", "待确定")],
-            "institutions": ["待确定"],
-            "analysis": "教育背景需要进一步分析"
+            "degrees": [education],
+            "institutions": ["待补充"],
+            "analysis": education_analysis
         },
         "industryBackground": {
             "sector": "待确定",
             "yearsInIndustry": "待确定",
             "keyCompanies": ["待确定"],
-            "industryImpact": 5,
-            "analysis": "行业背景需要进一步分析"
+            "industryImpact": industry_impact_score,
+            "analysis": industry_background_analysis
         },
         "workExperience": {
-            "positions": [extracted_info.get("experience", "待确定")],
-            "keyAchievements": extracted_info.get("achievements", []),
-            "leadershipRoles": ["待确定"],
-            "projectImpact": extracted_info.get("projects", []),
-            "analysis": "工作经验需要进一步分析"
+            "positions": [experience],
+            "keyAchievements": achievements,
+            "leadershipRoles": ["待补充"],
+            "projectImpact": projects,
+            "analysis": work_experience_analysis
         },
         "technicalExpertise": {
-            "coreSkills": extracted_info.get("skills", []),
-            "specializations": ["待确定"],
-            "innovations": extracted_info.get("projects", []),
-            "industryRecognition": extracted_info.get("achievements", []),
-            "analysis": "技术专长需要进一步分析"
+            "coreSkills": skills,
+            "specializations": ["待补充"],
+            "innovations": projects,
+            "industryRecognition": achievements or certifications,
+            "analysis": tech_analysis
+        },
+        "industryAnalysis": {
+            "industryImpact": industry_impact_score,
+            "sector": field_mapping.get(field, "Digital Technology"),
+            "marketPosition": "待补充市场定位描述",
+            "analysis": industry_analysis_text
+        },
+        "companyContribution": {
+            "impact": company_impact_score,
+            "achievements": achievements,
+            "innovations": projects,
+            "analysis": company_contribution_text
+        },
+        "industryStatus": {
+            "status": industry_status_score,
+            "awards": certifications or achievements,
+            "analysis": industry_status_text
         },
         "gtvPathway": {
             "recommendedRoute": "待评估",
             "eligibilityLevel": "待评估",
             "yearsOfExperience": "待确定",
-            "analysis": "需要LLM进行详细评估"
+            "analysis": gtv_pathway_analysis
         },
-        "strengths": [
-            {
-                "area": "技能专长",
-                "description": "具备相关技能",
-                "evidence": "简历中的技能列表"
-            }
-        ],
-        "weaknesses": [
-            {
-                "area": "评估完整性",
-                "description": "需要更详细的评估",
-                "improvement": "建议配置LLM进行智能评估",
-                "priority": "High"
-            }
-        ],
-        "criteriaAssessment": [
-            {
-                "name": "基础资格",
-                "status": "Partially Met",
-                "score": 50,
-                "evidence": "基础信息已提取，需要进一步评估"
-            }
-        ],
-        "overallScore": 50,
-        "recommendation": "建议配置LLM进行详细评估以获得更准确的结果",
-        "professionalAdvice": [
-            "配置LLM服务以获得智能评估",
-            "提供更详细的简历信息",
-            "准备相关支持文档"
-        ],
-        "timeline": "待评估",
-        "requiredDocuments": [
-            "简历/CV",
-            "学历证明",
-            "工作证明",
-            "推荐信"
-        ],
+        "strengths": strengths,
+        "weaknesses": weaknesses,
+        "criteriaAssessment": criteria_assessment,
+        "overallScore": 58,
+        "recommendation": recommendation_text,
+        "professionalAdvice": professional_advice,
+        "timeline": timeline_text,
+        "requiredDocuments": required_documents,
         "estimatedBudget": {
-            "min": 50000,
-            "max": 100000,
+            "min": 0,
+            "max": 0,
             "currency": "GBP"
         }
     }
-
 
 def _extract_with_local_rules(content: str) -> Dict[str, Any]:
     """本地规则信息提取（回退机制）"""

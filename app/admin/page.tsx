@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -16,8 +16,21 @@ import {
   MessageSquare,
   TrendingUp,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Search,
+  BookOpen,
+  Target,
+  Lightbulb,
+  Code
 } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useLanguage } from "@/lib/i18n"
 
 interface Bullet {
@@ -48,6 +61,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterSection, setFilterSection] = useState("all")
+  const [sortBy, setSortBy] = useState<"updated" | "helpful" | "id">("updated")
   
   // 添加/编辑表单状态
   const [isAdding, setIsAdding] = useState(false)
@@ -57,6 +73,16 @@ export default function AdminPage() {
     content: "",
     bullet_id: ""
   })
+  const [activeTab, setActiveTab] = useState("all")
+
+  const sectionOptions = [
+    { value: "defaults", label: "默认知识", icon: "📋" },
+    { value: "expert_guidelines", label: "专家指南", icon: "🎯" },
+    { value: "expert_case_studies", label: "案例研究", icon: "📚" },
+    { value: "guidelines", label: "指导原则", icon: "📖" },
+    { value: "criteria", label: "评估标准", icon: "✓" },
+    { value: "examples", label: "示例", icon: "💡" },
+  ]
 
   // 加载数据
   const loadData = async () => {
@@ -92,6 +118,17 @@ export default function AdminPage() {
   useEffect(() => {
     loadData()
   }, [])
+
+  // 清空提示消息
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError("")
+        setSuccess("")
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [error, success])
 
   // 添加知识条目
   const handleAdd = async () => {
@@ -231,281 +268,437 @@ export default function AdminPage() {
     setFormData({ section: "defaults", content: "", bullet_id: "" })
   }
 
-  return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">ACE知识库管理</h1>
-        <p className="text-gray-600">管理和维护GTV签证评估的AI知识库</p>
-      </div>
-
-      {/* 统计信息 */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Database className="h-5 w-5 text-blue-500" />
-                <div>
-                  <p className="text-sm text-gray-600">知识条目</p>
-                  <p className="text-2xl font-bold">{stats.bullets}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <MessageSquare className="h-5 w-5 text-green-500" />
-                <div>
-                  <p className="text-sm text-gray-600">章节数</p>
-                  <p className="text-2xl font-bold">{stats.sections}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="h-5 w-5 text-emerald-500" />
-                <div>
-                  <p className="text-sm text-gray-600">有用标记</p>
-                  <p className="text-2xl font-bold">{stats.tags.helpful}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <AlertCircle className="h-5 w-5 text-red-500" />
-                <div>
-                  <p className="text-sm text-gray-600">有害标记</p>
-                  <p className="text-2xl font-bold">{stats.tags.harmful}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* 消息提示 */}
-      {error && (
-        <Alert className="mb-4" variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+  // 过滤和排序
+  const filteredBullets = bullets
+    .filter((b) => {
+      const matchesSearch = 
+        b.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.content.toLowerCase().includes(searchTerm.toLowerCase())
       
-      {success && (
-        <Alert className="mb-4" variant="default">
-          <CheckCircle className="h-4 w-4" />
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
+      const matchesFilter = filterSection === "all" || b.section === filterSection
+      const matchesTab = activeTab === "all" || 
+        (activeTab === "expert" && b.section.startsWith("expert_")) ||
+        (activeTab === "standard" && !b.section.startsWith("expert_"))
+      
+      return matchesSearch && matchesFilter && matchesTab
+    })
+    .sort((a, b) => {
+      if (sortBy === "helpful") return b.helpful - a.helpful
+      if (sortBy === "id") return a.id.localeCompare(b.id)
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    })
 
-      {/* 操作按钮 */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex space-x-2">
-          <Button 
-            onClick={() => setIsAdding(true)}
-            className="flex items-center space-x-2"
-          >
-            <Plus className="h-4 w-4" />
-            <span>添加知识条目</span>
-          </Button>
+  const expertCount = bullets.filter(b => b.section.startsWith("expert_")).length
+  const standardCount = bullets.length - expertCount
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-6">
+      <div className="container mx-auto max-w-7xl">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <BookOpen className="h-8 w-8 text-primary" />
+            <h1 className="text-4xl font-bold">知识库管理系统</h1>
+          </div>
+          <p className="text-muted-foreground text-lg">管理和维护GTV签证评估所使用的专家知识库</p>
+        </div>
+
+        {/* 统计信息卡片 */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            <Card className="border-l-4 border-l-blue-500">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground font-medium">总知识点</p>
+                    <p className="text-3xl font-bold">{stats.bullets}</p>
+                  </div>
+                  <Database className="h-8 w-8 text-blue-500 opacity-20" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-l-4 border-l-purple-500">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground font-medium">专家知识</p>
+                    <p className="text-3xl font-bold">{expertCount}</p>
+                  </div>
+                  <Target className="h-8 w-8 text-purple-500 opacity-20" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-l-4 border-l-green-500">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground font-medium">标准知识</p>
+                    <p className="text-3xl font-bold">{standardCount}</p>
+                  </div>
+                  <Code className="h-8 w-8 text-green-500 opacity-20" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-l-4 border-l-emerald-500">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground font-medium">有用评分</p>
+                    <p className="text-3xl font-bold">{stats.tags.helpful}</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-emerald-500 opacity-20" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-red-500">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground font-medium">需改进</p>
+                    <p className="text-3xl font-bold">{stats.tags.harmful}</p>
+                  </div>
+                  <AlertCircle className="h-8 w-8 text-red-500 opacity-20" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* 消息提示 */}
+        {error && (
+          <Alert className="mb-4 animate-in" variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
+        {success && (
+          <Alert className="mb-4 animate-in">
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>{success}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* 操作栏 */}
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setIsAdding(true)}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              新增知识点
+            </Button>
+            
+            <Button 
+              onClick={loadData}
+              variant="outline"
+              disabled={loading}
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
           
           <Button 
-            onClick={loadData}
-            variant="outline"
-            className="flex items-center space-x-2"
-            disabled={loading}
+            onClick={handleReset}
+            variant="destructive"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>刷新</span>
+            <Trash2 className="h-4 w-4 mr-2" />
+            重置知识库
           </Button>
         </div>
-        
-        <Button 
-          onClick={handleReset}
-          variant="destructive"
-          className="flex items-center space-x-2"
-        >
-          <Trash2 className="h-4 w-4" />
-          <span>重置知识库</span>
-        </Button>
-      </div>
 
-      {/* 添加/编辑表单 */}
-      {(isAdding || editingId) && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>
-              {isAdding ? "添加知识条目" : "编辑知识条目"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">章节</label>
-                <select
-                  value={formData.section}
-                  onChange={(e) => setFormData({...formData, section: e.target.value})}
-                  className="w-full mt-1 p-2 border rounded-md"
-                >
-                  <option value="defaults">默认</option>
-                  <option value="guidelines">指导原则</option>
-                  <option value="criteria">评估标准</option>
-                  <option value="examples">示例</option>
-                </select>
+        {/* 添加/编辑表单 */}
+        {(isAdding || editingId) && (
+          <Card className="mb-6 border-2 border-primary/30">
+            <CardHeader className="bg-primary/5">
+              <CardTitle>
+                {editingId ? "编辑知识点" : "新增知识点"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">ID (唯一标识)</label>
+                  <Input
+                    value={formData.bullet_id}
+                    onChange={(e) => setFormData({...formData, bullet_id: e.target.value})}
+                    placeholder="e.g., expert_positioning_rule"
+                    disabled={!!editingId}
+                  />
+                  {!editingId && (
+                    <p className="text-xs text-muted-foreground mt-1">为空则自动生成UUID</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium mb-2 block">分类</label>
+                  <Select
+                    value={formData.section}
+                    onValueChange={(value) => setFormData({...formData, section: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sectionOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.icon} {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               
               <div>
-                <label className="text-sm font-medium">ID (可选)</label>
-                <Input
-                  value={formData.bullet_id}
-                  onChange={(e) => setFormData({...formData, bullet_id: e.target.value})}
-                  placeholder="留空自动生成"
+                <label className="text-sm font-medium mb-2 block">知识内容</label>
+                <Textarea
+                  value={formData.content}
+                  onChange={(e) => setFormData({...formData, content: e.target.value})}
+                  placeholder="输入详细的知识内容。支持Markdown格式。"
+                  rows={6}
+                  className="font-mono text-sm"
                 />
+                <p className="text-xs text-muted-foreground mt-2">
+                  字数: {formData.content.length} | 建议: 50-1000字
+                </p>
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={cancelEdit}>
+                  取消
+                </Button>
+                <Button 
+                  onClick={() => editingId ? handleUpdate(editingId) : handleAdd()}
+                  disabled={!formData.content.trim()}
+                >
+                  {editingId ? "更新" : "添加"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 知识点列表 */}
+        <Card>
+          <CardHeader className="border-b bg-muted/50">
+            <div className="space-y-4">
+              <CardTitle>知识点库</CardTitle>
+              
+              {/* 搜索和过滤 */}
+              <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="搜索ID或内容..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                
+                <Select value={filterSection} onValueChange={setFilterSection}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">所有分类</SelectItem>
+                    {sectionOptions.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.icon} {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="updated">最近更新</SelectItem>
+                    <SelectItem value="helpful">有用程度</SelectItem>
+                    <SelectItem value="id">字母顺序</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-            
-            <div>
-              <label className="text-sm font-medium">内容</label>
-              <Textarea
-                value={formData.content}
-                onChange={(e) => setFormData({...formData, content: e.target.value})}
-                placeholder="输入知识条目内容..."
-                rows={4}
-                className="mt-1"
-              />
-            </div>
-            
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={cancelEdit}>
-                取消
-              </Button>
-              <Button 
-                onClick={() => isAdding ? handleAdd() : handleUpdate(editingId!)}
-                disabled={!formData.content.trim()}
-              >
-                {isAdding ? "添加" : "更新"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          </CardHeader>
 
-      {/* 知识条目列表 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>知识条目列表</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8">
-              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2" />
-              <p>加载中...</p>
-            </div>
-          ) : bullets.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Database className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>暂无知识条目</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {bullets.map((bullet) => (
-                <div key={bullet.id} className="border rounded-lg p-4">
-                  {editingId === bullet.id ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm font-medium">章节</label>
-                          <select
-                            value={formData.section}
-                            onChange={(e) => setFormData({...formData, section: e.target.value})}
-                            className="w-full mt-1 p-2 border rounded-md"
-                          >
-                            <option value="defaults">默认</option>
-                            <option value="guidelines">指导原则</option>
-                            <option value="criteria">评估标准</option>
-                            <option value="examples">示例</option>
-                          </select>
+          <CardContent className="pt-6">
+            {/* Tabs for Expert vs Standard */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="all">全部 ({bullets.length})</TabsTrigger>
+                <TabsTrigger value="expert">专家知识 ({expertCount})</TabsTrigger>
+                <TabsTrigger value="standard">标准知识 ({standardCount})</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {loading ? (
+              <div className="text-center py-12">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2" />
+                <p className="text-muted-foreground">加载中...</p>
+              </div>
+            ) : filteredBullets.length === 0 ? (
+              <div className="text-center py-12">
+                <Database className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                <p className="text-muted-foreground">暂无知识点</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredBullets.map((bullet) => (
+                  <div 
+                    key={bullet.id} 
+                    className="border rounded-lg p-4 hover:shadow-md transition-all hover:border-primary/50"
+                  >
+                    {editingId === bullet.id ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium">分类</label>
+                            <Select
+                              value={formData.section}
+                              onValueChange={(value) => setFormData({...formData, section: value})}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {sectionOptions.map(opt => (
+                                  <SelectItem key={opt.value} value={opt.value}>
+                                    {opt.icon} {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div>
+                            <label className="text-sm font-medium">ID</label>
+                            <Input
+                              value={formData.bullet_id}
+                              disabled
+                            />
+                          </div>
                         </div>
                         
                         <div>
-                          <label className="text-sm font-medium">ID</label>
-                          <Input
-                            value={formData.bullet_id}
-                            onChange={(e) => setFormData({...formData, bullet_id: e.target.value})}
-                            disabled
+                          <label className="text-sm font-medium">内容</label>
+                          <Textarea
+                            value={formData.content}
+                            onChange={(e) => setFormData({...formData, content: e.target.value})}
+                            rows={5}
+                            className="font-mono text-sm"
                           />
                         </div>
+                        
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" onClick={cancelEdit}>
+                            取消
+                          </Button>
+                          <Button onClick={() => handleUpdate(bullet.id)}>
+                            保存
+                          </Button>
+                        </div>
                       </div>
-                      
+                    ) : (
                       <div>
-                        <label className="text-sm font-medium">内容</label>
-                        <Textarea
-                          value={formData.content}
-                          onChange={(e) => setFormData({...formData, content: e.target.value})}
-                          rows={3}
-                          className="mt-1"
-                        />
-                      </div>
-                      
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="outline" onClick={cancelEdit}>
-                          取消
-                        </Button>
-                        <Button onClick={() => handleUpdate(bullet.id)}>
-                          保存
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="secondary">{bullet.section}</Badge>
-                          <span className="text-sm text-gray-500">#{bullet.id}</span>
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge 
+                                variant={bullet.section.startsWith("expert_") ? "default" : "secondary"}
+                              >
+                                {sectionOptions.find(s => s.value === bullet.section)?.icon}
+                                {" "}
+                                {sectionOptions.find(s => s.value === bullet.section)?.label}
+                              </Badge>
+                              <code className="text-xs bg-muted px-2 py-1 rounded">
+                                {bullet.id}
+                              </code>
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => startEdit(bullet)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDelete(bullet.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                         
-                        <div className="flex space-x-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => startEdit(bullet)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(bullet.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                        <p className="text-sm text-foreground whitespace-pre-wrap mb-3 leading-relaxed">
+                          {bullet.content}
+                        </p>
+                        
+                        <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t">
+                          <div className="flex gap-4">
+                            <span className="flex items-center gap-1">
+                              👍 有用: <strong>{bullet.helpful}</strong>
+                            </span>
+                            <span className="flex items-center gap-1">
+                              👎 无用: <strong>{bullet.harmful}</strong>
+                            </span>
+                            <span className="flex items-center gap-1">
+                              ➖ 中立: <strong>{bullet.neutral}</strong>
+                            </span>
+                          </div>
+                          <span>
+                            更新: {new Date(bullet.updated_at).toLocaleString("zh-CN")}
+                          </span>
                         </div>
                       </div>
-                      
-                      <p className="text-gray-800 mb-2">{bullet.content}</p>
-                      
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span>有用: {bullet.helpful}</span>
-                        <span>有害: {bullet.harmful}</span>
-                        <span>中性: {bullet.neutral}</span>
-                        <span>更新: {new Date(bullet.updated_at).toLocaleString()}</span>
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 知识库统计底部 */}
+        {!loading && filteredBullets.length > 0 && (
+          <Card className="mt-6 bg-muted/30">
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold text-primary">{filteredBullets.length}</p>
+                  <p className="text-sm text-muted-foreground">筛选结果</p>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <div>
+                  <p className="text-2xl font-bold">{filteredBullets.filter(b => b.section.startsWith("expert_")).length}</p>
+                  <p className="text-sm text-muted-foreground">专家知识</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-emerald-600">{filteredBullets.reduce((sum, b) => sum + b.helpful, 0)}</p>
+                  <p className="text-sm text-muted-foreground">总有用评分</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{Math.round(filteredBullets.reduce((sum, b) => sum + b.helpful, 0) / Math.max(filteredBullets.length, 1))}</p>
+                  <p className="text-sm text-muted-foreground">平均评分</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }

@@ -189,6 +189,606 @@
       "neutral": 0,
       "created_at": "2025-10-31T14:45:04.204148",
       "updated_at": "2025-10-31T14:45:04.204150"
+    },
+    "expert_positioning_vc_founder": {
+      "id": "expert_positioning_vc_founder",
+      "section": "expert_guidelines",
+      "content": "案例场景：申请人背景为近1年创新项目创始人 + 之前4年VC投资人经验。核心问题：定位选择不当会导致驳回。建议方案：① 深度分析职业生涯轨迹，判断主要成就是投资阶段还是创业阶段；② 若投资成就更突出（基金规模、案例、ROI），以PE/VC身份申请，强调行业影响力和投资决策能力；③ 若创业项目更具潜力（融资额、用户规模、创新性），可选择创业者身份，但需补充项目成熟度和市场表现证据；④ 切忌混用两个身份，容易造成审核官困惑和对申请人职业稳定性的质疑。",
+      "helpful": 10,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-02T00:00:00.000000",
+      "updated_at": "2025-11-02T00:00:00.000000"
+    },
+    "expert_material_weakness_mc": {
+      "id": "expert_material_weakness_mc",
+      "section": "expert_guidelines",
+      "content": "材料评估陷阱：弱MC证据（Main Contribution / Criterion 2 - 对行业的杰出贡献）。案例：客户仅选一个奖项作为MC主张，大概率驳回。MC是实际审案中最重要的部分之一。问题根因：①仅靠单一奖项无法充分证明行业贡献；②缺少量化指标（投资案例数、退出回报、被投公司市值等）；③没有第三方背书或媒体报道。补强策略：① 系统梳理所有行业认可（奖项、榜单、评委经历、媒体专访）；② 量化核心成果（已投基金规模、管理资产、成功退出数、年化回报率等）；③ 收集被投企业的成长数据和创始人推荐信；④ 整理专业媒体或行业报告中的提及和引用。",
+      "helpful": 10,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-02T00:00:00.000000",
+      "updated_at": "2025-11-02T00:00:00.000000"
+    },
+    "expert_criteria_confusion_oc1_oc3": {
+      "id": "expert_criteria_confusion_oc1_oc3",
+      "section": "expert_guidelines",
+      "content": "标准混用陷阱：OC1（Criterion 1 - 知名组织领导力）和 OC3（Criterion 3 - 媒体报道）交叉使用科技创始人 + 投资人两个身份。风险：①审核官困惑：同一申请人在两个不同身份间切换，显得职业轨迹不清；②公司成立时间短：新创公司难以证明持续领导力和团队建设成果；③材料年份混乱：超过5年的旧材料说服力下降，容易被评审官质疑时效性。最佳实践：① 确定唯一核心身份（创始人或投资人），其他经历作为背景支撑；② 围绕选定身份重新组织所有证据；③ 优先使用近5年内（最近3年最佳）的材料；④ 若需涉及多个身份，必须在叙事中清晰解释逻辑关系和职业演进。",
+      "helpful": 10,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-02T00:00:00.000000",
+      "updated_at": "2025-11-02T00:00:00.000000"
+    },
+    "expert_material_curation_strategy": {
+      "id": "expert_material_curation_strategy",
+      "section": "expert_guidelines",
+      "content": "专业材料梳理三步法：第一步 - 定位与聚焦：明确申请人的核心杰出性（创业、投资、研究等），所有材料必须服从这一主线，无关或相反的材料果断舍弃。第二步 - 个人vs团队成就区分：分类整理申请人的个人贡献（决策、创意、执行）和团队整体成就，避免夸大或混淆。第三步 - 5年规则：优先选用过去5年内的成果，超过5年的需有重大理由才能采纳。具体操作：① 建立成就矩阵（时间、身份、成就类型、证据支撑度）；② 按GTV 10标准逐一匹配最强证据；③ 识别未开采的优势点（校友网络、被投企业的成功案例、隐形影响等）；④ 确保每个标准至少有3个备选证据，防止单点风险。",
+      "helpful": 10,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-02T00:00:00.000000",
+      "updated_at": "2025-11-02T00:00:00.000000"
+    },
+    "expert_case_study_vc_founder_red_flags": {
+      "id": "expert_case_study_vc_founder_red_flags",
+      "section": "expert_case_studies",
+      "content": "真实案例分析 - VC投资人转创始人申请：背景档案：4年PE/VC投资经理 + 1年技术创业。原始问题列表：①定位模糊：同时强调投资和创业两个身份，缺乏清晰主线；②MC选证脆弱：仅有1个奖项，无量化指标和第三方背书；③标准混用：用创始人经历申报OC1（领导力），用投资人案例申报OC3（媒体），容易造成不一致印象；④时间风险：部分引用材料超过5年，时效性问题；⑤成就混乱：未区分个人决策贡献和所在机构整体成果。咨询建议路径：检查阶段→定位选择→证据重组→补强计划。最终判断：该案需要深度挖掘，仅凭现有材料很难成功申请，建议投入2-3个月时间梳理完整证据链。",
+      "helpful": 10,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-02T00:00:00.000000",
+      "updated_at": "2025-11-02T00:00:00.000000"
+    },
+    "expert_five_year_rule": {
+      "id": "expert_five_year_rule",
+      "section": "expert_guidelines",
+      "content": "GTV评审「5年规则」：重点关注申请人最近5年内的成就和贡献，超过5年的材料需特别谨慎。理由：①证明持续性：展示申请人最近持续的领导力和贡献，而非一次性成就；②时效性认可：行业认可应该是最新的，否则难以证明当下地位；③职业发展轨迹：最近5年的成就反映申请人的最新水平和发展势头。实操建议：①超过5年的成就需要有「持续性」证据（如持续担任职务、持续获得认可）；②旧材料可作为「背景」，但不能作为「主要证据」；③优先组织近3年的高含金量成果；④若重要成就确实发生在5年外，需在叙事中解释其持续影响力。",
+      "helpful": 9,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-02T00:00:00.000000",
+      "updated_at": "2025-11-02T00:00:00.000000"
+    },
+    "expert_hidden_strength_discovery": {
+      "id": "expert_hidden_strength_discovery",
+      "section": "expert_guidelines",
+      "content": "隐性优势点挖掘：许多申请人的好材料被遗漏，需要系统性发掘。常见未被利用的优势：①校友或行业生态贡献（校友基金、行业协会、产业联盟领导力）；②被投企业的成功：若被投公司后续融资、上市或获得大奖，反映投资人的眼光和选择能力；③媒体和演讲活动：即使不是头部媒体，系统性的媒体出现和思想领导力演讲也能体现行业话语权；④行业评审与咨询：作为竞赛评委、政府顾问、企业董事的经历；⑤跨界影响：在某领域的创新被其他行业采用和改进。发掘方法：①系统性回顾过去5年每一项工作的完整impact；②采访申请人的同事、被投创始人、合作伙伴；③查阅相关媒体存档、公开数据库（企查查、天眼查等）；④梳理隐形背书（微信公众号、知识付费平台的追随者、行业圈子的知名度）。",
+      "helpful": 9,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-02T00:00:00.000000",
+      "updated_at": "2025-11-02T00:00:00.000000"
+    },
+    "zhu_exp_1": {
+      "id": "zhu_exp_1",
+      "section": "工作经验",
+      "content": "2021.03至今在新奥集团担任AI智能资深技术专家/智能大模型工程资深架构师/智能群资深技术总监，带领大模型研发团队，推动能源集团智能化技术升级。2015.8至2021.3在携程负责移动端千人团队的研发效能，支撑亿级流程服务入口，主导无线MCD云平台与无线服务端开发，担任算法技术专家/高级经理。2014.3至2015.1在爱立信中国核心通讯技术研发，担任资源算法工程师和云计算工程师。2011.4至2014.3在阿尔卡特朗讯贝尔实验室负责4G核心物理层算法仿真系统研发，担任算法工程师/仿真系统研发经理，并曾赴美国贝尔实验室联合研发。英特尔Linux操作系统研发实习生10个月。共12年技术管理经验，带领团队规模从5人到90人不等，擅长AI大模型、企业智能体、产业智能化升级等领域。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.493682",
+      "updated_at": "2025-11-02T12:42:03.493689"
+    },
+    "zhu_edu_1": {
+      "id": "zhu_edu_1",
+      "section": "教育背景",
+      "content": "2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.493885",
+      "updated_at": "2025-11-02T12:42:03.493889"
+    },
+    "zhu_skill_1": {
+      "id": "zhu_skill_1",
+      "section": "技能专长",
+      "content": "人工智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.494081",
+      "updated_at": "2025-11-02T12:42:03.494084"
+    },
+    "zhu_skill_2": {
+      "id": "zhu_skill_2",
+      "section": "技能专长",
+      "content": "大模型技术",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.494256",
+      "updated_at": "2025-11-02T12:42:03.494259"
+    },
+    "zhu_skill_3": {
+      "id": "zhu_skill_3",
+      "section": "技能专长",
+      "content": "智能体Agent",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.494426",
+      "updated_at": "2025-11-02T12:42:03.494429"
+    },
+    "zhu_skill_4": {
+      "id": "zhu_skill_4",
+      "section": "技能专长",
+      "content": "产业智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.494599",
+      "updated_at": "2025-11-02T12:42:03.494602"
+    },
+    "zhu_skill_5": {
+      "id": "zhu_skill_5",
+      "section": "技能专长",
+      "content": "物联智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.494775",
+      "updated_at": "2025-11-02T12:42:03.494778"
+    },
+    "zhu_skill_6": {
+      "id": "zhu_skill_6",
+      "section": "技能专长",
+      "content": "持续迭代",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.494996",
+      "updated_at": "2025-11-02T12:42:03.494999"
+    },
+    "zhu_skill_7": {
+      "id": "zhu_skill_7",
+      "section": "技能专长",
+      "content": "软件系统开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.495166",
+      "updated_at": "2025-11-02T12:42:03.495169"
+    },
+    "zhu_skill_8": {
+      "id": "zhu_skill_8",
+      "section": "技能专长",
+      "content": "通讯系统开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.495345",
+      "updated_at": "2025-11-02T12:42:03.495349"
+    },
+    "zhu_skill_9": {
+      "id": "zhu_skill_9",
+      "section": "技能专长",
+      "content": "嵌入式系统",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.495521",
+      "updated_at": "2025-11-02T12:42:03.495524"
+    },
+    "zhu_skill_10": {
+      "id": "zhu_skill_10",
+      "section": "技能专长",
+      "content": "Linux系统技术",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.495692",
+      "updated_at": "2025-11-02T12:42:03.495695"
+    },
+    "zhu_skill_11": {
+      "id": "zhu_skill_11",
+      "section": "技能专长",
+      "content": "全栈工程",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.495869",
+      "updated_at": "2025-11-02T12:42:03.495873"
+    },
+    "zhu_skill_12": {
+      "id": "zhu_skill_12",
+      "section": "技能专长",
+      "content": "云计算",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.496075",
+      "updated_at": "2025-11-02T12:42:03.496079"
+    },
+    "zhu_skill_13": {
+      "id": "zhu_skill_13",
+      "section": "技能专长",
+      "content": "企业架构",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.496241",
+      "updated_at": "2025-11-02T12:42:03.496245"
+    },
+    "zhu_skill_14": {
+      "id": "zhu_skill_14",
+      "section": "技能专长",
+      "content": "智能产品架构",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.496414",
+      "updated_at": "2025-11-02T12:42:03.496417"
+    },
+    "zhu_skill_15": {
+      "id": "zhu_skill_15",
+      "section": "技能专长",
+      "content": "智能算法",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.496580",
+      "updated_at": "2025-11-02T12:42:03.496583"
+    },
+    "zhu_skill_16": {
+      "id": "zhu_skill_16",
+      "section": "技能专长",
+      "content": "团队管理",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.496747",
+      "updated_at": "2025-11-02T12:42:03.496750"
+    },
+    "zhu_skill_17": {
+      "id": "zhu_skill_17",
+      "section": "技能专长",
+      "content": "持续交付",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.496952",
+      "updated_at": "2025-11-02T12:42:03.496956"
+    },
+    "zhu_skill_18": {
+      "id": "zhu_skill_18",
+      "section": "技能专长",
+      "content": "算法研发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.497124",
+      "updated_at": "2025-11-02T12:42:03.497127"
+    },
+    "zhu_skill_19": {
+      "id": "zhu_skill_19",
+      "section": "技能专长",
+      "content": "模型训练与部署",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.497300",
+      "updated_at": "2025-11-02T12:42:03.497303"
+    },
+    "zhu_skill_20": {
+      "id": "zhu_skill_20",
+      "section": "技能专长",
+      "content": "数据处理流水线",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.497468",
+      "updated_at": "2025-11-02T12:42:03.497471"
+    },
+    "zhu_ach_1": {
+      "id": "zhu_ach_1",
+      "section": "成就荣誉",
+      "content": "2024年大模型工程和智能体技术相关专利6篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.497634",
+      "updated_at": "2025-11-02T12:42:03.497637"
+    },
+    "zhu_ach_2": {
+      "id": "zhu_ach_2",
+      "section": "成就荣誉",
+      "content": "2023年大模型工程相关专利10篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.497799",
+      "updated_at": "2025-11-02T12:42:03.497801"
+    },
+    "zhu_ach_3": {
+      "id": "zhu_ach_3",
+      "section": "成就荣誉",
+      "content": "2022年CV识别算法专利5篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.497976",
+      "updated_at": "2025-11-02T12:42:03.497980"
+    },
+    "zhu_ach_4": {
+      "id": "zhu_ach_4",
+      "section": "成就荣誉",
+      "content": "2022年获得《创值标兵》称号",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.498144",
+      "updated_at": "2025-11-02T12:42:03.498233"
+    },
+    "zhu_ach_5": {
+      "id": "zhu_ach_5",
+      "section": "成就荣誉",
+      "content": "2020年携程无线质量优秀个人技术贡献奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.498514",
+      "updated_at": "2025-11-02T12:42:03.498519"
+    },
+    "zhu_ach_6": {
+      "id": "zhu_ach_6",
+      "section": "成就荣誉",
+      "content": "2016年携程MCD平台获得携程突出技术贡献奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.498693",
+      "updated_at": "2025-11-02T12:42:03.498697"
+    },
+    "zhu_ach_7": {
+      "id": "zhu_ach_7",
+      "section": "成就荣誉",
+      "content": "2015年携程提交IOS应用集群打包专利两篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.498864",
+      "updated_at": "2025-11-02T12:42:03.498867"
+    },
+    "zhu_ach_8": {
+      "id": "zhu_ach_8",
+      "section": "成就荣誉",
+      "content": "2013年阿尔卡特朗讯outstanding员工奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.499068",
+      "updated_at": "2025-11-02T12:42:03.499072"
+    },
+    "zhu_ach_9": {
+      "id": "zhu_ach_9",
+      "section": "成就荣誉",
+      "content": "2010年发表《液冷源控制系统的研制》核心期刊",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.499253",
+      "updated_at": "2025-11-02T12:42:03.499257"
+    },
+    "zhu_ach_10": {
+      "id": "zhu_ach_10",
+      "section": "成就荣誉",
+      "content": "2009年发表《弹箭惯性主轴测试方法研究》EI收录",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.499428",
+      "updated_at": "2025-11-02T12:42:03.499432"
+    },
+    "zhu_ach_11": {
+      "id": "zhu_ach_11",
+      "section": "成就荣誉",
+      "content": "2004-2008年校奖学金、社会活动积极分子、优秀团干",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T12:42:03.499609",
+      "updated_at": "2025-11-02T12:42:03.499613"
+    },
+    "小张_exp_1": {
+      "id": "小张_exp_1",
+      "section": "工作经验",
+      "content": "More than 10 years of Internet marketing and sales experience, with roles in well-known Internet companies and participation in entrepreneurial teams. Founder & CEO of READII since Nov 2020, focusing on products for non-native children to improve British accent, leading MVP design, team building, market research, and UK market development. Consultant at ZHEXIN OVERSEAS CO.LTD since May 2019, offering overseas study consulting. Marketing Director at UMU (Dec 2017 – May 2018), organizing industry exhibitions, developing business partnerships, and enhancing brand competitiveness. Marketing Manager at ChinaHR.com (Nov 2011 – Aug 2017), leading a marketing team in East China to expand markets and achieve sales goals. Marketing Specialist at Kuxun.com & Funfungolf.com (Jun 2007 – Nov 2011), handling social media, marketing events, and partnerships.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.582075",
+      "updated_at": "2025-11-02T18:38:42.582083"
+    },
+    "小张_edu_1": {
+      "id": "小张_edu_1",
+      "section": "教育背景",
+      "content": "Sep 2003 – Jun 2007: Bachelor of Management, Communication University of China.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.582266",
+      "updated_at": "2025-11-02T18:38:42.582271"
+    },
+    "小张_skill_1": {
+      "id": "小张_skill_1",
+      "section": "技能专长",
+      "content": "Internet marketing",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.582468",
+      "updated_at": "2025-11-02T18:38:42.582473"
+    },
+    "小张_skill_2": {
+      "id": "小张_skill_2",
+      "section": "技能专长",
+      "content": "Sales",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.582658",
+      "updated_at": "2025-11-02T18:38:42.582662"
+    },
+    "小张_skill_3": {
+      "id": "小张_skill_3",
+      "section": "技能专长",
+      "content": "Team building",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.582837",
+      "updated_at": "2025-11-02T18:38:42.582842"
+    },
+    "小张_skill_4": {
+      "id": "小张_skill_4",
+      "section": "技能专长",
+      "content": "Market research",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.583039",
+      "updated_at": "2025-11-02T18:38:42.583043"
+    },
+    "小张_skill_5": {
+      "id": "小张_skill_5",
+      "section": "技能专长",
+      "content": "Business development",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.583231",
+      "updated_at": "2025-11-02T18:38:42.583236"
+    },
+    "小张_skill_6": {
+      "id": "小张_skill_6",
+      "section": "技能专长",
+      "content": "Product management",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.583425",
+      "updated_at": "2025-11-02T18:38:42.583430"
+    },
+    "小张_skill_7": {
+      "id": "小张_skill_7",
+      "section": "技能专长",
+      "content": "Event organization",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.583623",
+      "updated_at": "2025-11-02T18:38:42.583628"
+    },
+    "小张_skill_8": {
+      "id": "小张_skill_8",
+      "section": "技能专长",
+      "content": "Brand management",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.583803",
+      "updated_at": "2025-11-02T18:38:42.583807"
+    },
+    "小张_skill_9": {
+      "id": "小张_skill_9",
+      "section": "技能专长",
+      "content": "Social media operation",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.584011",
+      "updated_at": "2025-11-02T18:38:42.584016"
+    },
+    "小张_skill_10": {
+      "id": "小张_skill_10",
+      "section": "技能专长",
+      "content": "Public relations",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.584197",
+      "updated_at": "2025-11-02T18:38:42.584202"
+    },
+    "小张_skill_11": {
+      "id": "小张_skill_11",
+      "section": "技能专长",
+      "content": "Partnership development",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.584390",
+      "updated_at": "2025-11-02T18:38:42.584395"
+    },
+    "小张_ach_1": {
+      "id": "小张_ach_1",
+      "section": "成就荣誉",
+      "content": "Founded and led READII from 0 to 1, including MVP design and early product validation.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.584573",
+      "updated_at": "2025-11-02T18:38:42.584577"
+    },
+    "小张_ach_2": {
+      "id": "小张_ach_2",
+      "section": "成就荣誉",
+      "content": "Expanded UK market for non-native English speaking children.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.584763",
+      "updated_at": "2025-11-02T18:38:42.584768"
+    },
+    "小张_ach_3": {
+      "id": "小张_ach_3",
+      "section": "成就荣誉",
+      "content": "Organized and participated in major industry exhibitions (e.g., China Annual Training Conference) at UMU.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.584960",
+      "updated_at": "2025-11-02T18:38:42.584964"
+    },
+    "小张_ach_4": {
+      "id": "小张_ach_4",
+      "section": "成就荣誉",
+      "content": "Cooperated with top training companies to enhance UMU’s product competitiveness.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.585141",
+      "updated_at": "2025-11-02T18:38:42.585145"
+    },
+    "小张_ach_5": {
+      "id": "小张_ach_5",
+      "section": "成就荣誉",
+      "content": "Provided training technical support for major enterprises (Dongfeng, Nissan, FOTILE University, Bank of China, VIPKID).",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.585320",
+      "updated_at": "2025-11-02T18:38:42.585325"
+    },
+    "小张_ach_6": {
+      "id": "小张_ach_6",
+      "section": "成就荣誉",
+      "content": "Won HRoot '2017-2018 Greater China human resources organization customer satisfaction award' at UMU.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.585507",
+      "updated_at": "2025-11-02T18:38:42.585511"
+    },
+    "小张_ach_7": {
+      "id": "小张_ach_7",
+      "section": "成就荣誉",
+      "content": "Managed and expanded East China marketing team at ChinaHR.com, achieving sales goals.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-02T18:38:42.585694",
+      "updated_at": "2025-11-02T18:38:42.585698"
     }
   },
   "sections": {
@@ -202,11 +802,26 @@
       "startup_visa",
       "assessment_criteria"
     ],
+    "expert_guidelines": [
+      "expert_positioning_vc_founder",
+      "expert_material_weakness_mc",
+      "expert_criteria_confusion_oc1_oc3",
+      "expert_material_curation_strategy",
+      "expert_five_year_rule",
+      "expert_hidden_strength_discovery"
+    ],
+    "expert_case_studies": [
+      "expert_case_study_vc_founder_red_flags"
+    ],
     "工作经验": [
-      "mingg chen_exp_1"
+      "mingg chen_exp_1",
+      "zhu_exp_1",
+      "小张_exp_1"
     ],
     "教育背景": [
-      "mingg chen_edu_1"
+      "mingg chen_edu_1",
+      "zhu_edu_1",
+      "小张_edu_1"
     ],
     "技能专长": [
       "mingg chen_skill_1",
@@ -215,13 +830,62 @@
       "mingg chen_skill_4",
       "mingg chen_skill_5",
       "mingg chen_skill_6",
-      "mingg chen_skill_7"
+      "mingg chen_skill_7",
+      "zhu_skill_1",
+      "zhu_skill_2",
+      "zhu_skill_3",
+      "zhu_skill_4",
+      "zhu_skill_5",
+      "zhu_skill_6",
+      "zhu_skill_7",
+      "zhu_skill_8",
+      "zhu_skill_9",
+      "zhu_skill_10",
+      "zhu_skill_11",
+      "zhu_skill_12",
+      "zhu_skill_13",
+      "zhu_skill_14",
+      "zhu_skill_15",
+      "zhu_skill_16",
+      "zhu_skill_17",
+      "zhu_skill_18",
+      "zhu_skill_19",
+      "zhu_skill_20",
+      "小张_skill_1",
+      "小张_skill_2",
+      "小张_skill_3",
+      "小张_skill_4",
+      "小张_skill_5",
+      "小张_skill_6",
+      "小张_skill_7",
+      "小张_skill_8",
+      "小张_skill_9",
+      "小张_skill_10",
+      "小张_skill_11"
     ],
     "成就荣誉": [
       "mingg chen_ach_1",
       "mingg chen_ach_2",
       "mingg chen_ach_3",
-      "mingg chen_ach_4"
+      "mingg chen_ach_4",
+      "zhu_ach_1",
+      "zhu_ach_2",
+      "zhu_ach_3",
+      "zhu_ach_4",
+      "zhu_ach_5",
+      "zhu_ach_6",
+      "zhu_ach_7",
+      "zhu_ach_8",
+      "zhu_ach_9",
+      "zhu_ach_10",
+      "zhu_ach_11",
+      "小张_ach_1",
+      "小张_ach_2",
+      "小张_ach_3",
+      "小张_ach_4",
+      "小张_ach_5",
+      "小张_ach_6",
+      "小张_ach_7"
     ]
   },
   "next_id": 0

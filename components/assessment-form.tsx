@@ -9,11 +9,12 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowRight, Loader2, FileText, Upload } from "lucide-react"
+import { ArrowRight, Loader2, FileText, Upload, AlertCircle, MessageSquare } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/i18n"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { ErrorDialog } from "@/components/error-dialog"
+import { ConsultationBooking } from "@/components/consultation-booking"
 
 type FormData = {
   name: string
@@ -33,7 +34,7 @@ type ErrorState = {
 
 export function AssessmentForm() {
   const router = useRouter()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
@@ -44,6 +45,7 @@ export function AssessmentForm() {
     message: "",
     errorDetails: undefined,
   })
+  const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false)
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -407,14 +409,65 @@ export function AssessmentForm() {
             <CardTitle>{t("form.upload.additional.title")}</CardTitle>
             <CardDescription>{t("form.upload.additional.desc")}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Textarea
-              id="additionalInfo"
-              placeholder={t("form.upload.additional.placeholder")}
-              rows={6}
-              value={formData.additionalInfo}
-              onChange={(e) => setFormData({ ...formData, additionalInfo: e.target.value })}
-            />
+          <CardContent className="space-y-6">
+            {/* Information Completion Notice */}
+            <div className="space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+              <div className="flex gap-3">
+                <AlertCircle className="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <div className="space-y-2 flex-1">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100">
+                    {t("form.upload.additional.notice.title")}
+                  </h4>
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    {t("form.upload.additional.notice.desc")}
+                  </p>
+                  <div className="mt-3 text-sm text-blue-800 dark:text-blue-200 whitespace-pre-line font-mono text-xs">
+                    {t("form.upload.additional.notice.items")}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Information Textarea */}
+            <div>
+              <Label htmlFor="additionalInfo" className="mb-2">{t("form.upload.additional.title")}</Label>
+              <Textarea
+                id="additionalInfo"
+                placeholder={t("form.upload.additional.placeholder")}
+                rows={6}
+                value={formData.additionalInfo}
+                onChange={(e) => setFormData({ ...formData, additionalInfo: e.target.value })}
+              />
+            </div>
+
+            {/* One-on-One Consultation Invitation */}
+            <div className="space-y-4 rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-950">
+              <div className="flex gap-3">
+                <MessageSquare className="h-5 w-5 flex-shrink-0 text-purple-600 dark:text-purple-400 mt-0.5" />
+                <div className="space-y-3 flex-1">
+                  <h4 className="font-semibold text-purple-900 dark:text-purple-100">
+                    {t("form.upload.additional.notice.consultation")}
+                  </h4>
+                  <p className="text-sm text-purple-800 dark:text-purple-200">
+                    {t("form.upload.additional.notice.consultation.desc")}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 mt-2"
+                    onClick={() => {
+                      // TODO: Implement consultation booking functionality
+                      console.log("Booking consultation...")
+                      setIsConsultationModalOpen(true)
+                    }}
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    {t("form.upload.additional.notice.consultation.button")}
+                  </Button>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -455,6 +508,12 @@ export function AssessmentForm() {
         title={errorState.title}
         message={errorState.message}
         errorDetails={errorState.errorDetails}
+      />
+      <ConsultationBooking
+        isOpen={isConsultationModalOpen}
+        onClose={() => setIsConsultationModalOpen(false)}
+        userName={formData.name}
+        userEmail={formData.email}
       />
     </form>
   )
