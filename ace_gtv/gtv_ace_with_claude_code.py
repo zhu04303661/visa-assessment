@@ -9,7 +9,8 @@ import os
 import sys
 import subprocess
 import tempfile
-from typing import Dict, Optional, Any
+from pathlib import Path
+from typing import Dict, Optional, Any, List
 from datetime import datetime
 import logging
 
@@ -231,6 +232,10 @@ class GTVACEAgentWithClaudeCode:
         )
         self.conversation_history = []
         self.assessment_data = GTVAssessmentData()
+
+        # 设置数据目录用于保存文件
+        self.data_dir = Path(__file__).parent / "data"
+        self.data_dir.mkdir(exist_ok=True)
     
     def _create_configured_dummy_client(self) -> DummyLLMClient:
         """创建配置了GTV相关响应的DummyLLMClient"""
@@ -590,7 +595,132 @@ class GTVACEAgentWithClaudeCode:
         self.assessment_data = GTVAssessmentData()
         self.conversation_history = []
         logger.info("评估已重置")
-    
+
+    def _save_playbook(self) -> None:
+        """保存知识库"""
+        try:
+            playbook_file = self.data_dir / "playbook.json"
+            with open(playbook_file, 'w', encoding='utf-8') as f:
+                json.dump(self.playbook.to_dict(), f, ensure_ascii=False, indent=2)
+            logger.info("知识库已保存")
+        except Exception as e:
+            logger.error(f"保存知识库失败: {e}")
+
+    def _save_conversation_history(self) -> None:
+        """保存对话历史"""
+        try:
+            history_file = self.data_dir / "conversation_history.json"
+            with open(history_file, 'w', encoding='utf-8') as f:
+                json.dump(self.conversation_history, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.error(f"保存对话历史失败: {e}")
+
+    def _save_assessment_data(self) -> None:
+        """保存评估数据"""
+        try:
+            assessment_file = self.data_dir / "assessment_data.json"
+            with open(assessment_file, 'w', encoding='utf-8') as f:
+                json.dump(self.assessment_data.__dict__, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.error(f"保存评估数据失败: {e}")
+
+    def get_all_bullets(self) -> List[Dict]:
+        """获取所有知识条目"""
+        bullets = []
+        for bullet in self.playbook.bullets():
+            bullets.append({
+                "id": bullet.id,
+                "section": bullet.section,
+                "content": bullet.content,
+                "helpful": bullet.helpful,
+                "harmful": bullet.harmful,
+                "neutral": bullet.neutral,
+                "created_at": bullet.created_at,
+                "updated_at": bullet.updated_at
+            })
+        return bullets
+
+    def add_bullet_manual(self, section: str, content: str, bullet_id: str = None) -> Dict:
+        """手动添加知识条目"""
+        try:
+            bullet = self.playbook.add_bullet(
+                section=section,
+                content=content,
+                bullet_id=bullet_id
+            )
+            self._save_playbook()
+            return {
+                "success": True,
+                "bullet": {
+                    "id": bullet.id,
+                    "section": bullet.section,
+                    "content": bullet.content,
+                    "helpful": bullet.helpful,
+                    "harmful": bullet.harmful,
+                    "neutral": bullet.neutral
+                }
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def update_bullet_manual(self, bullet_id: str, content: str = None, section: str = None) -> Dict:
+        """手动更新知识条目"""
+        try:
+            bullet = self.playbook.get_bullet(bullet_id)
+            if not bullet:
+                return {"success": False, "error": "知识条目不存在"}
+
+            if content:
+                bullet.content = content
+            if section:
+                bullet.section = section
+
+            bullet.updated_at = datetime.now().isoformat()
+            self._save_playbook()
+
+            return {
+                "success": True,
+                "bullet": {
+                    "id": bullet.id,
+                    "section": bullet.section,
+                    "content": bullet.content,
+                    "helpful": bullet.helpful,
+                    "harmful": bullet.harmful,
+                    "neutral": bullet.neutral
+                }
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def delete_bullet_manual(self, bullet_id: str) -> Dict:
+        """手动删除知识条目"""
+        try:
+            bullet = self.playbook.get_bullet(bullet_id)
+            if not bullet:
+                return {"success": False, "error": "知识条目不存在"}
+
+            self.playbook.remove_bullet(bullet_id)
+            self._save_playbook()
+
+            return {"success": True, "message": "知识条目已删除"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def reset_playbook(self) -> Dict:
+        """重置知识库"""
+        try:
+            self.playbook = self._initialize_gtv_playbook()
+            self.conversation_history = []
+            self.assessment_data = GTVAssessmentData()
+
+            self._save_playbook()
+            self._save_conversation_history()
+            self._save_assessment_data()
+
+            return {"success": True, "message": "知识库已重置"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     def cleanup(self):
         """清理资源"""
         self.claude_code_evaluator.cleanup()

@@ -425,3 +425,8 @@ MIT License
 
 如有问题或疑问，请在 GitHub 上提交 issue。
 # visa-assessment
+
+
+
+nohup ./start_frontend.sh > frontend.log 2>&1 &
+nohup bash start_backend.sh &
