@@ -1,13 +1,13 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Sparkles } from "lucide-react"
+import { ArrowRight, Sparkles, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { useLanguage } from "@/lib/i18n"
 import { LanguageSwitcher } from "@/components/language-switcher"
 
 export function Hero() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-background via-background to-muted/20">
@@ -17,7 +17,13 @@ export function Hero() {
         <div className="absolute left-0 bottom-0 h-[400px] w-[400px] rounded-full bg-accent/10 blur-3xl" />
       </div>
 
-      <div className="absolute right-4 top-4 z-10">
+      <div className="absolute right-4 top-4 z-10 flex gap-2">
+        <Button asChild variant="outline" size="sm" className="gap-2">
+          <Link href="/knowledge-base">
+            <BookOpen className="h-4 w-4" />
+            {language === "en" ? "Knowledge Base" : "知识库"}
+          </Link>
+        </Button>
         <LanguageSwitcher />
       </div>
 

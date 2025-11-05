@@ -10,6 +10,96 @@
       "created_at": "2025-10-30T08:53:53.660622+00:00",
       "updated_at": "2025-10-30T08:53:53.660630+00:00"
     },
+    "gtv_assessment_scoring_rules": {
+      "id": "gtv_assessment_scoring_rules",
+      "section": "scoring_framework",
+      "content": "GTV评估采用多维度评分体系：(1)教育背景评分(0-20分)：顶级院校5分、硕士及以上5分、相关专业5分、学术成就5分；(2)工作经验评分(0-25分)：年限匹配5分、公司规模5分、职位级别5分、持续贡献5分、跨界经验5分；(3)技术能力评分(0-20分)：核心技能5分、创新成果5分、专利数量5分、技术深度5分；(4)领导力评分(0-20分)：团队规模5分、决策影响5分、战略贡献5分、业界认可5分；(5)行业影响评分(0-15分)：媒体报道5分、行业地位5分、生态贡献5分",
+      "helpful": 9,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-04T00:00:00.000000+00:00",
+      "updated_at": "2025-11-04T00:00:00.000000+00:00"
+    },
+    "gtv_education_scoring": {
+      "id": "gtv_education_scoring",
+      "section": "scoring_framework",
+      "content": "教育背景评分规则：顶级院校判定(5分)：QS前50全球排名的大学或剑桥、牛津等传统名校，按国家分层(英美顶校5分、欧澳顶校4分、国内清北5分、其他高等5分)；学位等级(5分)：博士5分、硕士4分、学士3分、非学位0分；专业相关性(5分)：完全相关5分、相关专业4分、基础相关3分、无关0分；学术成就(5分)：国际学术奖项5分、发表论文4分、GPA3.8+3分、其他2分",
+      "helpful": 9,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-04T00:00:00.000000+00:00",
+      "updated_at": "2025-11-04T00:00:00.000000+00:00"
+    },
+    "gtv_experience_scoring": {
+      "id": "gtv_experience_scoring",
+      "section": "scoring_framework",
+      "content": "工作经验评分规则：年限评分(5分)：8年以上5分、6-8年4分、4-6年3分、2-4年2分、1-2年1分、0-1年0分；公司规模(5分)：Fortune500/独角兽5分、行业领先4分、快速成长3分、初创2分、小型1分；职位级别(5分)：C-level/部门VP5分、总监级4分、高级经理3分、经理级2分、专家级1分、员工0分；持续贡献(5分)：持续5年以上高质量贡献5分、3-5年4分、1-3年3分、短期跳跃2分、频繁跳槽0分；跨界经验(5分)：3个及以上不同行业5分、2个不同行业4分、不同职能领域3分、相同领域深耕2分、单一方向1分",
+      "helpful": 9,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-04T00:00:00.000000+00:00",
+      "updated_at": "2025-11-04T00:00:00.000000+00:00"
+    },
+    "gtv_technical_scoring": {
+      "id": "gtv_technical_scoring",
+      "section": "scoring_framework",
+      "content": "技术能力评分规则：核心技能(5分)：掌握5个及以上关键技术栈5分、3-5个4分、2-3个3分、1-2个2分、基础技能1分；创新成果(5分)：自主创新产品/平台5分、重大功能贡献4分、技术架构优化3分、解决方案改进2分、维护性工作1分；专利数量(5分)：10项以上国际专利5分、5-10项4分、2-4项3分、1项2分、无专利1分；技术深度(5分)：某领域全球顶级专家5分、行业深度认可4分、较深专业知识3分、基本精通2分、学习中1分",
+      "helpful": 9,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-04T00:00:00.000000+00:00",
+      "updated_at": "2025-11-04T00:00:00.000000+00:00"
+    },
+    "gtv_leadership_scoring": {
+      "id": "gtv_leadership_scoring",
+      "section": "scoring_framework",
+      "content": "领导力评分规则：团队规模(5分)：领导100+人团队5分、50-100人4分、20-50人3分、5-20人2分、1-5人1分、无直接下属0分；决策影响(5分)：战略决策影响公司方向5分、关键产品决策权4分、部门运营决策3分、小范围决策权2分、建议权1分；战略贡献(5分)：制定公司级战略5分、部门级战略4分、核心业务战略3分、执行层战略2分、战术执行1分；业界认可(5分)：行业协会主席/评委5分、顾问团成员4分、受邀演讲3分、媒体采访2分、行业认知1分",
+      "helpful": 9,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-04T00:00:00.000000+00:00",
+      "updated_at": "2025-11-04T00:00:00.000000+00:00"
+    },
+    "gtv_impact_scoring": {
+      "id": "gtv_impact_scoring",
+      "section": "scoring_framework",
+      "content": "行业影响评分规则：媒体报道(5分)：国际顶级媒体报道5分、国内专业媒体报道4分、行业媒体报道3分、网络自媒体2分、公司宣传1分；行业地位(5分)：行业公认领袖5分、一线企业认可专家4分、知名从业者3分、活跃从业者2分、初入行业1分；生态贡献(5分)：建立行业标准5分、开源项目大贡献者4分、行业峰会组织者3分、知识分享传播2分、被动参与1分",
+      "helpful": 9,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-04T00:00:00.000000+00:00",
+      "updated_at": "2025-11-04T00:00:00.000000+00:00"
+    },
+    "gtv_exceptional_talent_criteria": {
+      "id": "gtv_exceptional_talent_criteria",
+      "section": "visa_pathways",
+      "content": "Exceptional Talent (Criterion 1-4)：(1)Leadership: 需证明在知名组织担任领导或关键决策角色，影响重大项目或战略(最低30分)；(2)Significant Contribution: 在行业产生重大原创贡献，成果具有可复制性和商业价值(最低30分)；(3)International Recognition: 获得国际公认的奖项、媒体认可或学术地位(最低20分)；(4)Future Contribution: 在英国继续贡献的清晰计划和能力证明(最低20分)",
+      "helpful": 9,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-04T00:00:00.000000+00:00",
+      "updated_at": "2025-11-04T00:00:00.000000+00:00"
+    },
+    "gtv_exceptional_promise_criteria": {
+      "id": "gtv_exceptional_promise_criteria",
+      "section": "visa_pathways",
+      "content": "Exceptional Promise (Promise Criteria 1-4)：(1)Potential: 证明在领域内具有明显的高成长潜力，相关成就超过同龄人水平(最低25分)；(2)Innovation: 展现创新思维和实现创新想法的能力，有具体的创新成果或项目(最低25分)；(3)Recognition: 获得业界专家或权威机构的认可，表明潜力获得确认(最低20分)；(4)Future Contribution: 详细的英国发展计划，包括进一步提升、研究方向或商业规划(最低15分)",
+      "helpful": 9,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-04T00:00:00.000000+00:00",
+      "updated_at": "2025-11-04T00:00:00.000000+00:00"
+    },
+    "gtv_scoring_thresholds": {
+      "id": "gtv_scoring_thresholds",
+      "section": "scoring_framework",
+      "content": "GTV评分等级划分：(1)Exceptional Talent (80-100分)：总体评分≥80分 + 至少三个维度≥30分 + 领导力和行业影响至少各一项≥25分；(2)Exceptional Promise (65-79分)：总体评分≥65分 + 至少三个维度≥20分 + 创新成果明显≥20分；(3)Further Development (50-64分)：总体评分50-64分，具备潜力但需补强；(4)Building Foundation (30-49分)：总体评分30-49分，需要系统性提升；(5)Needs Assessment (0-29分)：总体评分<30分，建议重新评估方向",
+      "helpful": 9,
+      "harmful": 0,
+      "neutral": 0,
+      "created_at": "2025-11-04T00:00:00.000000+00:00",
+      "updated_at": "2025-11-04T00:00:00.000000+00:00"
+    },
     "claude_code_integration": {
       "id": "claude_code_integration",
       "section": "guidelines",
@@ -48,7 +138,7 @@
       "harmful": 0,
       "neutral": 0,
       "created_at": "2025-10-30T08:53:53.660662+00:00",
-      "updated_at": "2025-10-30T08:53:53.660664+00:00"
+      "updated_at": "2025-10-30T08:53:53.660668+00:00"
     },
     "assessment_criteria": {
       "id": "assessment_criteria",
@@ -263,22 +353,22 @@
     "zhu_exp_1": {
       "id": "zhu_exp_1",
       "section": "工作经验",
-      "content": "2021.03至今在新奥集团担任AI智能资深技术专家/智能大模型工程资深架构师/智能群资深技术总监，带领大模型研发团队，推动能源集团智能化技术升级。2015.8至2021.3在携程负责移动端千人团队的研发效能，支撑亿级流程服务入口，主导无线MCD云平台与无线服务端开发，担任算法技术专家/高级经理。2014.3至2015.1在爱立信中国核心通讯技术研发，担任资源算法工程师和云计算工程师。2011.4至2014.3在阿尔卡特朗讯贝尔实验室负责4G核心物理层算法仿真系统研发，担任算法工程师/仿真系统研发经理，并曾赴美国贝尔实验室联合研发。英特尔Linux操作系统研发实习生10个月。共12年技术管理经验，带领团队规模从5人到90人不等，擅长AI大模型、企业智能体、产业智能化升级等领域。",
+      "content": "拥有12年技术管理与研发经验。现任新奥集团智能技术负责人、智能技术架构师及智能产品研发群资深技术总监，带领90人团队专研AI与大模型技术，推动能源集团智能化升级，打造产业GPT大模型及多项高质量算法。曾任携程算法技术专家/高级经理，负责无线云平台与服务端开发，主导无线APP持续交付云平台的建设。历任爱立信软件工程师，参与eMBMS模拟器、CI系统及云平台开发。阿尔卡特朗讯贝尔实验室算法工程师及仿真系统研发经理，负责4G物理层算法仿真系统，赴美国参与Light Radio LTE仿真系统研发。英特尔亚太研发中心Linux操作系统实习生，参与MeeGo Netbook QA自动化测试工具开发。",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.493682",
-      "updated_at": "2025-11-02T12:42:03.493689"
+      "created_at": "2025-11-05T14:03:24.538996",
+      "updated_at": "2025-11-05T14:03:24.539008"
     },
     "zhu_edu_1": {
       "id": "zhu_edu_1",
       "section": "教育背景",
-      "content": "2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位",
+      "content": "2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位。",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.493885",
-      "updated_at": "2025-11-02T12:42:03.493889"
+      "created_at": "2025-11-05T14:03:24.539147",
+      "updated_at": "2025-11-05T14:03:24.539149"
     },
     "zhu_skill_1": {
       "id": "zhu_skill_1",
@@ -287,8 +377,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.494081",
-      "updated_at": "2025-11-02T12:42:03.494084"
+      "created_at": "2025-11-05T14:03:24.539275",
+      "updated_at": "2025-11-05T14:03:24.539278"
     },
     "zhu_skill_2": {
       "id": "zhu_skill_2",
@@ -297,18 +387,18 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.494256",
-      "updated_at": "2025-11-02T12:42:03.494259"
+      "created_at": "2025-11-05T14:03:24.539406",
+      "updated_at": "2025-11-05T14:03:24.539408"
     },
     "zhu_skill_3": {
       "id": "zhu_skill_3",
       "section": "技能专长",
-      "content": "智能体Agent",
+      "content": "智能体Agent技术",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.494426",
-      "updated_at": "2025-11-02T12:42:03.494429"
+      "created_at": "2025-11-05T14:03:24.539547",
+      "updated_at": "2025-11-05T14:03:24.539550"
     },
     "zhu_skill_4": {
       "id": "zhu_skill_4",
@@ -317,8 +407,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.494599",
-      "updated_at": "2025-11-02T12:42:03.494602"
+      "created_at": "2025-11-05T14:03:24.539670",
+      "updated_at": "2025-11-05T14:03:24.539672"
     },
     "zhu_skill_5": {
       "id": "zhu_skill_5",
@@ -327,8 +417,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.494775",
-      "updated_at": "2025-11-02T12:42:03.494778"
+      "created_at": "2025-11-05T14:03:24.539792",
+      "updated_at": "2025-11-05T14:03:24.539794"
     },
     "zhu_skill_6": {
       "id": "zhu_skill_6",
@@ -337,8 +427,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.494996",
-      "updated_at": "2025-11-02T12:42:03.494999"
+      "created_at": "2025-11-05T14:03:24.539911",
+      "updated_at": "2025-11-05T14:03:24.539913"
     },
     "zhu_skill_7": {
       "id": "zhu_skill_7",
@@ -347,8 +437,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.495166",
-      "updated_at": "2025-11-02T12:42:03.495169"
+      "created_at": "2025-11-05T14:03:24.540034",
+      "updated_at": "2025-11-05T14:03:24.540036"
     },
     "zhu_skill_8": {
       "id": "zhu_skill_8",
@@ -357,88 +447,88 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.495345",
-      "updated_at": "2025-11-02T12:42:03.495349"
+      "created_at": "2025-11-05T14:03:24.540156",
+      "updated_at": "2025-11-05T14:03:24.540158"
     },
     "zhu_skill_9": {
       "id": "zhu_skill_9",
       "section": "技能专长",
-      "content": "嵌入式系统",
+      "content": "嵌入式系统开发",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.495521",
-      "updated_at": "2025-11-02T12:42:03.495524"
+      "created_at": "2025-11-05T14:03:24.540277",
+      "updated_at": "2025-11-05T14:03:24.540279"
     },
     "zhu_skill_10": {
       "id": "zhu_skill_10",
       "section": "技能专长",
-      "content": "Linux系统技术",
+      "content": "Linux系统应用",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.495692",
-      "updated_at": "2025-11-02T12:42:03.495695"
+      "created_at": "2025-11-05T14:03:24.540398",
+      "updated_at": "2025-11-05T14:03:24.540400"
     },
     "zhu_skill_11": {
       "id": "zhu_skill_11",
-      "section": "技能专长",
-      "content": "全栈工程",
-      "helpful": true,
-      "harmful": false,
-      "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.495869",
-      "updated_at": "2025-11-02T12:42:03.495873"
-    },
-    "zhu_skill_12": {
-      "id": "zhu_skill_12",
       "section": "技能专长",
       "content": "云计算",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.496075",
-      "updated_at": "2025-11-02T12:42:03.496079"
+      "created_at": "2025-11-05T14:03:24.540544",
+      "updated_at": "2025-11-05T14:03:24.540546"
+    },
+    "zhu_skill_12": {
+      "id": "zhu_skill_12",
+      "section": "技能专长",
+      "content": "移动互联网基础设施",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T14:03:24.540662",
+      "updated_at": "2025-11-05T14:03:24.540664"
     },
     "zhu_skill_13": {
       "id": "zhu_skill_13",
       "section": "技能专长",
-      "content": "企业架构",
+      "content": "研发工具链",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.496241",
-      "updated_at": "2025-11-02T12:42:03.496245"
+      "created_at": "2025-11-05T14:03:24.540780",
+      "updated_at": "2025-11-05T14:03:24.540782"
     },
     "zhu_skill_14": {
       "id": "zhu_skill_14",
       "section": "技能专长",
-      "content": "智能产品架构",
+      "content": "CV/NLP算法",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.496414",
-      "updated_at": "2025-11-02T12:42:03.496417"
+      "created_at": "2025-11-05T14:03:24.540897",
+      "updated_at": "2025-11-05T14:03:24.540899"
     },
     "zhu_skill_15": {
       "id": "zhu_skill_15",
       "section": "技能专长",
-      "content": "智能算法",
+      "content": "企业智能化架构",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.496580",
-      "updated_at": "2025-11-02T12:42:03.496583"
+      "created_at": "2025-11-05T14:03:24.541014",
+      "updated_at": "2025-11-05T14:03:24.541016"
     },
     "zhu_skill_16": {
       "id": "zhu_skill_16",
       "section": "技能专长",
-      "content": "团队管理",
+      "content": "全栈工程",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.496747",
-      "updated_at": "2025-11-02T12:42:03.496750"
+      "created_at": "2025-11-05T14:03:24.541132",
+      "updated_at": "2025-11-05T14:03:24.541134"
     },
     "zhu_skill_17": {
       "id": "zhu_skill_17",
@@ -447,38 +537,38 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.496952",
-      "updated_at": "2025-11-02T12:42:03.496956"
+      "created_at": "2025-11-05T14:03:24.541250",
+      "updated_at": "2025-11-05T14:03:24.541252"
     },
     "zhu_skill_18": {
       "id": "zhu_skill_18",
       "section": "技能专长",
-      "content": "算法研发",
+      "content": "团队管理",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.497124",
-      "updated_at": "2025-11-02T12:42:03.497127"
+      "created_at": "2025-11-05T14:03:24.541368",
+      "updated_at": "2025-11-05T14:03:24.541370"
     },
     "zhu_skill_19": {
       "id": "zhu_skill_19",
       "section": "技能专长",
-      "content": "模型训练与部署",
+      "content": "持续交付",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.497300",
-      "updated_at": "2025-11-02T12:42:03.497303"
+      "created_at": "2025-11-05T13:44:08.838933",
+      "updated_at": "2025-11-05T13:44:08.838935"
     },
     "zhu_skill_20": {
       "id": "zhu_skill_20",
       "section": "技能专长",
-      "content": "数据处理流水线",
+      "content": "团队管理",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.497468",
-      "updated_at": "2025-11-02T12:42:03.497471"
+      "created_at": "2025-11-04T09:45:34.320078",
+      "updated_at": "2025-11-04T09:45:34.320080"
     },
     "zhu_ach_1": {
       "id": "zhu_ach_1",
@@ -487,8 +577,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.497634",
-      "updated_at": "2025-11-02T12:42:03.497637"
+      "created_at": "2025-11-05T14:03:24.541485",
+      "updated_at": "2025-11-05T14:03:24.541488"
     },
     "zhu_ach_2": {
       "id": "zhu_ach_2",
@@ -497,8 +587,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.497799",
-      "updated_at": "2025-11-02T12:42:03.497801"
+      "created_at": "2025-11-05T14:03:24.541617",
+      "updated_at": "2025-11-05T14:03:24.541619"
     },
     "zhu_ach_3": {
       "id": "zhu_ach_3",
@@ -507,8 +597,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.497976",
-      "updated_at": "2025-11-02T12:42:03.497980"
+      "created_at": "2025-11-05T14:03:24.541735",
+      "updated_at": "2025-11-05T14:03:24.541737"
     },
     "zhu_ach_4": {
       "id": "zhu_ach_4",
@@ -517,8 +607,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.498144",
-      "updated_at": "2025-11-02T12:42:03.498233"
+      "created_at": "2025-11-05T14:03:24.541852",
+      "updated_at": "2025-11-05T14:03:24.541854"
     },
     "zhu_ach_5": {
       "id": "zhu_ach_5",
@@ -527,8 +617,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.498514",
-      "updated_at": "2025-11-02T12:42:03.498519"
+      "created_at": "2025-11-05T14:03:24.541972",
+      "updated_at": "2025-11-05T14:03:24.541974"
     },
     "zhu_ach_6": {
       "id": "zhu_ach_6",
@@ -537,18 +627,18 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.498693",
-      "updated_at": "2025-11-02T12:42:03.498697"
+      "created_at": "2025-11-05T14:03:24.542089",
+      "updated_at": "2025-11-05T14:03:24.542091"
     },
     "zhu_ach_7": {
       "id": "zhu_ach_7",
       "section": "成就荣誉",
-      "content": "2015年携程提交IOS应用集群打包专利两篇",
+      "content": "2015年在携程提交IOS应用集群打包专利两篇",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.498864",
-      "updated_at": "2025-11-02T12:42:03.498867"
+      "created_at": "2025-11-05T14:03:24.542206",
+      "updated_at": "2025-11-05T14:03:24.542208"
     },
     "zhu_ach_8": {
       "id": "zhu_ach_8",
@@ -557,8 +647,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.499068",
-      "updated_at": "2025-11-02T12:42:03.499072"
+      "created_at": "2025-11-05T14:03:24.542336",
+      "updated_at": "2025-11-05T14:03:24.542338"
     },
     "zhu_ach_9": {
       "id": "zhu_ach_9",
@@ -567,8 +657,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.499253",
-      "updated_at": "2025-11-02T12:42:03.499257"
+      "created_at": "2025-11-05T14:03:24.542456",
+      "updated_at": "2025-11-05T14:03:24.542458"
     },
     "zhu_ach_10": {
       "id": "zhu_ach_10",
@@ -577,18 +667,18 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.499428",
-      "updated_at": "2025-11-02T12:42:03.499432"
+      "created_at": "2025-11-05T14:03:24.542581",
+      "updated_at": "2025-11-05T14:03:24.542583"
     },
     "zhu_ach_11": {
       "id": "zhu_ach_11",
       "section": "成就荣誉",
-      "content": "2004-2008年校奖学金、社会活动积极分子、优秀团干",
+      "content": "2004～2008年校奖学金、校“社会活动积极分子”、校“优秀团干”",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-02T12:42:03.499609",
-      "updated_at": "2025-11-02T12:42:03.499613"
+      "created_at": "2025-11-05T14:03:24.542710",
+      "updated_at": "2025-11-05T14:03:24.542712"
     },
     "小张_exp_1": {
       "id": "小张_exp_1",
@@ -753,7 +843,7 @@
     "小张_ach_4": {
       "id": "小张_ach_4",
       "section": "成就荣誉",
-      "content": "Cooperated with top training companies to enhance UMU’s product competitiveness.",
+      "content": "Cooperated with top training companies to enhance UMU's product competitiveness.",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
@@ -789,6 +879,1886 @@
       "neutral": 0,
       "created_at": "2025-11-02T18:38:42.585694",
       "updated_at": "2025-11-02T18:38:42.585698"
+    },
+    "asdf_exp_1": {
+      "id": "asdf_exp_1",
+      "section": "工作经验",
+      "content": "2021.03~至今于新奥集团，担任AI智能资深技术专家/智能大模型工程资深架构师/智能群资深技术总监，负责大型能源集团智能化技术与大模型研发团队管理。2015.8~2021.3在携程，任算法技术专家/高级经理，负责移动端研发效能、无线MCD云平台及无线服务端开发。2014.3~2015.1于爱立信，负责核心通讯技术研发，担任资源算法工程师、云计算工程师。2011.4~2014.3在阿尔卡特朗讯贝尔实验室，负责4G核心物理层算法仿真系统研发，曾赴美国贝尔实验室联合研发。英特尔实习10个月，参与Linux操作系统研发。共12年技术管理和研发经验，团队管理规模最大至90人，具备强大的项目推动与技术创新能力。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.377254",
+      "updated_at": "2025-11-04T10:12:00.377261"
+    },
+    "asdf_edu_1": {
+      "id": "asdf_edu_1",
+      "section": "教育背景",
+      "content": "2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位。主攻人工智能、大模型技术、智能体、产业智能、物联智能、持续迭代、软件系统、通讯系统、嵌入式系统开发及Linux系统应用。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.377425",
+      "updated_at": "2025-11-04T10:12:00.377427"
+    },
+    "asdf_skill_1": {
+      "id": "asdf_skill_1",
+      "section": "技能专长",
+      "content": "人工智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.377594",
+      "updated_at": "2025-11-04T10:12:00.377596"
+    },
+    "asdf_skill_2": {
+      "id": "asdf_skill_2",
+      "section": "技能专长",
+      "content": "大模型技术",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.377751",
+      "updated_at": "2025-11-04T10:12:00.377754"
+    },
+    "asdf_skill_3": {
+      "id": "asdf_skill_3",
+      "section": "技能专长",
+      "content": "智能体Agent技术",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.377930",
+      "updated_at": "2025-11-04T10:12:00.377932"
+    },
+    "asdf_skill_4": {
+      "id": "asdf_skill_4",
+      "section": "技能专长",
+      "content": "大模型训练",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.378105",
+      "updated_at": "2025-11-04T10:12:00.378108"
+    },
+    "asdf_skill_5": {
+      "id": "asdf_skill_5",
+      "section": "技能专长",
+      "content": "智能模型研发平台",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.378262",
+      "updated_at": "2025-11-04T10:12:00.378264"
+    },
+    "asdf_skill_6": {
+      "id": "asdf_skill_6",
+      "section": "技能专长",
+      "content": "云计算",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.378418",
+      "updated_at": "2025-11-04T10:12:00.378420"
+    },
+    "asdf_skill_7": {
+      "id": "asdf_skill_7",
+      "section": "技能专长",
+      "content": "移动互联网基础服务",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.378574",
+      "updated_at": "2025-11-04T10:12:00.378576"
+    },
+    "asdf_skill_8": {
+      "id": "asdf_skill_8",
+      "section": "技能专长",
+      "content": "研发工具链建设",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.378729",
+      "updated_at": "2025-11-04T10:12:00.378731"
+    },
+    "asdf_skill_9": {
+      "id": "asdf_skill_9",
+      "section": "技能专长",
+      "content": "嵌入式系统开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.378899",
+      "updated_at": "2025-11-04T10:12:00.378901"
+    },
+    "asdf_skill_10": {
+      "id": "asdf_skill_10",
+      "section": "技能专长",
+      "content": "工业控制",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.379053",
+      "updated_at": "2025-11-04T10:12:00.379055"
+    },
+    "asdf_skill_11": {
+      "id": "asdf_skill_11",
+      "section": "技能专长",
+      "content": "4G物理层算法仿真",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.379208",
+      "updated_at": "2025-11-04T10:12:00.379210"
+    },
+    "asdf_skill_12": {
+      "id": "asdf_skill_12",
+      "section": "技能专长",
+      "content": "通讯系统",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.379363",
+      "updated_at": "2025-11-04T10:12:00.379365"
+    },
+    "asdf_skill_13": {
+      "id": "asdf_skill_13",
+      "section": "技能专长",
+      "content": "物联网算法",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.379517",
+      "updated_at": "2025-11-04T10:12:00.379519"
+    },
+    "asdf_skill_14": {
+      "id": "asdf_skill_14",
+      "section": "技能专长",
+      "content": "全栈开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.379670",
+      "updated_at": "2025-11-04T10:12:00.379672"
+    },
+    "asdf_skill_15": {
+      "id": "asdf_skill_15",
+      "section": "技能专长",
+      "content": "企业架构设计",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.379840",
+      "updated_at": "2025-11-04T10:12:00.379842"
+    },
+    "asdf_skill_16": {
+      "id": "asdf_skill_16",
+      "section": "技能专长",
+      "content": "智能产品架构",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.379994",
+      "updated_at": "2025-11-04T10:12:00.379996"
+    },
+    "asdf_skill_17": {
+      "id": "asdf_skill_17",
+      "section": "技能专长",
+      "content": "算法研发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.380148",
+      "updated_at": "2025-11-04T10:12:00.380150"
+    },
+    "asdf_skill_18": {
+      "id": "asdf_skill_18",
+      "section": "技能专长",
+      "content": "Linux系统技术",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.380305",
+      "updated_at": "2025-11-04T10:12:00.380307"
+    },
+    "asdf_skill_19": {
+      "id": "asdf_skill_19",
+      "section": "技能专长",
+      "content": "持续交付",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.380461",
+      "updated_at": "2025-11-04T10:12:00.380463"
+    },
+    "asdf_skill_20": {
+      "id": "asdf_skill_20",
+      "section": "技能专长",
+      "content": "团队管理",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.380616",
+      "updated_at": "2025-11-04T10:12:00.380618"
+    },
+    "asdf_ach_1": {
+      "id": "asdf_ach_1",
+      "section": "成就荣誉",
+      "content": "2024年大模型工程和智能体技术相关专利6篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.380784",
+      "updated_at": "2025-11-04T10:12:00.380786"
+    },
+    "asdf_ach_2": {
+      "id": "asdf_ach_2",
+      "section": "成就荣誉",
+      "content": "2023年大模型工程相关专利10篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.380939",
+      "updated_at": "2025-11-04T10:12:00.380941"
+    },
+    "asdf_ach_3": {
+      "id": "asdf_ach_3",
+      "section": "成就荣誉",
+      "content": "2022年CV识别算法专利5篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.381092",
+      "updated_at": "2025-11-04T10:12:00.381094"
+    },
+    "asdf_ach_4": {
+      "id": "asdf_ach_4",
+      "section": "成就荣誉",
+      "content": "2022年获得《创值标兵》称号",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.381245",
+      "updated_at": "2025-11-04T10:12:00.381247"
+    },
+    "asdf_ach_5": {
+      "id": "asdf_ach_5",
+      "section": "成就荣誉",
+      "content": "2020年携程无线质量优秀个人技术贡献奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.381398",
+      "updated_at": "2025-11-04T10:12:00.381400"
+    },
+    "asdf_ach_6": {
+      "id": "asdf_ach_6",
+      "section": "成就荣誉",
+      "content": "2016年携程MCD平台获得携程突出技术贡献奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.381550",
+      "updated_at": "2025-11-04T10:12:00.381552"
+    },
+    "asdf_ach_7": {
+      "id": "asdf_ach_7",
+      "section": "成就荣誉",
+      "content": "2015年携程IOS应用集群打包专利两篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.381703",
+      "updated_at": "2025-11-04T10:12:00.381705"
+    },
+    "asdf_ach_8": {
+      "id": "asdf_ach_8",
+      "section": "成就荣誉",
+      "content": "2013年阿尔卡特朗讯outstanding员工奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.381938",
+      "updated_at": "2025-11-04T10:12:00.381942"
+    },
+    "asdf_ach_9": {
+      "id": "asdf_ach_9",
+      "section": "成就荣誉",
+      "content": "2010年发表《液冷源控制系统的研制》（核心期刊）",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.382548",
+      "updated_at": "2025-11-04T10:12:00.382592"
+    },
+    "asdf_ach_10": {
+      "id": "asdf_ach_10",
+      "section": "成就荣誉",
+      "content": "2009年发表《弹箭惯性主轴测试方法研究》（EI收录）",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.382763",
+      "updated_at": "2025-11-04T10:12:00.382766"
+    },
+    "asdf_ach_11": {
+      "id": "asdf_ach_11",
+      "section": "成就荣誉",
+      "content": "2004-2008年校奖学金、校社会活动积极分子、校优秀团干",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:12:00.382921",
+      "updated_at": "2025-11-04T10:12:00.382923"
+    },
+    "zhyu_exp_1": {
+      "id": "zhyu_exp_1",
+      "section": "工作经验",
+      "content": "拥有12年技术管理和研发经验，历任新奥集团智能技术负责人、资深技术专家，携程无线技术专家、高级经理，爱立信软件工程师，阿尔卡特朗讯贝尔实验室算法工程师及研发经理，以及英特尔Linux操作系统研发实习生。主导过能源集团智能化升级、大模型研发、企业智能体开发、云平台与无线服务端开发、物理层算法仿真系统建设等，带领团队规模从5人到90人，具备深厚的大模型、算法、云计算、通讯、嵌入式及产业智能研发与管理能力。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.558420",
+      "updated_at": "2025-11-04T10:39:42.558424"
+    },
+    "zhyu_edu_1": {
+      "id": "zhyu_edu_1",
+      "section": "教育背景",
+      "content": "2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.558581",
+      "updated_at": "2025-11-04T10:39:42.558583"
+    },
+    "zhyu_skill_1": {
+      "id": "zhyu_skill_1",
+      "section": "技能专长",
+      "content": "人工智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.558739",
+      "updated_at": "2025-11-04T10:39:42.558741"
+    },
+    "zhyu_skill_2": {
+      "id": "zhyu_skill_2",
+      "section": "技能专长",
+      "content": "大模型技术",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.558896",
+      "updated_at": "2025-11-04T10:39:42.558898"
+    },
+    "zhyu_skill_3": {
+      "id": "zhyu_skill_3",
+      "section": "技能专长",
+      "content": "智能体Agent技术",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.559238",
+      "updated_at": "2025-11-04T10:39:42.559244"
+    },
+    "zhyu_skill_4": {
+      "id": "zhyu_skill_4",
+      "section": "技能专长",
+      "content": "产业智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.559458",
+      "updated_at": "2025-11-04T10:39:42.559461"
+    },
+    "zhyu_skill_5": {
+      "id": "zhyu_skill_5",
+      "section": "技能专长",
+      "content": "物联智能",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.559711",
+      "updated_at": "2025-11-04T10:39:42.559715"
+    },
+    "zhyu_skill_6": {
+      "id": "zhyu_skill_6",
+      "section": "技能专长",
+      "content": "软件系统开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.559877",
+      "updated_at": "2025-11-04T10:39:42.559880"
+    },
+    "zhyu_skill_7": {
+      "id": "zhyu_skill_7",
+      "section": "技能专长",
+      "content": "通讯系统开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.560039",
+      "updated_at": "2025-11-04T10:39:42.560042"
+    },
+    "zhyu_skill_8": {
+      "id": "zhyu_skill_8",
+      "section": "技能专长",
+      "content": "嵌入式系统",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.560206",
+      "updated_at": "2025-11-04T10:39:42.560208"
+    },
+    "zhyu_skill_9": {
+      "id": "zhyu_skill_9",
+      "section": "技能专长",
+      "content": "Linux系统技术",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.560364",
+      "updated_at": "2025-11-04T10:39:42.560366"
+    },
+    "zhyu_skill_10": {
+      "id": "zhyu_skill_10",
+      "section": "技能专长",
+      "content": "云计算",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.560560",
+      "updated_at": "2025-11-04T10:39:42.560562"
+    },
+    "zhyu_skill_11": {
+      "id": "zhyu_skill_11",
+      "section": "技能专长",
+      "content": "移动互联网基础服务",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.560719",
+      "updated_at": "2025-11-04T10:39:42.560721"
+    },
+    "zhyu_skill_12": {
+      "id": "zhyu_skill_12",
+      "section": "技能专长",
+      "content": "研发工具链",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.560875",
+      "updated_at": "2025-11-04T10:39:42.560877"
+    },
+    "zhyu_skill_13": {
+      "id": "zhyu_skill_13",
+      "section": "技能专长",
+      "content": "CV/NLP算法",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.561031",
+      "updated_at": "2025-11-04T10:39:42.561033"
+    },
+    "zhyu_skill_14": {
+      "id": "zhyu_skill_14",
+      "section": "技能专长",
+      "content": "智能模型研发平台",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.561186",
+      "updated_at": "2025-11-04T10:39:42.561188"
+    },
+    "zhyu_skill_15": {
+      "id": "zhyu_skill_15",
+      "section": "技能专长",
+      "content": "企业架构设计",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.561342",
+      "updated_at": "2025-11-04T10:39:42.561344"
+    },
+    "zhyu_skill_16": {
+      "id": "zhyu_skill_16",
+      "section": "技能专长",
+      "content": "全栈开发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.561520",
+      "updated_at": "2025-11-04T10:39:42.561523"
+    },
+    "zhyu_skill_17": {
+      "id": "zhyu_skill_17",
+      "section": "技能专长",
+      "content": "持续交付",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.561680",
+      "updated_at": "2025-11-04T10:39:42.561682"
+    },
+    "zhyu_skill_18": {
+      "id": "zhyu_skill_18",
+      "section": "技能专长",
+      "content": "算法仿真",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.561841",
+      "updated_at": "2025-11-04T10:39:42.561843"
+    },
+    "zhyu_skill_19": {
+      "id": "zhyu_skill_19",
+      "section": "技能专长",
+      "content": "团队管理",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.562009",
+      "updated_at": "2025-11-04T10:39:42.562011"
+    },
+    "zhyu_ach_1": {
+      "id": "zhyu_ach_1",
+      "section": "成就荣誉",
+      "content": "2024年大模型工程和智能体技术相关专利6篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.562167",
+      "updated_at": "2025-11-04T10:39:42.562169"
+    },
+    "zhyu_ach_2": {
+      "id": "zhyu_ach_2",
+      "section": "成就荣誉",
+      "content": "2023年大模型工程相关专利10篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.562323",
+      "updated_at": "2025-11-04T10:39:42.562325"
+    },
+    "zhyu_ach_3": {
+      "id": "zhyu_ach_3",
+      "section": "成就荣誉",
+      "content": "2022年CV识别算法专利5篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.562506",
+      "updated_at": "2025-11-04T10:39:42.562508"
+    },
+    "zhyu_ach_4": {
+      "id": "zhyu_ach_4",
+      "section": "成就荣誉",
+      "content": "2022年获得《创值标兵》称号",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.562661",
+      "updated_at": "2025-11-04T10:39:42.562663"
+    },
+    "zhyu_ach_5": {
+      "id": "zhyu_ach_5",
+      "section": "成就荣誉",
+      "content": "2020年携程无线质量优秀个人技术贡献奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.562815",
+      "updated_at": "2025-11-04T10:39:42.562817"
+    },
+    "zhyu_ach_6": {
+      "id": "zhyu_ach_6",
+      "section": "成就荣誉",
+      "content": "2016年携程MCD平台获得携程突出技术贡献奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.562970",
+      "updated_at": "2025-11-04T10:39:42.562972"
+    },
+    "zhyu_ach_7": {
+      "id": "zhyu_ach_7",
+      "section": "成就荣誉",
+      "content": "2015年在携程提交IOS应用集群打包专利两篇",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.563125",
+      "updated_at": "2025-11-04T10:39:42.563127"
+    },
+    "zhyu_ach_8": {
+      "id": "zhyu_ach_8",
+      "section": "成就荣誉",
+      "content": "2013年阿尔卡特朗讯outstanding员工奖",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.563280",
+      "updated_at": "2025-11-04T10:39:42.563282"
+    },
+    "zhyu_ach_9": {
+      "id": "zhyu_ach_9",
+      "section": "成就荣誉",
+      "content": "2010年发表《液冷源控制系统的研制》核心期刊",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.563436",
+      "updated_at": "2025-11-04T10:39:42.563438"
+    },
+    "zhyu_ach_10": {
+      "id": "zhyu_ach_10",
+      "section": "成就荣誉",
+      "content": "2009年发表《弹箭惯性主轴测试方法研究》EI收录",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.563615",
+      "updated_at": "2025-11-04T10:39:42.563617"
+    },
+    "zhyu_ach_11": {
+      "id": "zhyu_ach_11",
+      "section": "成就荣誉",
+      "content": "2004～2008年校奖学金、校“社会活动积极分子”、校“优秀团干”",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:39:42.563771",
+      "updated_at": "2025-11-04T10:39:42.563773"
+    },
+    "xasdf_exp_1": {
+      "id": "xasdf_exp_1",
+      "section": "工作经验",
+      "content": "Rui Zheng has over 4 years of experience in economic management and budget specialization within the construction engineering industry. He has worked at BCEG NO.4 Construction Engineering Company in various roles including General Staff and Budget Specialist, handling contract settlements, project cost management, labor management, and project material measurement. He has demonstrated the ability to review large volumes of project materials, manage significant contract values, and support projects in achieving profitability and operational excellence.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.087058",
+      "updated_at": "2025-11-04T10:41:39.087062"
+    },
+    "xasdf_edu_1": {
+      "id": "xasdf_edu_1",
+      "section": "教育背景",
+      "content": "Bachelor of Engineering from China University of Mining and Technology (Sep 2013 - Jul 2017). Master in Engineering Project Management from University of Leeds, UK.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.087229",
+      "updated_at": "2025-11-04T10:41:39.087231"
+    },
+    "xasdf_skill_1": {
+      "id": "xasdf_skill_1",
+      "section": "技能专长",
+      "content": "Economic management",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.087388",
+      "updated_at": "2025-11-04T10:41:39.087390"
+    },
+    "xasdf_skill_2": {
+      "id": "xasdf_skill_2",
+      "section": "技能专长",
+      "content": "Project cost control",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.087547",
+      "updated_at": "2025-11-04T10:41:39.087549"
+    },
+    "xasdf_skill_3": {
+      "id": "xasdf_skill_3",
+      "section": "技能专长",
+      "content": "Contract management",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.087703",
+      "updated_at": "2025-11-04T10:41:39.087706"
+    },
+    "xasdf_skill_4": {
+      "id": "xasdf_skill_4",
+      "section": "技能专长",
+      "content": "Budgeting",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.087884",
+      "updated_at": "2025-11-04T10:41:39.087886"
+    },
+    "xasdf_skill_5": {
+      "id": "xasdf_skill_5",
+      "section": "技能专长",
+      "content": "Settlement review",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.088038",
+      "updated_at": "2025-11-04T10:41:39.088040"
+    },
+    "xasdf_skill_6": {
+      "id": "xasdf_skill_6",
+      "section": "技能专长",
+      "content": "Labor management",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.088193",
+      "updated_at": "2025-11-04T10:41:39.088196"
+    },
+    "xasdf_skill_7": {
+      "id": "xasdf_skill_7",
+      "section": "技能专长",
+      "content": "Material measurement",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.088351",
+      "updated_at": "2025-11-04T10:41:39.088354"
+    },
+    "xasdf_skill_8": {
+      "id": "xasdf_skill_8",
+      "section": "技能专长",
+      "content": "Team collaboration",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.088515",
+      "updated_at": "2025-11-04T10:41:39.088517"
+    },
+    "xasdf_skill_9": {
+      "id": "xasdf_skill_9",
+      "section": "技能专长",
+      "content": "Project documentation",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.088678",
+      "updated_at": "2025-11-04T10:41:39.088680"
+    },
+    "xasdf_ach_1": {
+      "id": "xasdf_ach_1",
+      "section": "成就荣誉",
+      "content": "Reviewed over 100 project department settlement materials, saving the company approximately 2 million yuan.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.088857",
+      "updated_at": "2025-11-04T10:41:39.088859"
+    },
+    "xasdf_ach_2": {
+      "id": "xasdf_ach_2",
+      "section": "成就荣誉",
+      "content": "Signed over 100 contracts with dozens of subcontracting units totaling approximately 800 million yuan in value.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.089013",
+      "updated_at": "2025-11-04T10:41:39.089016"
+    },
+    "xasdf_ach_3": {
+      "id": "xasdf_ach_3",
+      "section": "成就荣誉",
+      "content": "Completed settlements with over ten subcontractors totaling about 100 million yuan, achieving a rate of return of approximately 10%.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.089169",
+      "updated_at": "2025-11-04T10:41:39.089171"
+    },
+    "xasdf_ach_4": {
+      "id": "xasdf_ach_4",
+      "section": "成就荣誉",
+      "content": "Helped project department obtain the 2022 Construction Engineering Group Labor Management Advanced Project Management Department award.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.089323",
+      "updated_at": "2025-11-04T10:41:39.089325"
+    },
+    "xasdf_ach_5": {
+      "id": "xasdf_ach_5",
+      "section": "成就荣誉",
+      "content": "Turned losses into profits on multiple projects through effective steel bar calculations and material measurement.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.089477",
+      "updated_at": "2025-11-04T10:41:39.089479"
+    },
+    "xasdf_ach_6": {
+      "id": "xasdf_ach_6",
+      "section": "成就荣誉",
+      "content": "Increased main material yield rate by about 5% on five projects.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T10:41:39.089630",
+      "updated_at": "2025-11-04T10:41:39.089632"
+    },
+    "zhu_ach_12": {
+      "id": "zhu_ach_12",
+      "section": "成就荣誉",
+      "content": "OhioMTA Central East District/Graves Piano Competition Winner, 2016",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T11:29:34.062628",
+      "updated_at": "2025-11-04T11:29:34.062633"
+    },
+    "zhu_ach_13": {
+      "id": "zhu_ach_13",
+      "section": "成就荣誉",
+      "content": "OhioMTA Central East District Graves Piano and Organ Company, Senior Solo Division 1st Place, 2016",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T11:29:34.062983",
+      "updated_at": "2025-11-04T11:29:34.062986"
+    },
+    "zhu_ach_14": {
+      "id": "zhu_ach_14",
+      "section": "成就荣誉",
+      "content": "MTNA Competition Senior Piano Solo Winner, East Central Division, 2015",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T11:29:34.063343",
+      "updated_at": "2025-11-04T11:29:34.063346"
+    },
+    "zhu_ach_15": {
+      "id": "zhu_ach_15",
+      "section": "成就荣誉",
+      "content": "MTNA Competition Senior Piano Honorable Mention, Ohio State Competition, 2015",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T11:29:34.063566",
+      "updated_at": "2025-11-04T11:29:34.063568"
+    },
+    "zhu_ach_16": {
+      "id": "zhu_ach_16",
+      "section": "成就荣誉",
+      "content": "OhioMTA Central East District Graves Piano and Organ Company, Senior Duet Division 1st Place, 2015",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T11:29:34.063709",
+      "updated_at": "2025-11-04T11:29:34.063712"
+    },
+    "zhu_ach_17": {
+      "id": "zhu_ach_17",
+      "section": "成就荣誉",
+      "content": "Capital University Annual Tuition Scholarship Award, 2013-2016",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T11:29:34.064012",
+      "updated_at": "2025-11-04T11:29:34.064014"
+    },
+    "zhu_ach_18": {
+      "id": "zhu_ach_18",
+      "section": "成就荣誉",
+      "content": "Karen Jean Foster Competition 2nd Prize Award, 2014",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T11:29:34.064224",
+      "updated_at": "2025-11-04T11:29:34.064227"
+    },
+    "zhu_ach_19": {
+      "id": "zhu_ach_19",
+      "section": "成就荣誉",
+      "content": "Youngster’s Outstanding Artistic Stars 1st Prize, 2013",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T11:29:34.064375",
+      "updated_at": "2025-11-04T11:29:34.064377"
+    },
+    "阿斯顿发_exp_1": {
+      "id": "阿斯顿发_exp_1",
+      "section": "工作经验",
+      "content": "2022年10月-2023年3月在阿里巴巴专注于学习组织的设计、开发和建设，改善工作场所学习和沟通协同，组织多样研讨会和非正式学习活动，优化课程资源。2022年1月-2022年5月担任独立课程设计师，为成年学习者设计终身学习课程并组织人文和社会科学研讨会。2020年7月-2020年8月在博学教育参与在线课程研发，协助心理咨询及课程大纲调整。2019年11月-2020年2月在鸢尾宇宙担任成人教育研究员，研发成人工艺课程并建议文化元素设计工艺创意课程，设计促销活动。2018年10月-2019年1月在浙江教育评估研究院担任分析师实习生，汇总与分析大学毕业生就业数据和趋势。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T13:26:27.523158",
+      "updated_at": "2025-11-04T13:26:27.523172"
+    },
+    "阿斯顿发_edu_1": {
+      "id": "阿斯顿发_edu_1",
+      "section": "教育背景",
+      "content": "硕士学位，伦敦大学学院（UCL），2021年10月-2024年3月，主修教育（高级实践），必修模块包括教育理论、研究方法、行动研究等。学士学位，伦敦大学学院（UCL），2018年10月-2021年7月，主修教育研究，毕业等级一等荣誉，核心课程涵盖教育社会、全球化时代教育、学习科学、定量分析等。",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T13:26:27.523651",
+      "updated_at": "2025-11-04T13:26:27.523658"
+    },
+    "阿斯顿发_skill_1": {
+      "id": "阿斯顿发_skill_1",
+      "section": "技能专长",
+      "content": "课程设计",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T13:26:27.524135",
+      "updated_at": "2025-11-04T13:26:27.524142"
+    },
+    "阿斯顿发_skill_2": {
+      "id": "阿斯顿发_skill_2",
+      "section": "技能专长",
+      "content": "教育研究",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T13:26:27.524718",
+      "updated_at": "2025-11-04T13:26:27.524726"
+    },
+    "阿斯顿发_skill_3": {
+      "id": "阿斯顿发_skill_3",
+      "section": "技能专长",
+      "content": "定性与定量分析",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T13:26:27.525227",
+      "updated_at": "2025-11-04T13:26:27.525234"
+    },
+    "阿斯顿发_skill_4": {
+      "id": "阿斯顿发_skill_4",
+      "section": "技能专长",
+      "content": "学习资源优化",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T13:26:27.525707",
+      "updated_at": "2025-11-04T13:26:27.525713"
+    },
+    "阿斯顿发_skill_5": {
+      "id": "阿斯顿发_skill_5",
+      "section": "技能专长",
+      "content": "SPSS",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T13:26:27.526262",
+      "updated_at": "2025-11-04T13:26:27.526269"
+    },
+    "阿斯顿发_skill_6": {
+      "id": "阿斯顿发_skill_6",
+      "section": "技能专长",
+      "content": "SPSS",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T13:22:25.239030",
+      "updated_at": "2025-11-04T13:22:25.239032"
+    },
+    "阿斯顿发_ach_1": {
+      "id": "阿斯顿发_ach_1",
+      "section": "成就荣誉",
+      "content": "学士毕业一等荣誉",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T13:26:27.526753",
+      "updated_at": "2025-11-04T13:26:27.526760"
+    },
+    "阿斯顿发_ach_2": {
+      "id": "阿斯顿发_ach_2",
+      "section": "成就荣誉",
+      "content": "多项研究项目提案已准备发表或启动",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T13:26:27.527315",
+      "updated_at": "2025-11-04T13:26:27.527386"
+    },
+    "阿斯顿发_ach_3": {
+      "id": "阿斯顿发_ach_3",
+      "section": "成就荣誉",
+      "content": "组织多场工作坊和非正式学习活动",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T13:26:27.527947",
+      "updated_at": "2025-11-04T13:26:27.527956"
+    },
+    "dfg_exp_1": {
+      "id": "dfg_exp_1",
+      "section": "工作经验",
+      "content": "With 10 years of experience in technical management, Zhu began his career at Alcatel-Lucent and, after 2 years, was dispatched to Bell Labs in the USA to participate in significant communication system simulation projects, quickly advancing to algorithm team leader. At Ctrip, he served as R&D Manager and Technical Expert for mass user intelligent products, leading teams of up to 20-30 people. Later, at a major domestic energy conglomerate (ENN), he led a 90-person team in developing proprietary industry GPT large models and enterprise intelligences, achieving significant business impact. Work experience includes: \n2021.03–Present: Senior Technical Director of R&D Group (90-person team) at ENNEW Technology Co., Ltd – Launched GPT large model technology, established efficient R&D pipelines, developed AI Copilot and intelligent products with nearly 20 million in revenue, and led group-wide intelligent R&D initiatives.\n2020.04–2021.03: Trip.com Senior Manager/Senior Technical Expert/Head of Ctrip APP Intelligent Construction Platform and Intelligent Wireless Backend – Managed wireless framework services and platforms, enabling internationalization and high-concurrency services.\n2018.11–2020.04: OYO Hotels China Enterprise Architect, Intelligent Algorithm Expert, Head of Intelligent Efficiency Product & Continuous Delivery Teams – Built continuous delivery and business efficiency platforms supporting 600+ applications and 600-person R&D teams.\n2015.08–2018.11: Trip.com Manager/Technical Expert – Constructed industry-first wireless app continuous delivery cloud platform, led collaborative development for thousands of wireless developers, and received technical awards.\n2014.03–2015.08: Ericsson China Cloud Computing Engineer, Intelligent Algorithm Expert – Developed LTE 4G wireless communication system simulators and automated CI cloud platform, participated in K8S and Docker-based innovation lab projects.\n2011.04–2014.03: Alcatel-Lucent Bell Labs Communications Algorithm Engineer / R&D Team Manager – Led LTE simulation system development, dispatched to Bell Labs USA, and established advanced simulation and testing platforms.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.357575",
+      "updated_at": "2025-11-04T18:46:42.357583"
+    },
+    "dfg_edu_1": {
+      "id": "dfg_edu_1",
+      "section": "教育背景",
+      "content": "2008.09–2011.04: Nanjing University of Science and Technology, Master Degree, Measuring & Control Technology and Instrumentations.\n2004.09–2008.06: Nanjing University of Science and Technology, Bachelor Degree, Measuring & Control Technology and Instrumentations.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.357755",
+      "updated_at": "2025-11-04T18:46:42.357757"
+    },
+    "dfg_skill_1": {
+      "id": "dfg_skill_1",
+      "section": "技能专长",
+      "content": "AI model development",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.357918",
+      "updated_at": "2025-11-04T18:46:42.357920"
+    },
+    "dfg_skill_2": {
+      "id": "dfg_skill_2",
+      "section": "技能专长",
+      "content": "Computer Vision (CV)",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.358080",
+      "updated_at": "2025-11-04T18:46:42.358082"
+    },
+    "dfg_skill_3": {
+      "id": "dfg_skill_3",
+      "section": "技能专长",
+      "content": "Natural Language Processing (NLP)",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.358289",
+      "updated_at": "2025-11-04T18:46:42.358291"
+    },
+    "dfg_skill_4": {
+      "id": "dfg_skill_4",
+      "section": "技能专长",
+      "content": "Big data feature extraction",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.358449",
+      "updated_at": "2025-11-04T18:46:42.358451"
+    },
+    "dfg_skill_5": {
+      "id": "dfg_skill_5",
+      "section": "技能专长",
+      "content": "Trend forecasting",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.358610",
+      "updated_at": "2025-11-04T18:46:42.358612"
+    },
+    "dfg_skill_6": {
+      "id": "dfg_skill_6",
+      "section": "技能专长",
+      "content": "Decision support",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.358772",
+      "updated_at": "2025-11-04T18:46:42.358774"
+    },
+    "dfg_skill_7": {
+      "id": "dfg_skill_7",
+      "section": "技能专长",
+      "content": "AutoML",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.358931",
+      "updated_at": "2025-11-04T18:46:42.358933"
+    },
+    "dfg_skill_8": {
+      "id": "dfg_skill_8",
+      "section": "技能专长",
+      "content": "Intelligent agent design",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.359092",
+      "updated_at": "2025-11-04T18:46:42.359094"
+    },
+    "dfg_skill_9": {
+      "id": "dfg_skill_9",
+      "section": "技能专长",
+      "content": "GPT large model Agent technology",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.359264",
+      "updated_at": "2025-11-04T18:46:42.359266"
+    },
+    "dfg_skill_10": {
+      "id": "dfg_skill_10",
+      "section": "技能专长",
+      "content": "AI large model technical engineering",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.359455",
+      "updated_at": "2025-11-04T18:46:42.359457"
+    },
+    "dfg_skill_11": {
+      "id": "dfg_skill_11",
+      "section": "技能专长",
+      "content": "Distributed training",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.359616",
+      "updated_at": "2025-11-04T18:46:42.359618"
+    },
+    "dfg_skill_12": {
+      "id": "dfg_skill_12",
+      "section": "技能专长",
+      "content": "AI R&D platform construction",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.359776",
+      "updated_at": "2025-11-04T18:46:42.359778"
+    },
+    "dfg_skill_13": {
+      "id": "dfg_skill_13",
+      "section": "技能专长",
+      "content": "LLMOps/MLOps/DataOps/DevOps",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.359935",
+      "updated_at": "2025-11-04T18:46:42.359937"
+    },
+    "dfg_skill_14": {
+      "id": "dfg_skill_14",
+      "section": "技能专长",
+      "content": "Cloud computing",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.360096",
+      "updated_at": "2025-11-04T18:46:42.360098"
+    },
+    "dfg_skill_15": {
+      "id": "dfg_skill_15",
+      "section": "技能专长",
+      "content": "Mobile internet infrastructure",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.360268",
+      "updated_at": "2025-11-04T18:46:42.360270"
+    },
+    "dfg_skill_16": {
+      "id": "dfg_skill_16",
+      "section": "技能专长",
+      "content": "Technical management",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.360429",
+      "updated_at": "2025-11-04T18:46:42.360430"
+    },
+    "dfg_skill_17": {
+      "id": "dfg_skill_17",
+      "section": "技能专长",
+      "content": "Enterprise digital transformation",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.360589",
+      "updated_at": "2025-11-04T18:46:42.360591"
+    },
+    "dfg_skill_18": {
+      "id": "dfg_skill_18",
+      "section": "技能专长",
+      "content": "Wireless backend development",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.360761",
+      "updated_at": "2025-11-04T18:46:42.360763"
+    },
+    "dfg_skill_19": {
+      "id": "dfg_skill_19",
+      "section": "技能专长",
+      "content": "Continuous delivery platform",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.360928",
+      "updated_at": "2025-11-04T18:46:42.360930"
+    },
+    "dfg_skill_20": {
+      "id": "dfg_skill_20",
+      "section": "技能专长",
+      "content": "IoT algorithm models",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.361101",
+      "updated_at": "2025-11-04T18:46:42.361103"
+    },
+    "dfg_ach_1": {
+      "id": "dfg_ach_1",
+      "section": "成就荣誉",
+      "content": "2023: Submitted six AI large model technology patents (e.g., large model thought tree generator, code generation iterator, data alignment, agent hybrid mode, knowledge fusion).",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.361261",
+      "updated_at": "2025-11-04T18:46:42.361263"
+    },
+    "dfg_ach_2": {
+      "id": "dfg_ach_2",
+      "section": "成就荣誉",
+      "content": "2022: Submitted twelve AI model patents (methods for time series data prediction, target behavior detection, fault diagnosis, identity recognition, object tracking, gas load forecasting, etc.).",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.361444",
+      "updated_at": "2025-11-04T18:46:42.361446"
+    },
+    "dfg_ach_3": {
+      "id": "dfg_ach_3",
+      "section": "成就荣誉",
+      "content": "2022: Two patents on CV recognition algorithms.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.361606",
+      "updated_at": "2025-11-04T18:46:42.361608"
+    },
+    "dfg_ach_4": {
+      "id": "dfg_ach_4",
+      "section": "成就荣誉",
+      "content": "2022: Received 'Value Creation Pioneer' title from ENNEW Technology Co., Ltd.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.361767",
+      "updated_at": "2025-11-04T18:46:42.361769"
+    },
+    "dfg_ach_5": {
+      "id": "dfg_ach_5",
+      "section": "成就荣誉",
+      "content": "2020: Ctrip Wireless Quality Outstanding Individual Technical Contribution Award.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.361926",
+      "updated_at": "2025-11-04T18:46:42.361929"
+    },
+    "dfg_ach_6": {
+      "id": "dfg_ach_6",
+      "section": "成就荣誉",
+      "content": "2016: Ctrip MCD platform received Outstanding Technical Contribution Award.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.362086",
+      "updated_at": "2025-11-04T18:46:42.362088"
+    },
+    "dfg_ach_7": {
+      "id": "dfg_ach_7",
+      "section": "成就荣誉",
+      "content": "2015: Submitted two patents on iOS application cluster packaging at Ctrip.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.362245",
+      "updated_at": "2025-11-04T18:46:42.362247"
+    },
+    "dfg_ach_8": {
+      "id": "dfg_ach_8",
+      "section": "成就荣誉",
+      "content": "2011: Outstanding performance in Alcatel Lucent Shanghai Bell.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:46:42.362417",
+      "updated_at": "2025-11-04T18:46:42.362419"
+    },
+    "fgsd_exp_1": {
+      "id": "fgsd_exp_1",
+      "section": "工作经验",
+      "content": "2021.03 - Present: ENNEW Technology Co., Ltd, Senior Technical Director of R&D Group (90-person team). Led the development of proprietary industry GPT large models, intelligent agent applications, and AI Copilot systems, achieving significant business revenue and operational transformation. 2020.04 - 2021.03: Trip.com, Senior Manager / Senior Technical Expert. Oversaw mobile behavior mining, internationalization, and wireless backend infrastructure for high-concurrency mobile products. 2018.11 - 2020.04: OYO Hotels China, Enterprise Architect & Head of Intelligent Efficiency Product Team. Built continuous delivery and business efficiency management platforms, supporting rapid deployment for over 600 applications and 600+ R&D staff. 2015.08 - 2018.11: Trip.com, Manager / Technical Expert. Led Ctrip APP's intelligent platform and wireless backend, developed the industry's first wireless continuous delivery cloud platform, and received technical contribution awards. 2014.03 - 2015.08: Ericsson China, Cloud Computing Engineer & Intelligent Algorithm Expert. Developed LTE wireless simulation tools and automated cloud CI platforms. 2011.04 - 2014.03: Alcatel-Lucent Bell Labs, Communications Algorithm Engineer / R&D Team Manager. Led LTE physical layer simulation teams, engaged in international collaboration with Bell Labs USA, and developed simulation systems for strategic base station products.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.983124",
+      "updated_at": "2025-11-04T18:58:08.983135"
+    },
+    "fgsd_edu_1": {
+      "id": "fgsd_edu_1",
+      "section": "教育背景",
+      "content": "2008.9 - 2011.4: Nanjing University of Science and Technology, Master Degree, Major: Measuring & Control Technology and Instrumentations. 2004.9 - 2008.6: Nanjing University of Science and Technology, Bachelor Degree, Major: Measuring & Control Technology and Instrumentations.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.983321",
+      "updated_at": "2025-11-04T18:58:08.983324"
+    },
+    "fgsd_skill_1": {
+      "id": "fgsd_skill_1",
+      "section": "技能专长",
+      "content": "AI model development",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.983491",
+      "updated_at": "2025-11-04T18:58:08.983493"
+    },
+    "fgsd_skill_2": {
+      "id": "fgsd_skill_2",
+      "section": "技能专长",
+      "content": "Big data analytics",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.983658",
+      "updated_at": "2025-11-04T18:58:08.983660"
+    },
+    "fgsd_skill_3": {
+      "id": "fgsd_skill_3",
+      "section": "技能专长",
+      "content": "Computer Vision (CV)",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.983931",
+      "updated_at": "2025-11-04T18:58:08.983935"
+    },
+    "fgsd_skill_4": {
+      "id": "fgsd_skill_4",
+      "section": "技能专长",
+      "content": "Natural Language Processing (NLP)",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.984105",
+      "updated_at": "2025-11-04T18:58:08.984107"
+    },
+    "fgsd_skill_5": {
+      "id": "fgsd_skill_5",
+      "section": "技能专长",
+      "content": "Feature extraction",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.984294",
+      "updated_at": "2025-11-04T18:58:08.984296"
+    },
+    "fgsd_skill_6": {
+      "id": "fgsd_skill_6",
+      "section": "技能专长",
+      "content": "Trend forecasting",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.984460",
+      "updated_at": "2025-11-04T18:58:08.984463"
+    },
+    "fgsd_skill_7": {
+      "id": "fgsd_skill_7",
+      "section": "技能专长",
+      "content": "Decision support",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.984634",
+      "updated_at": "2025-11-04T18:58:08.984637"
+    },
+    "fgsd_skill_8": {
+      "id": "fgsd_skill_8",
+      "section": "技能专长",
+      "content": "AutoML",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.984799",
+      "updated_at": "2025-11-04T18:58:08.984801"
+    },
+    "fgsd_skill_9": {
+      "id": "fgsd_skill_9",
+      "section": "技能专长",
+      "content": "Intelligent agent design",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.984966",
+      "updated_at": "2025-11-04T18:58:08.984968"
+    },
+    "fgsd_skill_10": {
+      "id": "fgsd_skill_10",
+      "section": "技能专长",
+      "content": "GPT large model Agent technology",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.985153",
+      "updated_at": "2025-11-04T18:58:08.985155"
+    },
+    "fgsd_skill_11": {
+      "id": "fgsd_skill_11",
+      "section": "技能专长",
+      "content": "Distributed training",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.985335",
+      "updated_at": "2025-11-04T18:58:08.985337"
+    },
+    "fgsd_skill_12": {
+      "id": "fgsd_skill_12",
+      "section": "技能专长",
+      "content": "Large model intelligence assessment",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.985498",
+      "updated_at": "2025-11-04T18:58:08.985500"
+    },
+    "fgsd_skill_13": {
+      "id": "fgsd_skill_13",
+      "section": "技能专长",
+      "content": "Stable inference optimization",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.985660",
+      "updated_at": "2025-11-04T18:58:08.985662"
+    },
+    "fgsd_skill_14": {
+      "id": "fgsd_skill_14",
+      "section": "技能专长",
+      "content": "AI R&D platform construction",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.985822",
+      "updated_at": "2025-11-04T18:58:08.985824"
+    },
+    "fgsd_skill_15": {
+      "id": "fgsd_skill_15",
+      "section": "技能专长",
+      "content": "LLMOps/MLOps/DataOps/DevOps",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.985984",
+      "updated_at": "2025-11-04T18:58:08.985986"
+    },
+    "fgsd_skill_16": {
+      "id": "fgsd_skill_16",
+      "section": "技能专长",
+      "content": "Cloud computing",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.986149",
+      "updated_at": "2025-11-04T18:58:08.986152"
+    },
+    "fgsd_skill_17": {
+      "id": "fgsd_skill_17",
+      "section": "技能专长",
+      "content": "Mobile internet infrastructure",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.986332",
+      "updated_at": "2025-11-04T18:58:08.986334"
+    },
+    "fgsd_skill_18": {
+      "id": "fgsd_skill_18",
+      "section": "技能专长",
+      "content": "R&D toolchain development",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.986504",
+      "updated_at": "2025-11-04T18:58:08.986507"
+    },
+    "fgsd_skill_19": {
+      "id": "fgsd_skill_19",
+      "section": "技能专长",
+      "content": "Technical team management",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.986666",
+      "updated_at": "2025-11-04T18:58:08.986668"
+    },
+    "fgsd_ach_1": {
+      "id": "fgsd_ach_1",
+      "section": "成就荣誉",
+      "content": "2023: Submitted six AI large model technology patents, including large model thought tree generator, code generation iterator, data alignment, hybrid mode, and knowledge fusion.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.986843",
+      "updated_at": "2025-11-04T18:58:08.986845"
+    },
+    "fgsd_ach_2": {
+      "id": "fgsd_ach_2",
+      "section": "成就荣誉",
+      "content": "2022: Submitted twelve AI model patents for time series prediction, target behavior detection, fault diagnosis, identity recognition, and gas load forecasting.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.987008",
+      "updated_at": "2025-11-04T18:58:08.987010"
+    },
+    "fgsd_ach_3": {
+      "id": "fgsd_ach_3",
+      "section": "成就荣誉",
+      "content": "2022: Two patents on CV recognition algorithms.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.987174",
+      "updated_at": "2025-11-04T18:58:08.987176"
+    },
+    "fgsd_ach_4": {
+      "id": "fgsd_ach_4",
+      "section": "成就荣誉",
+      "content": "2022: Received the 'Value Creation Pioneer' title from ENNEW Technology Co., Ltd.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.987354",
+      "updated_at": "2025-11-04T18:58:08.987356"
+    },
+    "fgsd_ach_5": {
+      "id": "fgsd_ach_5",
+      "section": "成就荣誉",
+      "content": "2020: Ctrip Wireless Quality Outstanding Individual Technical Contribution Award.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.987519",
+      "updated_at": "2025-11-04T18:58:08.987521"
+    },
+    "fgsd_ach_6": {
+      "id": "fgsd_ach_6",
+      "section": "成就荣誉",
+      "content": "2016: Ctrip MCD platform received the Ctrip Outstanding Technical Contribution Award.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.987683",
+      "updated_at": "2025-11-04T18:58:08.987685"
+    },
+    "fgsd_ach_7": {
+      "id": "fgsd_ach_7",
+      "section": "成就荣誉",
+      "content": "2015: Submitted two patents on iOS application cluster packaging at Ctrip.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.987847",
+      "updated_at": "2025-11-04T18:58:08.987849"
+    },
+    "fgsd_ach_8": {
+      "id": "fgsd_ach_8",
+      "section": "成就荣誉",
+      "content": "2011: Outstanding performance at Alcatel-Lucent Shanghai Bell.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-04T18:58:08.988012",
+      "updated_at": "2025-11-04T18:58:08.988014"
+    },
+    "王小明_exp_1": {
+      "id": "王小明_exp_1",
+      "section": "工作经验",
+      "content": "With 12 years in intelligence R&D, Zhu Enqing began his career at Alcatel-Lucent Bell Labs as a Communications Algorithm Engineer, later becoming an R&D Team Manager. He was dispatched to Bell Labs USA for LTE system development, gaining exposure to advanced engineering. At Ericsson China, he worked as a Cloud Computing Engineer and Intelligent Algorithm Expert, leading cloud platform and LTE 4G system simulation projects. At OYO Hotels China, he was Enterprise Architect and led the development of a continuous delivery platform and business efficiency management system, supporting rapid deployment of over 600 applications. At Trip.com (Ctrip), he served as R&D Manager, Technical Expert, and Senior Technical Expert, leading teams to build wireless frameworks and intelligent construction platforms, supporting high concurrency, international expansion, and mobile transformation. At ENNEW Technology, as Senior Technical Director of R&D (90-person team), he led GPT large model technology development, built industry-specific LLMs, established efficient data pipelines, and developed business AI solutions, generating significant revenue and accelerating intelligent upgrades for a conglomerate of 50,000 employees.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.981644",
+      "updated_at": "2025-11-05T13:59:17.981651"
+    },
+    "王小明_edu_1": {
+      "id": "王小明_edu_1",
+      "section": "教育背景",
+      "content": "2008.9-2011.4 Nanjing University of Science and Technology, Master Degree, Measuring & Control Technology and Instrumentations. 2004.9-2008.6 Nanjing University of Science and Technology, Bachelor Degree, Measuring & Control Technology and Instrumentations.",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.981820",
+      "updated_at": "2025-11-05T13:59:17.981822"
+    },
+    "王小明_skill_1": {
+      "id": "王小明_skill_1",
+      "section": "技能专长",
+      "content": "AI model development",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.981981",
+      "updated_at": "2025-11-05T13:59:17.981983"
+    },
+    "王小明_skill_2": {
+      "id": "王小明_skill_2",
+      "section": "技能专长",
+      "content": "Big data feature extraction",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.982143",
+      "updated_at": "2025-11-05T13:59:17.982145"
+    },
+    "王小明_skill_3": {
+      "id": "王小明_skill_3",
+      "section": "技能专长",
+      "content": "Computer Vision (CV)",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.982303",
+      "updated_at": "2025-11-05T13:59:17.982305"
+    },
+    "王小明_skill_4": {
+      "id": "王小明_skill_4",
+      "section": "技能专长",
+      "content": "Natural Language Processing (NLP)",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.982461",
+      "updated_at": "2025-11-05T13:59:17.982463"
+    },
+    "王小明_skill_5": {
+      "id": "王小明_skill_5",
+      "section": "技能专长",
+      "content": "Trend forecasting",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.982643",
+      "updated_at": "2025-11-05T13:59:17.982645"
+    },
+    "王小明_skill_6": {
+      "id": "王小明_skill_6",
+      "section": "技能专长",
+      "content": "Decision support",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.982802",
+      "updated_at": "2025-11-05T13:59:17.982804"
+    },
+    "王小明_skill_7": {
+      "id": "王小明_skill_7",
+      "section": "技能专长",
+      "content": "AutoML",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.982975",
+      "updated_at": "2025-11-05T13:59:17.982977"
+    },
+    "王小明_skill_8": {
+      "id": "王小明_skill_8",
+      "section": "技能专长",
+      "content": "Enterprise intelligent agent design",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.983133",
+      "updated_at": "2025-11-05T13:59:17.983135"
+    },
+    "王小明_skill_9": {
+      "id": "王小明_skill_9",
+      "section": "技能专长",
+      "content": "GPT large model agent technology",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.983293",
+      "updated_at": "2025-11-05T13:59:17.983295"
+    },
+    "王小明_skill_10": {
+      "id": "王小明_skill_10",
+      "section": "技能专长",
+      "content": "Distributed training",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.983453",
+      "updated_at": "2025-11-05T13:59:17.983455"
+    },
+    "王小明_skill_11": {
+      "id": "王小明_skill_11",
+      "section": "技能专长",
+      "content": "Large model inference optimization",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.983634",
+      "updated_at": "2025-11-05T13:59:17.983636"
+    },
+    "王小明_skill_12": {
+      "id": "王小明_skill_12",
+      "section": "技能专长",
+      "content": "AI R&D platform construction",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.983795",
+      "updated_at": "2025-11-05T13:59:17.983797"
+    },
+    "王小明_skill_13": {
+      "id": "王小明_skill_13",
+      "section": "技能专长",
+      "content": "LLMOps/MLOps/DataOps/DevOps",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.983954",
+      "updated_at": "2025-11-05T13:59:17.983956"
+    },
+    "王小明_skill_14": {
+      "id": "王小明_skill_14",
+      "section": "技能专长",
+      "content": "Cloud computing",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.984116",
+      "updated_at": "2025-11-05T13:59:17.984118"
+    },
+    "王小明_skill_15": {
+      "id": "王小明_skill_15",
+      "section": "技能专长",
+      "content": "Mobile internet infrastructure",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.984280",
+      "updated_at": "2025-11-05T13:59:17.984282"
+    },
+    "王小明_skill_16": {
+      "id": "王小明_skill_16",
+      "section": "技能专长",
+      "content": "Model computing power platforms",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.984448",
+      "updated_at": "2025-11-05T13:59:17.984450"
+    },
+    "王小明_skill_17": {
+      "id": "王小明_skill_17",
+      "section": "技能专长",
+      "content": "R&D toolchains",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.984644",
+      "updated_at": "2025-11-05T13:59:17.984646"
+    },
+    "王小明_skill_18": {
+      "id": "王小明_skill_18",
+      "section": "技能专长",
+      "content": "Technical management",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.984803",
+      "updated_at": "2025-11-05T13:59:17.984805"
+    },
+    "王小明_ach_1": {
+      "id": "王小明_ach_1",
+      "section": "成就荣誉",
+      "content": "2023: Submitted six AI large model technology patents (e.g. large model thought tree generator, code generation iterator, knowledge fusion, etc.)",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.984962",
+      "updated_at": "2025-11-05T13:59:17.984964"
+    },
+    "王小明_ach_2": {
+      "id": "王小明_ach_2",
+      "section": "成就荣誉",
+      "content": "2022: Submitted twelve AI model patents (time series prediction, target behavior detection, etc.)",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.985121",
+      "updated_at": "2025-11-05T13:59:17.985123"
+    },
+    "王小明_ach_3": {
+      "id": "王小明_ach_3",
+      "section": "成就荣誉",
+      "content": "2022: Two patents on CV recognition algorithms",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.985280",
+      "updated_at": "2025-11-05T13:59:17.985282"
+    },
+    "王小明_ach_4": {
+      "id": "王小明_ach_4",
+      "section": "成就荣誉",
+      "content": "2022: Received 'Value Creation Pioneer' title from ENNEW Technology",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.985442",
+      "updated_at": "2025-11-05T13:59:17.985444"
+    },
+    "王小明_ach_5": {
+      "id": "王小明_ach_5",
+      "section": "成就荣誉",
+      "content": "2020: Ctrip Wireless Quality Outstanding Individual Technical Contribution Award",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.985616",
+      "updated_at": "2025-11-05T13:59:17.985618"
+    },
+    "王小明_ach_6": {
+      "id": "王小明_ach_6",
+      "section": "成就荣誉",
+      "content": "2016: Ctrip MCD platform received the Ctrip Outstanding Technical Contribution Award",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.985774",
+      "updated_at": "2025-11-05T13:59:17.985776"
+    },
+    "王小明_ach_7": {
+      "id": "王小明_ach_7",
+      "section": "成就荣誉",
+      "content": "2015: Submitted two patents on iOS application cluster packaging at Ctrip",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.985932",
+      "updated_at": "2025-11-05T13:59:17.985934"
+    },
+    "王小明_ach_8": {
+      "id": "王小明_ach_8",
+      "section": "成就荣誉",
+      "content": "2011: Outstanding performance in Alcatel-Lucent Shanghai Bell",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-05T13:59:17.986088",
+      "updated_at": "2025-11-05T13:59:17.986090"
     }
   },
   "sections": {
@@ -816,12 +2786,26 @@
     "工作经验": [
       "mingg chen_exp_1",
       "zhu_exp_1",
-      "小张_exp_1"
+      "小张_exp_1",
+      "asdf_exp_1",
+      "zhyu_exp_1",
+      "xasdf_exp_1",
+      "阿斯顿发_exp_1",
+      "dfg_exp_1",
+      "fgsd_exp_1",
+      "王小明_exp_1"
     ],
     "教育背景": [
       "mingg chen_edu_1",
       "zhu_edu_1",
-      "小张_edu_1"
+      "小张_edu_1",
+      "asdf_edu_1",
+      "zhyu_edu_1",
+      "xasdf_edu_1",
+      "阿斯顿发_edu_1",
+      "dfg_edu_1",
+      "fgsd_edu_1",
+      "王小明_edu_1"
     ],
     "技能专长": [
       "mingg chen_skill_1",
@@ -861,7 +2845,118 @@
       "小张_skill_8",
       "小张_skill_9",
       "小张_skill_10",
-      "小张_skill_11"
+      "小张_skill_11",
+      "asdf_skill_1",
+      "asdf_skill_2",
+      "asdf_skill_3",
+      "asdf_skill_4",
+      "asdf_skill_5",
+      "asdf_skill_6",
+      "asdf_skill_7",
+      "asdf_skill_8",
+      "asdf_skill_9",
+      "asdf_skill_10",
+      "asdf_skill_11",
+      "asdf_skill_12",
+      "asdf_skill_13",
+      "asdf_skill_14",
+      "asdf_skill_15",
+      "asdf_skill_16",
+      "asdf_skill_17",
+      "asdf_skill_18",
+      "asdf_skill_19",
+      "asdf_skill_20",
+      "zhyu_skill_1",
+      "zhyu_skill_2",
+      "zhyu_skill_3",
+      "zhyu_skill_4",
+      "zhyu_skill_5",
+      "zhyu_skill_6",
+      "zhyu_skill_7",
+      "zhyu_skill_8",
+      "zhyu_skill_9",
+      "zhyu_skill_10",
+      "zhyu_skill_11",
+      "zhyu_skill_12",
+      "zhyu_skill_13",
+      "zhyu_skill_14",
+      "zhyu_skill_15",
+      "zhyu_skill_16",
+      "zhyu_skill_17",
+      "zhyu_skill_18",
+      "zhyu_skill_19",
+      "xasdf_skill_1",
+      "xasdf_skill_2",
+      "xasdf_skill_3",
+      "xasdf_skill_4",
+      "xasdf_skill_5",
+      "xasdf_skill_6",
+      "xasdf_skill_7",
+      "xasdf_skill_8",
+      "xasdf_skill_9",
+      "阿斯顿发_skill_1",
+      "阿斯顿发_skill_2",
+      "阿斯顿发_skill_3",
+      "阿斯顿发_skill_4",
+      "阿斯顿发_skill_5",
+      "阿斯顿发_skill_6",
+      "dfg_skill_1",
+      "dfg_skill_2",
+      "dfg_skill_3",
+      "dfg_skill_4",
+      "dfg_skill_5",
+      "dfg_skill_6",
+      "dfg_skill_7",
+      "dfg_skill_8",
+      "dfg_skill_9",
+      "dfg_skill_10",
+      "dfg_skill_11",
+      "dfg_skill_12",
+      "dfg_skill_13",
+      "dfg_skill_14",
+      "dfg_skill_15",
+      "dfg_skill_16",
+      "dfg_skill_17",
+      "dfg_skill_18",
+      "dfg_skill_19",
+      "dfg_skill_20",
+      "fgsd_skill_1",
+      "fgsd_skill_2",
+      "fgsd_skill_3",
+      "fgsd_skill_4",
+      "fgsd_skill_5",
+      "fgsd_skill_6",
+      "fgsd_skill_7",
+      "fgsd_skill_8",
+      "fgsd_skill_9",
+      "fgsd_skill_10",
+      "fgsd_skill_11",
+      "fgsd_skill_12",
+      "fgsd_skill_13",
+      "fgsd_skill_14",
+      "fgsd_skill_15",
+      "fgsd_skill_16",
+      "fgsd_skill_17",
+      "fgsd_skill_18",
+      "fgsd_skill_19",
+      "王小明_skill_1",
+      "王小明_skill_2",
+      "王小明_skill_3",
+      "王小明_skill_4",
+      "王小明_skill_5",
+      "王小明_skill_6",
+      "王小明_skill_7",
+      "王小明_skill_8",
+      "王小明_skill_9",
+      "王小明_skill_10",
+      "王小明_skill_11",
+      "王小明_skill_12",
+      "王小明_skill_13",
+      "王小明_skill_14",
+      "王小明_skill_15",
+      "王小明_skill_16",
+      "王小明_skill_17",
+      "王小明_skill_18"
     ],
     "成就荣誉": [
       "mingg chen_ach_1",
@@ -885,7 +2980,70 @@
       "小张_ach_4",
       "小张_ach_5",
       "小张_ach_6",
-      "小张_ach_7"
+      "小张_ach_7",
+      "asdf_ach_1",
+      "asdf_ach_2",
+      "asdf_ach_3",
+      "asdf_ach_4",
+      "asdf_ach_5",
+      "asdf_ach_6",
+      "asdf_ach_7",
+      "asdf_ach_8",
+      "asdf_ach_9",
+      "asdf_ach_10",
+      "asdf_ach_11",
+      "zhyu_ach_1",
+      "zhyu_ach_2",
+      "zhyu_ach_3",
+      "zhyu_ach_4",
+      "zhyu_ach_5",
+      "zhyu_ach_6",
+      "zhyu_ach_7",
+      "zhyu_ach_8",
+      "zhyu_ach_9",
+      "zhyu_ach_10",
+      "zhyu_ach_11",
+      "xasdf_ach_1",
+      "xasdf_ach_2",
+      "xasdf_ach_3",
+      "xasdf_ach_4",
+      "xasdf_ach_5",
+      "xasdf_ach_6",
+      "zhu_ach_12",
+      "zhu_ach_13",
+      "zhu_ach_14",
+      "zhu_ach_15",
+      "zhu_ach_16",
+      "zhu_ach_17",
+      "zhu_ach_18",
+      "zhu_ach_19",
+      "阿斯顿发_ach_1",
+      "阿斯顿发_ach_2",
+      "阿斯顿发_ach_3",
+      "dfg_ach_1",
+      "dfg_ach_2",
+      "dfg_ach_3",
+      "dfg_ach_4",
+      "dfg_ach_5",
+      "dfg_ach_6",
+      "dfg_ach_7",
+      "dfg_ach_8",
+      "fgsd_ach_1",
+      "fgsd_ach_2",
+      "fgsd_ach_3",
+      "fgsd_ach_4",
+      "fgsd_ach_5",
+      "fgsd_ach_6",
+      "fgsd_ach_7",
+      "fgsd_ach_8",
+      "王小明_ach_1",
+      "王小明_ach_2",
+      "王小明_ach_3",
+      "王小明_ach_4",
+      "王小明_ach_5",
+      "王小明_ach_6",
+      "王小明_ach_7",
+      "王小明_ach_8"
     ]
   },
   "next_id": 0

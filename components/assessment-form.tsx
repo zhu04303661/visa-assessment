@@ -15,6 +15,7 @@ import { useLanguage } from "@/lib/i18n"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { ErrorDialog } from "@/components/error-dialog"
 import { ConsultationBooking } from "@/components/consultation-booking"
+import { AssessmentLoading } from "@/components/assessment-loading"
 
 type FormData = {
   name: string
@@ -515,6 +516,7 @@ export function AssessmentForm() {
         userName={formData.name}
         userEmail={formData.email}
       />
+      <AssessmentLoading isOpen={isSubmitting && isAnalyzing} />
     </form>
   )
 }

@@ -8,6 +8,12 @@ httpx==0.27.2  # 兼容Python 3.13的版本
 # OpenAI/Azure OpenAI集成
 openai>=1.0.0
 
+# LangChain/LangGraph依赖 (用于评分Agent)
+langchain>=0.1.5
+langchain-core>=0.1.5
+langchain-openai>=0.1.0
+pydantic>=2.0.0
+
 # 文件处理和PDF报告生成
 pdfminer.six==20221105
 python-docx==1.1.2
