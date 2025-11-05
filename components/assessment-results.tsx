@@ -32,6 +32,7 @@ import { ConsultationBooking } from "@/components/consultation-booking"
 import { ScoringAnalysisButton } from "@/components/scoring-analysis-button"
 import { ScoringDetailsCard } from "@/components/scoring-details-card"
 import { OCAssessmentDisplay } from "@/components/oc-assessment-display"
+import { OCAssessmentButton } from "@/components/oc-assessment-button"
 
 type CriterionStatus = "met" | "partial" | "notmet"
 
@@ -1209,7 +1210,7 @@ export function AssessmentResults() {
 
             {/* OC Assessment Display */}
             {(() => {
-              const ocData = data.ocAssessment
+              const ocData = data.ocAssessment as any
               console.log("🔍 Checking OC Assessment display condition:", {
                 hasOcAssessment: !!ocData,
                 ocDataType: typeof ocData,
@@ -1270,10 +1271,45 @@ export function AssessmentResults() {
                   console.warn("⚠️ OC数据存在但无法提取oc_results")
                 }
               } else {
-                console.warn("⚠️ ocAssessment is null or undefined")
+                console.warn("⚠️ ocAssessment is null or undefined，显示触发按钮")
               }
               return null
             })()}
+
+            {/* OC Assessment Trigger Button - 当没有OC结果时显示 */}
+            {!data.ocAssessment || !data.ocAssessment.oc_results || data.ocAssessment.oc_results.length === 0 ? (
+              <Card className="mb-6 border-dashed border-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-primary" />
+                    {language === "en" ? "Organizational Capability (OC) Assessment" : "组织能力 (OC) 评估"}
+                  </CardTitle>
+                  <CardDescription>
+                    {language === "en"
+                      ? "Run OC assessment to evaluate organizational capabilities"
+                      : "运行 OC 评估以评估组织能力"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="mb-4 text-sm text-muted-foreground">
+                    {language === "en"
+                      ? "Click the button below to start the OC assessment. Results will be displayed in a popup."
+                      : "点击下方按钮开始 OC 评估。结果将在弹窗中显示。"}
+                  </p>
+                  <OCAssessmentButton
+                    applicantData={data.applicantInfo}
+                    assessmentData={data}
+                    onAssessmentComplete={(results) => {
+                      console.log("✅ OC 评估完成，更新数据:", results)
+                      setData({
+                        ...data,
+                        ocAssessment: results
+                      })
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            ) : null}
 
             {/* Timeline & Budget */}
             <div className="mb-6 grid gap-6 md:grid-cols-2">
@@ -1352,6 +1388,12 @@ export function AssessmentResults() {
               <Button variant="outline" size="lg" onClick={handleDownload}>
                 <Download className="mr-2 h-4 w-4" />
                 {t("results.action.download")}
+              </Button>
+              <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+                <Link href="/deep-assessment">
+                  <Target className="mr-2 h-4 w-4" />
+                  {language === "en" ? "Deep Assessment" : "深度资格评估"}
+                </Link>
               </Button>
             </div>
 

@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         {/* Wrapped children with LanguageProvider and Suspense boundary */}
         <Suspense fallback={<div>Loading...</div>}>

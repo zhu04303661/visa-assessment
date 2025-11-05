@@ -151,86 +151,11 @@ export async function POST(request: Request) {
 
         const gtvAnalysis = gtvData.gtvAnalysis
         
-        // 调用OC评估API - 直接调用Python后端API
-        console.log("[v0] 开始调用OC评估API（Python后端）...")
-        let ocResults = null
-        try {
-          // 直接调用Python后端API，而不是Next.js API路由
-          const ocUrl = `${PYTHON_API_BASE_URL.replace(/\/$/, '')}/api/assessment/oc-evaluation`
-          console.log("[v0] 调用Python OC评估API:", ocUrl)
-          
-          // 构建assessmentData，包含从gtvAnalysis中提取的完整信息
-          const assessmentDataForOC = {
-            educationBackground: {
-              degrees: extractedInfo.education ? [extractedInfo.education] : [],
-              institutions: [],
-              analysis: extractedInfo.education || "",
-            },
-            workExperience: {
-              positions: extractedInfo.experience ? [extractedInfo.experience] : [],
-              projectImpact: extractedInfo.projects || [],
-              analysis: extractedInfo.experience || "",
-            },
-            technicalExpertise: {
-              coreSkills: extractedInfo.skills || [],
-              specializations: extractedInfo.certifications || [],
-              analysis: (extractedInfo.skills || []).join(", "),
-            },
-            strengths: [
-              ...((extractedInfo.achievements || []).map((a: string) => ({
-                area: "Achievement",
-                description: a,
-                evidence: a,
-              })) || []),
-              ...((extractedInfo.projects || []).map((p: string) => ({
-                area: "Project",
-                description: p,
-                evidence: p,
-              })) || []),
-            ],
-          }
-          
-          const ocResponse = await fetch(ocUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              applicantData: {
-                name: name || extractedInfo.name || "N/A",
-                field: field || "digital-technology",
-              },
-              assessmentData: assessmentDataForOC,
-            }),
-          })
-
-          if (ocResponse.ok) {
-            ocResults = await ocResponse.json()
-            console.log("[v0] OC评估结果:", {
-              success: ocResults.success,
-              hasOcResults: !!ocResults.oc_results,
-              ocResultsCount: ocResults.oc_results?.length || 0,
-              hasSummary: !!ocResults.summary
-            })
-            
-            // 确保数据结构正确
-            if (ocResults.success && ocResults.oc_results) {
-              console.log("[v0] ✅ OC评估成功，结果数:", ocResults.oc_results.length)
-            } else if (!ocResults.success) {
-              console.warn("[v0] ⚠️ OC评估返回失败:", ocResults.error)
-              ocResults = null  // 如果失败，设置为null
-            }
-          } else {
-            const errorText = await ocResponse.text()
-            console.warn("[v0] OC评估API调用失败:", ocResponse.status, errorText)
-            ocResults = null
-          }
-        } catch (ocError) {
-          console.error("[v0] ❌ OC评估API调用异常:", ocError)
-          ocResults = null
-        }
+        // 注意：OC 评估现在通过独立的按钮触发，不在简历上传时进行
+        // 这样可以避免简历分析时间过长
+        console.log("[v0] OC 评估已独立为按钮触发")
         
-        // 返回转换后的结果（包含OC评估）
+        // 返回转换后的结果（不包含OC评估）
         const responseData = {
           success: true,
           analysis: {
@@ -247,7 +172,7 @@ export async function POST(request: Request) {
             summary: extractedInfo.summary || "简历分析完成"
           },
           gtvAnalysis: gtvAnalysis,
-          ocAssessment: ocResults,  // OC评估结果（可能为null）
+          ocAssessment: null,  // OC 评估现在通过按钮单独触发，初始为 null
           personal_kb_path: pythonData.personal_kb_path,
           message: gtvData.message || pythonData.message,
           // 添加PDF文件信息

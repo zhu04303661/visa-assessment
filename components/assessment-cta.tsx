@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ArrowRight, CheckCircle2, MessageCircle, Upload, Settings } from "lucide-react"
+import { ArrowRight, CheckCircle2, MessageCircle, Upload, Settings, Target } from "lucide-react"
 import Link from "next/link"
 import { useLanguage } from "@/lib/i18n"
 
@@ -42,11 +42,18 @@ export function AssessmentCTA() {
                 ))}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
                 <Button asChild size="lg" className="group text-base">
                   <Link href="/assessment">
                     <Upload className="mr-2 h-5 w-5" />
                     {t("cta.button")}
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" className="group text-base bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+                  <Link href="/deep-assessment">
+                    <Target className="mr-2 h-5 w-5" />
+                    {language === "en" ? "Deep Assessment" : "深度资格评估"}
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>

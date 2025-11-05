@@ -91,7 +91,11 @@ sleep 2
 echo "🚀 启动GTV统一API服务器..."
 cd "$ROOT_DIR/ace_gtv" || { echo "❌ 找不到 ace_gtv 目录"; exit 1; }
 
-PORT=$API_PORT LOG_LEVEL="$LOG_LEVEL" nohup "$PYTHON_BIN" api_server.py > /tmp/api_server_unified.log 2>&1 &
+# 确保日志目录存在
+mkdir -p "$ROOT_DIR/ace_gtv/logs"
+LOG_FILE="$ROOT_DIR/ace_gtv/logs/api_server_unified.log"
+
+PORT=$API_PORT LOG_LEVEL="$LOG_LEVEL" nohup "$PYTHON_BIN" api_server.py > "$LOG_FILE" 2>&1 &
 API_PID=$!
 echo "✅ GTV统一API服务器已启动，PID: $API_PID"
 
@@ -124,7 +128,13 @@ LOCAL_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "127.0.0.1")
 
 echo "📡 API服务: http://$LOCAL_IP:$API_PORT"
 echo ""
-echo "日志位置: /tmp/api_server_unified.log"
+echo "📋 日志位置:"
+echo "   • 统一日志: $LOG_FILE"
+echo "   • 模块日志目录: $ROOT_DIR/ace_gtv/logs/"
+echo ""
+echo "📂 查看日志命令:"
+echo "   • tail -f $LOG_FILE"
+echo "   • ls -la $ROOT_DIR/ace_gtv/logs/"
 echo ""
 
 if [ "$BACKGROUND_MODE" = true ]; then

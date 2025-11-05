@@ -28,8 +28,9 @@ try:
 except ImportError:
     HAS_LANGCHAIN = False
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+from logger_config import setup_module_logger
+logger = setup_module_logger(__name__.split(".")[-1], __import__("os").getenv("LOG_LEVEL", "INFO"))
+# 日志已由 logger_config 统一配置
 
 # LLM 提示词
 KNOWLEDGE_EXTRACTION_PROMPT = """

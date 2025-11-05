@@ -9,13 +9,19 @@ import os
 import json
 import logging
 import tempfile
-from typing import Dict, Any, Optional
+from typing import Optional
 from pathlib import Path
 from datetime import datetime
 
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import dotenv
+
+# 导入统一日志系统
+from logger_config import setup_module_logger
+
+# 初始化日志
+logger = setup_module_logger("api_server", os.getenv("LOG_LEVEL", "INFO"))
 
 # 导入Agent和分析器
 try:
@@ -79,13 +85,6 @@ except ImportError as e:
 except Exception as e:
     logging.error(f"❌ LangGraph OC评估Agent导入异常: {e}", exc_info=True)
     LANGGRAPH_OC_AVAILABLE = False
-
-# 初始化日志
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 # 加载环境变量
 dotenv.load_dotenv()

@@ -369,6 +369,11 @@ class GTVPDFReportGenerator:
         
         # 总体评分
         overall_score = data.get('overallScore', 0)
+        try:
+            overall_score = int(float(overall_score)) if overall_score else 0
+        except (ValueError, TypeError):
+            logger.warning(f"⚠️ overallScore转换失败: {overall_score}，使用默认值0")
+            overall_score = 0
         score_color = self._get_score_color(overall_score)
         logger.debug(f"📊 添加总体评分: {overall_score}/100, 颜色: {score_color}")
         story.append(Paragraph(self._safe_text(f"Overall Score: {overall_score}/100"), 
@@ -405,6 +410,11 @@ class GTVPDFReportGenerator:
         
         # 总体评估
         overall_score = data.get('overallScore', 0)
+        try:
+            overall_score = int(float(overall_score)) if overall_score else 0
+        except (ValueError, TypeError):
+            logger.warning(f"⚠️ overallScore转换失败: {overall_score}，使用默认值0")
+            overall_score = 0
         pathway = data.get('gtvPathway', {})
         recommendation = data.get('recommendation', '')
         
@@ -524,6 +534,11 @@ class GTVPDFReportGenerator:
         
         # 总体评分
         overall_score = data.get('overallScore', 0)
+        try:
+            overall_score = int(float(overall_score)) if overall_score else 0
+        except (ValueError, TypeError):
+            logger.warning(f"⚠️ overallScore转换失败: {overall_score}，使用默认值0")
+            overall_score = 0
         score_color = self._get_score_color(overall_score)
         logger.debug(f"📊 添加总体评分: {overall_score}/100, 颜色: {score_color}")
         story.append(Paragraph(self._safe_text(f"Overall Assessment Score: {overall_score}/100"), 
@@ -764,8 +779,15 @@ class GTVPDFReportGenerator:
         
         canvas.restoreState()
     
-    def _get_score_color(self, score: int) -> colors.Color:
+    def _get_score_color(self, score) -> colors.Color:
         """根据分数获取颜色"""
+        try:
+            score = float(score) if isinstance(score, str) else score
+            score = int(score)
+        except (ValueError, TypeError):
+            logger.warning(f"⚠️ 分数转换失败: {score}，使用默认分数0")
+            score = 0
+        
         if score >= 80:
             color = colors.HexColor('#059669')  # 绿色
             logger.debug(f"🎨 分数 {score} 使用绿色")
@@ -777,8 +799,15 @@ class GTVPDFReportGenerator:
             logger.debug(f"🎨 分数 {score} 使用红色")
         return color
     
-    def _get_score_level(self, score: int) -> str:
+    def _get_score_level(self, score) -> str:
         """根据分数获取等级"""
+        try:
+            score = float(score) if isinstance(score, str) else score
+            score = int(score)
+        except (ValueError, TypeError):
+            logger.warning(f"⚠️ 分数转换失败: {score}，使用默认分数0")
+            score = 0
+        
         if score >= 80:
             level = "Strong"
         elif score >= 70:
@@ -787,7 +816,6 @@ class GTVPDFReportGenerator:
             level = "Fair"
         else:
             level = "Needs Improvement"
-        logger.debug(f"📊 分数 {score} 对应等级: {level}")
         return level
 
 def generate_gtv_pdf_report(assessment_data: Dict[str, Any], output_path: str = None) -> str:

@@ -35,11 +35,9 @@ except ImportError:
 # 日志配置
 # ============================================================================
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+from logger_config import setup_module_logger
+
+logger = setup_module_logger("scoring_agent", os.getenv("LOG_LEVEL", "INFO"))
 
 # ============================================================================
 # 状态定义

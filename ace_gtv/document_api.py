@@ -20,8 +20,9 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 UPLOAD_TEMP_DIR = tempfile.gettempdir()
 
 # 日志配置
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# 日志已由 logger_config 统一配置
+from logger_config import setup_module_logger
+logger = setup_module_logger(__name__.split(".")[-1], __import__("os").getenv("LOG_LEVEL", "INFO"))
 
 # Flask应用
 app = Flask(__name__)

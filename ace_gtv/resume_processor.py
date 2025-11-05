@@ -87,42 +87,10 @@ load_dotenv('.env')
 load_dotenv()
 
 # 配置日志（支持环境变量 LOG_LEVEL）
-_level_name = os.getenv("LOG_LEVEL", "INFO").upper()
-_level = getattr(logging, _level_name, logging.INFO)
-# 统一日志（UTF-8、文件+控制台、包含文件与行号）
-logger = logging.getLogger("resume_processor")
-logger.setLevel(_level)
+from logger_config import setup_module_logger
 
-# 清理重复handler
-if logger.handlers:
-    for h in list(logger.handlers):
-        logger.removeHandler(h)
+logger = setup_module_logger("resume_processor", os.getenv("LOG_LEVEL", "INFO"))
 
-_fmt = logging.Formatter('%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(message)s')
-
-try:
-    _log_file = Path(__file__).with_name('resume_processor.log')
-    _fh = logging.FileHandler(_log_file, encoding='utf-8')
-    _fh.setLevel(_level)
-    _fh.setFormatter(_fmt)
-    logger.addHandler(_fh)
-except Exception:
-    pass
-
-_sh = logging.StreamHandler(sys.stdout)
-_sh.setLevel(_level)
-_sh.setFormatter(_fmt)
-logger.addHandler(_sh)
-
-try:
-    wz = logging.getLogger('werkzeug')
-    wz.setLevel(_level)
-    for h in list(wz.handlers):
-        wz.removeHandler(h)
-    wz.addHandler(_fh) if '_fh' in globals() else None
-    wz.addHandler(_sh)
-except Exception:
-    pass
 
 def safe_preview(value: Any, max_len: int = 200) -> str:
     """生成安全可读的预览，替换不可打印字符，限制长度。"""
@@ -155,7 +123,7 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 
 # 超时配置（可用环境变量覆盖）
 PARSE_TIMEOUT_SEC = int(os.getenv('PARSE_TIMEOUT_SEC', '15'))
-LLM_TIMEOUT_SEC = int(os.getenv('LLM_TIMEOUT_SEC', '45'))
+LLM_TIMEOUT_SEC = int(os.getenv('LLM_TIMEOUT_SEC', '120'))  # 增加到2分钟，避免超时
 TOTAL_TIMEOUT_SEC = int(os.getenv('TOTAL_TIMEOUT_SEC', '60'))
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -364,16 +332,35 @@ def _get_llm_client() -> Optional[Any]:
     endpoint = os.getenv("ENDPOINT_URL", "").rstrip("/")
     api_key = os.getenv("AZURE_OPENAI_API_KEY", "")
     api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
-    if not (endpoint and api_key):
-        logger.warning("未配置 Azure OpenAI 参数，跳过LLM提取")
+    
+    # 详细的配置检查和日志
+    if not endpoint:
+        logger.warning("❌ 未配置 Azure OpenAI Endpoint (ENDPOINT_URL / AZURE_OPENAI_ENDPOINT)")
         return None
+    if not api_key:
+        logger.warning("❌ 未配置 Azure OpenAI API Key (AZURE_OPENAI_API_KEY / AZURE_API_KEY)")
+        return None
+    
+    # 验证 endpoint 格式
+    if not endpoint.startswith("https://"):
+        logger.warning(f"⚠️ Azure OpenAI Endpoint 应以 https:// 开头: {endpoint}")
+    
+    logger.info("✅ Azure OpenAI 配置已就绪")
+    logger.debug(f"   Endpoint: {endpoint[:50]}...")
+    logger.debug(f"   API Version: {api_version}")
+    
     if AzureOpenAI is None:
         raise RuntimeError("当前 openai 版本不支持 AzureOpenAI，请升级 openai 到支持 Azure 的版本")
-    return AzureOpenAI(
-        azure_endpoint=endpoint,
-        api_key=api_key,
-        api_version=api_version,
-    )
+    
+    try:
+        return AzureOpenAI(
+            azure_endpoint=endpoint,
+            api_key=api_key,
+            api_version=api_version,
+        )
+    except Exception as e:
+        logger.error(f"❌ 创建 Azure OpenAI 客户端失败: {e}")
+        return None
 
 
 def _parse_llm_json(text: str) -> Dict[str, Any]:
@@ -575,7 +562,7 @@ def call_ai_for_extraction(content: str) -> Dict[str, Any]:
         )
         llm_text = response.choices[0].message.content
 
-        logger.info(f"LLM返回文本长度: {len(llm_text)}; 预览: {safe_preview(llm_text)}")
+        logger.info(f"✅ LLM返回文本长度: {len(llm_text)} 字符，预览: {safe_preview(llm_text)}")
         parsed = _parse_llm_json(llm_text)
 
         # 兜底填充与类型规整
@@ -592,10 +579,20 @@ def call_ai_for_extraction(content: str) -> Dict[str, Any]:
             "certifications": parsed.get("certifications") or [],
             "summary": parsed.get("summary") or "",
         }
-        logger.info("LLM信息提取成功")
+        
+        # 如果关键字段缺失，记录警告但继续（本地规则作为后备）
+        missing_key_fields = [k for k in ['name', 'experience', 'education'] if not extracted.get(k)]
+        if missing_key_fields:
+            logger.warning(f"⚠️ LLM 提取缺少关键字段: {missing_key_fields}，将补充本地提取")
+            local_extracted = _extract_with_local_rules(content)
+            for field_key in missing_key_fields:
+                if field_key in local_extracted:
+                    extracted[field_key] = local_extracted[field_key]
+        
+        logger.info("✅ LLM信息提取成功")
         return extracted
     except Exception as e:
-        logger.error(f"LLM调用失败，回退本地规则: {e}", exc_info=True)
+        logger.error(f"❌ LLM调用失败，回退本地规则: {e}", exc_info=True)
         return _extract_with_local_rules(content)
 
 
@@ -777,16 +774,46 @@ def call_ai_for_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> Di
         )
         llm_text = response.choices[0].message.content
 
-        logger.info(f"GTV评估LLM返回文本长度: {len(llm_text)}; 预览: {safe_preview(llm_text)}")
-        logger.info(f"GTV评估LLM返回文本: {llm_text}")
+        logger.info(f"✅ GTV评估LLM返回文本长度: {len(llm_text)} 字符")
+        logger.info(f"GTV评估LLM返回文本预览: {safe_preview(llm_text)}")
 
+        # 检查是否完整（是否以 } 结尾）
+        if not llm_text.strip().endswith('}'):
+            logger.warning(f"⚠️ LLM 返回的 JSON 可能不完整，尝试修复...")
+        
         parsed = _parse_llm_json(llm_text)
         
-        logger.info("GTV资格评估成功")
+        # 验证解析结果的完整性
+        required_fields = ['applicantInfo', 'educationBackground', 'industryBackground', 
+                          'workExperience', 'technicalExpertise', 'overallScore', 'recommendation']
+        missing_fields = [f for f in required_fields if f not in parsed]
+        if missing_fields:
+            logger.warning(f"⚠️ 解析后缺少字段: {missing_fields}，尝试补充...")
+            # 使用默认评估补充缺失字段
+            default_assessment = _get_default_gtv_assessment(extracted_info, field)  # field 是函数参数
+            for fname in missing_fields:
+                if fname in default_assessment:
+                    parsed[fname] = default_assessment[fname]
+        
+        logger.info("✅ GTV资格评估成功")
         return parsed
         
     except Exception as e:
-        logger.error(f"GTV评估LLM调用失败，使用默认评估: {e}", exc_info=True)
+        error_msg = str(e)
+        logger.error(f"❌ GTV评估LLM调用失败，使用默认评估: {error_msg}")
+        
+        # 根据错误类型提供更具体的建议
+        if "Connection refused" in error_msg or "APIConnectionError" in error_msg:
+            logger.error("❌ Azure OpenAI 连接失败。请检查:")
+            logger.error("   1. ENDPOINT_URL / AZURE_OPENAI_ENDPOINT 是否正确配置")
+            logger.error("   2. 网络连接是否正常")
+            logger.error("   3. Azure 服务是否可用")
+        elif "401" in error_msg or "Unauthorized" in error_msg:
+            logger.error("❌ Azure OpenAI API Key 认证失败，请检查密钥配置")
+        elif "404" in error_msg:
+            logger.error("❌ Azure OpenAI Deployment 或 Endpoint 不存在")
+        
+        logger.debug("完整错误信息:", exc_info=True)
         return _get_default_gtv_assessment(extracted_info, field)
 
 

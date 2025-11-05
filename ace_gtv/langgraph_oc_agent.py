@@ -9,6 +9,7 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, TypedDict
 from datetime import datetime
+import time
 
 try:
     from langgraph.graph import StateGraph, START, END
@@ -26,16 +27,13 @@ except ImportError:
     logging.warning("⚠️ LangChain not installed")
 
 from langgraph_scoring_agent import KnowledgeBaseManager
+from logger_config import setup_module_logger, log_execution_time, log_step, log_oc_assessment_start, log_oc_assessment_complete, log_llm_call
 
 # ============================================================================
 # 日志配置
 # ============================================================================
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+logger = setup_module_logger("oc_agent", os.getenv("LOG_LEVEL", "INFO"))
 
 # ============================================================================
 # 状态定义
@@ -263,13 +261,18 @@ class LangGraphOCAgent:
     
     def _llm_assess_oc(self, oc_rule: Dict[str, Any], evidence: Dict[str, Any], applicant_data: Dict[str, Any], state: OCAssessmentState, oc_number: int = 1) -> Dict[str, Any]:
         """使用LLM评估单个OC"""
+        llm_start = time.time()
+        
         if not self.llm:
             # Fallback: 简单规则匹配
+            logger.debug(f"🤖 OC {oc_number} 无 LLM 可用，使用规则匹配")
             return self._simple_oc_assessment(oc_rule, evidence, oc_number)
         
         # 构建prompt
         oc_title = oc_rule.get("title", "")
         oc_content = oc_rule.get("content", "")
+        
+        logger.debug(f"🤖 OC {oc_number} 构建 LLM prompt...")
         
         prompt = f"""你是一位GTV签证评估专家。请根据知识库中的OC规则，详细评估申请人是否满足该OC要求。
 
@@ -317,10 +320,19 @@ class LangGraphOCAgent:
 """
         
         try:
+            logger.debug(f"🤖 OC {oc_number} 调用 LLM API...")
+            llm_call_start = time.time()
             response = self.llm.invoke(prompt)
+            llm_response_time = time.time() - llm_call_start
+            
+            logger.debug(f"🤖 OC {oc_number} LLM 响应耗时: {llm_response_time:.2f}秒")
+            log_llm_call(logger, "OpenAI", "gpt-4-turbo-preview", response_time=llm_response_time)
+            
             content = response.content if hasattr(response, 'content') else str(response)
+            logger.debug(f"🤖 OC {oc_number} LLM 响应长度: {len(content)} 字符")
             
             # 解析JSON响应
+            parse_start = time.time()
             try:
                 # 尝试提取JSON
                 import re
@@ -329,9 +341,13 @@ class LangGraphOCAgent:
                     assessment = json.loads(json_match.group())
                 else:
                     assessment = json.loads(content)
-            except:
+                parse_time = time.time() - parse_start
+                logger.debug(f"🤖 OC {oc_number} JSON 解析成功，耗时: {parse_time:.2f}秒")
+            except Exception as parse_err:
                 # 如果解析失败，使用简单评估
-                logger.warning(f"⚠️ LLM响应解析失败，使用简单评估: {content[:200]}")
+                parse_time = time.time() - parse_start
+                logger.warning(f"⚠️ OC {oc_number} LLM 响应解析失败 (耗时: {parse_time:.2f}秒): {str(parse_err)[:100]}")
+                logger.warning(f"⚠️ OC {oc_number} 响应内容预览: {content[:200]}")
                 assessment = self._simple_oc_assessment(oc_rule, evidence, oc_number)
                 assessment["llm_analysis"] = content[:500]
             
@@ -348,10 +364,14 @@ class LangGraphOCAgent:
             assessment.setdefault("improvement_suggestions", [])
             assessment.setdefault("matched_keywords", [])
             
+            total_llm_time = time.time() - llm_start
+            logger.debug(f"✅ OC {oc_number} LLM 评估完成，总耗时: {total_llm_time:.2f}秒")
+            
             return assessment
             
         except Exception as e:
-            logger.error(f"❌ LLM评估失败: {e}")
+            elapsed = time.time() - llm_start
+            logger.error(f"❌ OC {oc_number} LLM 评估失败 (耗时: {elapsed:.2f}秒): {str(e)}")
             return self._simple_oc_assessment(oc_rule, evidence, oc_number)
     
     def _simple_oc_assessment(self, oc_rule: Dict[str, Any], evidence: Dict[str, Any], oc_number: int = 1) -> Dict[str, Any]:
@@ -473,9 +493,12 @@ class LangGraphOCAgent:
     def assess(self, applicant_data: Dict[str, Any], assessment_data: Dict[str, Any]) -> Dict[str, Any]:
         """执行完整的OC评估"""
         start_time = datetime.now()
+        overall_start = time.time()
         request_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
         
-        logger.info(f"[{request_id}] 开始OC评估")
+        log_oc_assessment_start(logger, request_id, applicant_data.get('name', 'N/A'), 4)
+        logger.info(f"[{request_id}] 申请人字段: {applicant_data.get('field', 'N/A')}")
+        logger.info(f"[{request_id}] 评估数据键: {list(assessment_data.keys())}")
         
         # 初始化状态
         initial_state: OCAssessmentState = {
@@ -492,42 +515,102 @@ class LangGraphOCAgent:
         }
         
         try:
+            # 加载 OC 规则
+            logger.debug(f"[{request_id}] 开始加载 OC 规则...")
+            load_rules_start = time.time()
             if HAS_LANGGRAPH and self.graph:
                 # 使用LangGraph执行
+                logger.info(f"[{request_id}] 使用 LangGraph 模式执行 OC 评估")
                 final_state = self.graph.invoke(initial_state)
             else:
                 # 简化模式：直接执行节点
-                logger.warning("⚠️ 使用简化模式执行OC评估")
+                logger.warning(f"[{request_id}] ⚠️ 使用简化模式执行OC评估 (LangGraph={HAS_LANGGRAPH})")
                 final_state = initial_state
+                
+                # 加载规则
+                logger.debug(f"[{request_id}] 执行 _load_oc_rules_node...")
                 final_state = self._load_oc_rules_node(final_state)
+                load_rules_time = time.time() - load_rules_start
+                logger.info(f"[{request_id}] ✅ 加载 OC 规则完成，耗时: {load_rules_time:.2f}秒")
+                
+                # 提取证据
+                logger.debug(f"[{request_id}] 执行 _extract_evidence_node...")
+                extract_start = time.time()
                 final_state = self._extract_evidence_node(final_state)
+                extract_time = time.time() - extract_start
+                logger.info(f"[{request_id}] ✅ 提取证据完成，耗时: {extract_time:.2f}秒")
                 
                 # 评估4个OC
-                for i in range(4):
-                    final_state["current_oc_index"] = i
-                    final_state = self._assess_oc_node(final_state)
+                oc_rules_count = len(final_state.get("oc_rules", []))
+                logger.info(f"[{request_id}] 开始评估 {oc_rules_count} 个 OC...")
                 
+                for i in range(oc_rules_count):
+                    oc_start = time.time()
+                    log_step(logger, i + 1, oc_rules_count, f"评估 OC {i + 1}")
+                    
+                    final_state["current_oc_index"] = i
+                    logger.debug(f"[{request_id}] 开始评估 OC {i + 1}...")
+                    
+                    final_state = self._assess_oc_node(final_state)
+                    
+                    oc_time = time.time() - oc_start
+                    assessment = final_state.get("oc_assessments", [{}])[-1] if final_state.get("oc_assessments") else {}
+                    status = assessment.get("status", "未知")
+                    score = assessment.get("score", 0)
+                    log_step(logger, i + 1, oc_rules_count, f"OC {i + 1} 完成 | 状态: {status} | 评分: {score} | 耗时: {oc_time:.2f}秒", "success")
+                
+                # 生成总结
+                logger.debug(f"[{request_id}] 执行 _generate_summary_node...")
+                summary_start = time.time()
                 final_state = self._generate_summary_node(final_state)
+                summary_time = time.time() - summary_start
+                logger.info(f"[{request_id}] ✅ 生成总结完成，耗时: {summary_time:.2f}秒")
             
             execution_time = (datetime.now() - start_time).total_seconds()
+            overall_time = time.time() - overall_start
             final_state["execution_time"] = execution_time
             
-            logger.info(f"[{request_id}] OC评估完成，耗时: {execution_time:.2f}秒")
+            oc_results = final_state.get("oc_assessments", [])
+            llm_calls = final_state.get("llm_calls", [])
+            
+            log_oc_assessment_complete(
+                logger, 
+                request_id, 
+                overall_time, 
+                len(oc_results),
+                errors=0
+            )
+            
+            logger.info(f"[{request_id}] 📊 评估统计:")
+            logger.info(f"[{request_id}]   - 总耗时: {overall_time:.2f}秒")
+            logger.info(f"[{request_id}]   - OC 结果数: {len(oc_results)}")
+            logger.info(f"[{request_id}]   - LLM 调用数: {len(llm_calls)}")
+            
+            # 统计状态
+            status_counts = {}
+            for result in oc_results:
+                status = result.get("status", "未知")
+                status_counts[status] = status_counts.get(status, 0) + 1
+            logger.info(f"[{request_id}]   - 状态分布: {status_counts}")
             
             return {
                 "success": True,
-                "oc_results": final_state.get("oc_assessments", []),
+                "oc_results": oc_results,
                 "summary": final_state.get("final_summary", {}),
-                "execution_time": execution_time,
-                "llm_calls": len(final_state.get("llm_calls", []))
+                "execution_time": overall_time,
+                "llm_calls": len(llm_calls),
+                "request_id": request_id
             }
             
         except Exception as e:
-            logger.error(f"[{request_id}] OC评估失败: {e}", exc_info=True)
+            elapsed = time.time() - overall_start
+            logger.error(f"[{request_id}] ❌ OC评估失败: {str(e)}", exc_info=True)
+            logger.error(f"[{request_id}] 错误发生时已耗时: {elapsed:.2f}秒")
             return {
                 "success": False,
                 "error": str(e),
                 "oc_results": [],
-                "summary": {}
+                "summary": {},
+                "request_id": request_id
             }
 

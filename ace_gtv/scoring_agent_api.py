@@ -15,11 +15,11 @@ from scoring_agent_lite import ScoringAgent
 # ============================================================================
 
 log_level = os.getenv('LOG_LEVEL', 'INFO')
-logging.basicConfig(
-    level=getattr(logging, log_level),
+# 日志已由 logger_config 统一配置,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger(__name__)
+from logger_config import setup_module_logger
+logger = setup_module_logger(__name__.split(".")[-1], __import__("os").getenv("LOG_LEVEL", "INFO"))
 
 # ============================================================================
 # Flask应用初始化

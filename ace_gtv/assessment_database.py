@@ -13,8 +13,9 @@ from typing import Dict, Any, List, Optional, Tuple
 from contextlib import contextmanager
 
 # 配置日志
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# 日志已由 logger_config 统一配置
+from logger_config import setup_module_logger
+logger = setup_module_logger(__name__.split(".")[-1], __import__("os").getenv("LOG_LEVEL", "INFO"))
 
 class GTVAssessmentDatabase:
     """GTV签证评估结果数据库管理器"""
