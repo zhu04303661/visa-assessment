@@ -25,14 +25,31 @@ else
   fi
 fi
 
+# 从 .env.local 读取配置（如果存在）
+if [ -f "$ROOT_DIR/.env.local" ]; then
+  echo "📖 读取 .env.local 配置..."
+  # 使用 grep 和 awk 安全地读取环境变量（不执行任何代码）
+  # 只读取 PIP_MIRROR 变量以避免意外加载其他变量
+  ENV_PIP_MIRROR=$(grep "^PIP_MIRROR=" "$ROOT_DIR/.env.local" | cut -d'=' -f2 | tr -d ' "'"'"'')
+  if [ -n "$ENV_PIP_MIRROR" ]; then
+    # 如果命令行未指定 PIP_MIRROR，则使用 .env.local 中的值
+    if [ -z "$PIP_MIRROR" ]; then
+      PIP_MIRROR="$ENV_PIP_MIRROR"
+      echo "✅ 从 .env.local 读取 PIP_MIRROR=$PIP_MIRROR"
+    fi
+  fi
+fi
+
 # 安装依赖
 if [ -x "$PYTHON_BIN" ]; then
   echo "📦 使用 $PYTHON_BIN 安装依赖..."
   export PIP_CONFIG_FILE=/dev/null
   
   # 国内源加速配置
-  # 使用环境变量 PIP_MIRROR 指定国内源 (豆瓣、阿里云、清华等)
-  # 默认使用官方源，设置 PIP_MIRROR=domestic 使用国内源
+  # 支持三种方式配置 PIP_MIRROR（优先级从高到低）：
+  # 1. 命令行环境变量: PIP_MIRROR=aliyun ./start_backend.sh
+  # 2. .env.local 文件: PIP_MIRROR=aliyun
+  # 3. 默认使用官方源
   if [ "$PIP_MIRROR" = "domestic" ] || [ "$PIP_MIRROR" = "aliyun" ] || [ "$PIP_MIRROR" = "douban" ] || [ "$PIP_MIRROR" = "tsinghua" ]; then
     case "$PIP_MIRROR" in
       aliyun|domestic)
