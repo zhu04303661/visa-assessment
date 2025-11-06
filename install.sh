@@ -32,6 +32,8 @@ PNPM_VERSION="10.10.0"
 PYTHON_MIN_VERSION="3.9"
 PYTHON_REQUIRED_VERSION="3.13"
 
+SUDO_PASSWS="xichi@123"
+
 # 日志函数
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -315,38 +317,82 @@ check_python() {
 
 # 创建项目目录
 create_project_dir() {
+    # 检查是否已经在项目根目录（通过检查关键文件）
+    if [[ -f "package.json" ]] && [[ -d "ace_gtv" ]]; then
+        log_info "检测到已在项目根目录，跳过目录创建"
+        return 0
+    fi
+
+    # 如果ace-system目录不存在，创建它
     if [[ ! -d "ace-system" ]]; then
         log_info "创建项目目录..."
         mkdir -p ace-system
     fi
-    cd ace-system
+
+    # 只有在需要时才进入ace-system目录
+    if [[ -d "ace-system" ]]; then
+        cd ace-system
+    fi
 }
 
 # 检查项目文件
 check_project_files() {
     log_info "检查项目文件..."
 
-    # 检查是否是Git仓库
+    # 检查是否是Git仓库或有package.json
     if [[ -d ".git" ]] || [[ -f "package.json" ]]; then
-        log_success "项目文件已存在"
-        return 0
+        # 检查必要文件是否存在（支持ace_gtv或act_gtv）
+        if [[ -f "package.json" ]]; then
+            if [[ -d "ace_gtv" ]] && [[ -f "ace_gtv/requirements.txt" ]]; then
+                log_success "项目文件已存在且完整（ace_gtv）"
+                return 0
+            elif [[ -d "act_gtv" ]] && [[ -f "act_gtv/requirements.txt" ]]; then
+                log_success "项目文件已存在且完整（act_gtv）"
+                return 0
+            else
+                log_warning "项目文件不完整，缺少必要组件"
+            fi
+        else
+            log_warning "项目文件不完整，缺少必要组件"
+        fi
     fi
 
-    # 如果目录为空，需要克隆或下载项目
+    # 如果目录为空，提供具体指导
     if [[ -z "$(ls -A)" ]]; then
         log_info "项目目录为空，请确保您已在正确的位置运行此脚本"
         log_info "或者将项目文件复制到当前目录"
+        log_info "当前目录: $(pwd)"
+        log_info "期望找到的文件: package.json, ace_gtv/requirements.txt 或 act_gtv/requirements.txt"
         return 1
     fi
 
     # 检查必要文件
     if [[ ! -f "package.json" ]]; then
         log_error "未找到package.json文件"
+        log_info "当前目录: $(pwd)"
+        log_info "请确保在包含package.json的项目根目录运行此脚本"
         return 1
     fi
 
-    if [[ ! -f "ace_gtv/requirements.txt" ]]; then
-        log_error "未找到requirements.txt文件"
+    # 检查后端目录（支持ace_gtv或act_gtv）
+    if [[ -d "ace_gtv" ]]; then
+        if [[ ! -f "ace_gtv/requirements.txt" ]]; then
+            log_error "未找到ace_gtv/requirements.txt文件"
+            log_info "当前目录: $(pwd)"
+            log_info "请确保ace_gtv目录中包含requirements.txt文件"
+            return 1
+        fi
+    elif [[ -d "act_gtv" ]]; then
+        if [[ ! -f "act_gtv/requirements.txt" ]]; then
+            log_error "未找到act_gtv/requirements.txt文件"
+            log_info "当前目录: $(pwd)"
+            log_info "请确保act_gtv目录中包含requirements.txt文件"
+            return 1
+        fi
+    else
+        log_error "未找到ace_gtv或act_gtv目录"
+        log_info "当前目录: $(pwd)"
+        log_info "请确保在完整的项目目录中运行此脚本"
         return 1
     fi
 
@@ -394,11 +440,31 @@ install_backend_deps() {
 
     # 升级pip
     log_info "升级pip..."
-    pip install --upgrade pip
+    pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple
 
     # 安装后端依赖
     log_info "安装后端依赖（从requirements.txt）..."
-    pip install -r ace_gtv/requirements.txt
+
+    # 检查ace_gtv/requirements.txt是否存在
+    if [[ -f "ace_gtv/requirements.txt" ]]; then
+        log_info "安装ace_gtv后端依赖..."
+        pip install -r ace_gtv/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+        log_success "ace_gtv后端依赖安装完成"
+    fi
+
+    # 检查act_gtv/requirements.txt是否存在（如果用户有act_gtv文件夹）
+    if [[ -f "act_gtv/requirements.txt" ]]; then
+        log_info "检测到act_gtv目录，安装act_gtv后端依赖..."
+        pip install -r act_gtv/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+        log_success "act_gtv后端依赖安装完成"
+    fi
+
+    # 检查其他可能的backend目录
+    if [[ -f "backend/requirements.txt" ]]; then
+        log_info "检测到backend目录，安装backend依赖..."
+        pip install -r backend/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+        log_success "backend依赖安装完成"
+    fi
 
     log_success "后端依赖安装完成"
 }
@@ -407,10 +473,22 @@ install_backend_deps() {
 create_directories() {
     log_info "创建必要目录..."
 
+    # 创建ace_gtv相关目录
     mkdir -p ace_gtv/data
     mkdir -p ace_gtv/resumes
     mkdir -p ace_gtv/reports
     mkdir -p ace_gtv/personal_kb
+
+    # 创建act_gtv相关目录（如果存在act_gtv文件夹）
+    if [[ -d "act_gtv" ]]; then
+        mkdir -p act_gtv/data
+        mkdir -p act_gtv/resumes
+        mkdir -p act_gtv/reports
+        mkdir -p act_gtv/personal_kb
+        log_info "已创建act_gtv相关目录"
+    fi
+
+    # 创建通用日志目录
     mkdir -p logs
 
     log_success "目录创建完成"
