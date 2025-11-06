@@ -29,7 +29,30 @@ fi
 if [ -x "$PYTHON_BIN" ]; then
   echo "📦 使用 $PYTHON_BIN 安装依赖..."
   export PIP_CONFIG_FILE=/dev/null
-  PIP_INDEX_URL=${PIP_INDEX_URL:-https://pypi.org/simple}
+  
+  # 国内源加速配置
+  # 使用环境变量 PIP_MIRROR 指定国内源 (豆瓣、阿里云、清华等)
+  # 默认使用官方源，设置 PIP_MIRROR=domestic 使用国内源
+  if [ "$PIP_MIRROR" = "domestic" ] || [ "$PIP_MIRROR" = "aliyun" ] || [ "$PIP_MIRROR" = "douban" ] || [ "$PIP_MIRROR" = "tsinghua" ]; then
+    case "$PIP_MIRROR" in
+      aliyun|domestic)
+        echo "🚀 使用阿里云加速源"
+        PIP_INDEX_URL="https://mirrors.aliyun.com/pypi/simple/"
+        ;;
+      douban)
+        echo "🚀 使用豆瓣加速源"
+        PIP_INDEX_URL="https://pypi.douban.com/simple"
+        ;;
+      tsinghua)
+        echo "🚀 使用清华大学加速源"
+        PIP_INDEX_URL="https://pypi.tuna.tsinghua.edu.cn/simple"
+        ;;
+    esac
+  else
+    echo "📡 使用官方 PyPI 源 (如需加速，设置 PIP_MIRROR=domestic/aliyun/douban/tsinghua)"
+    PIP_INDEX_URL=${PIP_INDEX_URL:-https://pypi.org/simple}
+  fi
+  
   EXTRA_PIP_ARGS=(--find-links "$ROOT_DIR")
   "$PYTHON_BIN" -m pip install --upgrade pip -i "$PIP_INDEX_URL" || { echo "❌ pip 升级失败"; exit 1; }
   if [ -f "$ROOT_DIR/ace_gtv/requirements.txt" ]; then
