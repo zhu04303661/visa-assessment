@@ -353,22 +353,22 @@
     "zhu_exp_1": {
       "id": "zhu_exp_1",
       "section": "工作经验",
-      "content": "拥有12年技术与管理经验，历任新奥集团智能技术负责人、携程无线技术专家与高级经理、爱立信软件工程师、阿尔卡特朗讯贝尔实验室算法研发工程师及团队leader，并在英特尔实习。擅长能源产业智能化、大模型研发、云计算、物联网、嵌入式系统、Linux系统开发等。带领团队进行AI智能模型和大模型平台的研发，提升企业智能化水平。曾负责携程无线端研发效能、爱立信eMBMS模拟器开发、阿尔卡特朗讯LTE物理层仿真系统，拥有丰富的全栈、云计算、算法、企业架构与技术管理经验。",
+      "content": "拥有12年技术管理和研发经验，现任新奥集团智能技术负责人，带领90人团队推进能源集团智能化技术和大模型研发。曾在携程负责移动端千人团队的研发效能及无线MCD云平台开发，担任算法技术专家和高级经理。在爱立信从事核心通讯技术研发与云计算工程师职位。早期在阿尔卡特朗讯贝尔实验室担任算法工程师，负责4G物理层算法仿真系统研发，并有海外（美国贝尔实验室）联合研发经历。实习期间在英特尔从事Linux操作系统相关工作。",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.803139",
-      "updated_at": "2025-11-05T18:11:41.803147"
+      "created_at": "2025-11-06T09:56:11.391251",
+      "updated_at": "2025-11-06T09:56:11.391260"
     },
     "zhu_edu_1": {
       "id": "zhu_edu_1",
       "section": "教育背景",
-      "content": "2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位\n2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位",
+      "content": "2008.9-2011.4 南京理工大学 测控技术与仪器 硕士学位；2004.9-2008.6 南京理工大学 测控技术与仪器 学士学位。",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.803268",
-      "updated_at": "2025-11-05T18:11:41.803270"
+      "created_at": "2025-11-06T09:56:11.391406",
+      "updated_at": "2025-11-06T09:56:11.391411"
     },
     "zhu_skill_1": {
       "id": "zhu_skill_1",
@@ -377,8 +377,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.803383",
-      "updated_at": "2025-11-05T18:11:41.803386"
+      "created_at": "2025-11-06T09:56:11.391583",
+      "updated_at": "2025-11-06T09:56:11.391588"
     },
     "zhu_skill_2": {
       "id": "zhu_skill_2",
@@ -387,8 +387,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.803498",
-      "updated_at": "2025-11-05T18:11:41.803500"
+      "created_at": "2025-11-06T09:56:11.391730",
+      "updated_at": "2025-11-06T09:56:11.391735"
     },
     "zhu_skill_3": {
       "id": "zhu_skill_3",
@@ -397,8 +397,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.803617",
-      "updated_at": "2025-11-05T18:11:41.803619"
+      "created_at": "2025-11-06T09:56:11.391877",
+      "updated_at": "2025-11-06T09:56:11.391881"
     },
     "zhu_skill_4": {
       "id": "zhu_skill_4",
@@ -407,8 +407,8 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.803730",
-      "updated_at": "2025-11-05T18:11:41.803732"
+      "created_at": "2025-11-06T09:56:11.392028",
+      "updated_at": "2025-11-06T09:56:11.392033"
     },
     "zhu_skill_5": {
       "id": "zhu_skill_5",
@@ -417,268 +417,268 @@
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.803842",
-      "updated_at": "2025-11-05T18:11:41.803844"
+      "created_at": "2025-11-06T09:56:11.392173",
+      "updated_at": "2025-11-06T09:56:11.392177"
     },
     "zhu_skill_6": {
       "id": "zhu_skill_6",
+      "section": "技能专长",
+      "content": "持续迭代",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-06T09:56:11.392317",
+      "updated_at": "2025-11-06T09:56:11.392322"
+    },
+    "zhu_skill_7": {
+      "id": "zhu_skill_7",
       "section": "技能专长",
       "content": "软件系统开发",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.803954",
-      "updated_at": "2025-11-05T18:11:41.803956"
+      "created_at": "2025-11-06T09:56:11.392481",
+      "updated_at": "2025-11-06T09:56:11.392485"
     },
-    "zhu_skill_7": {
-      "id": "zhu_skill_7",
+    "zhu_skill_8": {
+      "id": "zhu_skill_8",
       "section": "技能专长",
       "content": "通讯系统开发",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.804067",
-      "updated_at": "2025-11-05T18:11:41.804069"
-    },
-    "zhu_skill_8": {
-      "id": "zhu_skill_8",
-      "section": "技能专长",
-      "content": "嵌入式系统开发",
-      "helpful": true,
-      "harmful": false,
-      "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.804181",
-      "updated_at": "2025-11-05T18:11:41.804183"
+      "created_at": "2025-11-06T09:56:11.392626",
+      "updated_at": "2025-11-06T09:56:11.392630"
     },
     "zhu_skill_9": {
       "id": "zhu_skill_9",
       "section": "技能专长",
-      "content": "Linux系统技术",
+      "content": "嵌入式系统",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.804298",
-      "updated_at": "2025-11-05T18:11:41.804300"
+      "created_at": "2025-11-06T09:56:11.392765",
+      "updated_at": "2025-11-06T09:56:11.392769"
     },
     "zhu_skill_10": {
       "id": "zhu_skill_10",
+      "section": "技能专长",
+      "content": "Linux系统技术应用",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-06T09:56:11.392912",
+      "updated_at": "2025-11-06T09:56:11.392916"
+    },
+    "zhu_skill_11": {
+      "id": "zhu_skill_11",
       "section": "技能专长",
       "content": "云计算",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.804410",
-      "updated_at": "2025-11-05T18:11:41.804412"
-    },
-    "zhu_skill_11": {
-      "id": "zhu_skill_11",
-      "section": "技能专长",
-      "content": "持续交付",
-      "helpful": true,
-      "harmful": false,
-      "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.804523",
-      "updated_at": "2025-11-05T18:11:41.804525"
+      "created_at": "2025-11-06T09:56:11.393060",
+      "updated_at": "2025-11-06T09:56:11.393063"
     },
     "zhu_skill_12": {
       "id": "zhu_skill_12",
+      "section": "技能专长",
+      "content": "移动互联网基础服务",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-06T09:56:11.393203",
+      "updated_at": "2025-11-06T09:56:11.393207"
+    },
+    "zhu_skill_13": {
+      "id": "zhu_skill_13",
+      "section": "技能专长",
+      "content": "研发工具链",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-06T09:56:11.393343",
+      "updated_at": "2025-11-06T09:56:11.393347"
+    },
+    "zhu_skill_14": {
+      "id": "zhu_skill_14",
+      "section": "技能专长",
+      "content": "CV/NLP算法",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-06T09:56:11.393503",
+      "updated_at": "2025-11-06T09:56:11.393508"
+    },
+    "zhu_skill_15": {
+      "id": "zhu_skill_15",
+      "section": "技能专长",
+      "content": "感知认知模型研发",
+      "helpful": true,
+      "harmful": false,
+      "neutral": 0,
+      "created_at": "2025-11-06T09:56:11.393643",
+      "updated_at": "2025-11-06T09:56:11.393647"
+    },
+    "zhu_skill_16": {
+      "id": "zhu_skill_16",
       "section": "技能专长",
       "content": "企业架构",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.804635",
-      "updated_at": "2025-11-05T18:11:41.804637"
+      "created_at": "2025-11-06T09:56:11.393783",
+      "updated_at": "2025-11-06T09:56:11.393787"
     },
-    "zhu_skill_13": {
-      "id": "zhu_skill_13",
+    "zhu_skill_17": {
+      "id": "zhu_skill_17",
       "section": "技能专长",
       "content": "智能产品架构",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.804747",
-      "updated_at": "2025-11-05T18:11:41.804749"
+      "created_at": "2025-11-06T09:56:11.393932",
+      "updated_at": "2025-11-06T09:56:11.393936"
     },
-    "zhu_skill_14": {
-      "id": "zhu_skill_14",
-      "section": "技能专长",
-      "content": "智能算法研发",
-      "helpful": true,
-      "harmful": false,
-      "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.804859",
-      "updated_at": "2025-11-05T18:11:41.804861"
-    },
-    "zhu_skill_15": {
-      "id": "zhu_skill_15",
-      "section": "技能专长",
-      "content": "团队管理",
-      "helpful": true,
-      "harmful": false,
-      "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.804972",
-      "updated_at": "2025-11-05T18:11:41.804974"
-    },
-    "zhu_skill_16": {
-      "id": "zhu_skill_16",
+    "zhu_skill_18": {
+      "id": "zhu_skill_18",
       "section": "技能专长",
       "content": "全栈开发",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T17:39:59.022532",
-      "updated_at": "2025-11-05T17:39:59.022534"
-    },
-    "zhu_skill_17": {
-      "id": "zhu_skill_17",
-      "section": "技能专长",
-      "content": "持续交付",
-      "helpful": true,
-      "harmful": false,
-      "neutral": 0,
-      "created_at": "2025-11-05T17:39:59.022646",
-      "updated_at": "2025-11-05T17:39:59.022648"
-    },
-    "zhu_skill_18": {
-      "id": "zhu_skill_18",
-      "section": "技能专长",
-      "content": "团队管理",
-      "helpful": true,
-      "harmful": false,
-      "neutral": 0,
-      "created_at": "2025-11-05T17:39:59.022760",
-      "updated_at": "2025-11-05T17:39:59.022762"
+      "created_at": "2025-11-06T09:56:11.394075",
+      "updated_at": "2025-11-06T09:56:11.394079"
     },
     "zhu_skill_19": {
       "id": "zhu_skill_19",
       "section": "技能专长",
-      "content": "算法仿真",
+      "content": "算法工程",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T14:16:09.324787",
-      "updated_at": "2025-11-05T14:16:09.324789"
+      "created_at": "2025-11-06T09:56:11.394222",
+      "updated_at": "2025-11-06T09:56:11.394227"
     },
     "zhu_skill_20": {
       "id": "zhu_skill_20",
       "section": "技能专长",
-      "content": "团队管理",
+      "content": "项目管理",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T14:16:09.325295",
-      "updated_at": "2025-11-05T14:16:09.325298"
+      "created_at": "2025-11-06T09:56:11.394366",
+      "updated_at": "2025-11-06T09:56:11.394370"
     },
     "zhu_ach_1": {
       "id": "zhu_ach_1",
       "section": "成就荣誉",
-      "content": "2024年 大模型工程和智能体技术相关专利6篇",
+      "content": "2024 大模型工程和智能体技术相关专利6篇",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.805088",
-      "updated_at": "2025-11-05T18:11:41.805090"
+      "created_at": "2025-11-06T09:56:11.394524",
+      "updated_at": "2025-11-06T09:56:11.394528"
     },
     "zhu_ach_2": {
       "id": "zhu_ach_2",
       "section": "成就荣誉",
-      "content": "2023年 大模型工程相关专利10篇",
+      "content": "2023 大模型工程相关专利10篇",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.805204",
-      "updated_at": "2025-11-05T18:11:41.805206"
+      "created_at": "2025-11-06T09:56:11.394668",
+      "updated_at": "2025-11-06T09:56:11.394672"
     },
     "zhu_ach_3": {
       "id": "zhu_ach_3",
       "section": "成就荣誉",
-      "content": "2022年 CV识别算法专利5篇",
+      "content": "2022 CV识别算法专利5篇",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.805317",
-      "updated_at": "2025-11-05T18:11:41.805320"
+      "created_at": "2025-11-06T09:56:11.394816",
+      "updated_at": "2025-11-06T09:56:11.394820"
     },
     "zhu_ach_4": {
       "id": "zhu_ach_4",
       "section": "成就荣誉",
-      "content": "2022年 获得《创值标兵》称号",
+      "content": "2022 获得《创值标兵》称号",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.805434",
-      "updated_at": "2025-11-05T18:11:41.805436"
+      "created_at": "2025-11-06T09:56:11.394956",
+      "updated_at": "2025-11-06T09:56:11.394960"
     },
     "zhu_ach_5": {
       "id": "zhu_ach_5",
       "section": "成就荣誉",
-      "content": "2020年 携程无线质量优秀个人技术贡献奖",
+      "content": "2020 携程无线质量优秀个人技术贡献奖",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.805543",
-      "updated_at": "2025-11-05T18:11:41.805545"
+      "created_at": "2025-11-06T09:56:11.395098",
+      "updated_at": "2025-11-06T09:56:11.395102"
     },
     "zhu_ach_6": {
       "id": "zhu_ach_6",
       "section": "成就荣誉",
-      "content": "2016年 携程MCD平台获得携程突出技术贡献奖",
+      "content": "2016 携程MCD平台突出技术贡献奖",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.805652",
-      "updated_at": "2025-11-05T18:11:41.805654"
+      "created_at": "2025-11-06T09:56:11.395240",
+      "updated_at": "2025-11-06T09:56:11.395244"
     },
     "zhu_ach_7": {
       "id": "zhu_ach_7",
       "section": "成就荣誉",
-      "content": "2015年 在携程提交IOS应用集群打包专利两篇",
+      "content": "2015 携程IOS应用集群打包专利两篇",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.805767",
-      "updated_at": "2025-11-05T18:11:41.805769"
+      "created_at": "2025-11-06T09:56:11.395382",
+      "updated_at": "2025-11-06T09:56:11.395386"
     },
     "zhu_ach_8": {
       "id": "zhu_ach_8",
       "section": "成就荣誉",
-      "content": "2013年 阿尔卡特朗讯outstanding员工奖",
+      "content": "2013 阿尔卡特朗讯outstanding员工奖",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.805875",
-      "updated_at": "2025-11-05T18:11:41.805877"
+      "created_at": "2025-11-06T09:56:11.395560",
+      "updated_at": "2025-11-06T09:56:11.395565"
     },
     "zhu_ach_9": {
       "id": "zhu_ach_9",
       "section": "成就荣誉",
-      "content": "2010年 发表《液冷源控制系统的研制》核心期刊",
+      "content": "2010 发表《液冷源控制系统的研制》核心期刊",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.805985",
-      "updated_at": "2025-11-05T18:11:41.805987"
+      "created_at": "2025-11-06T09:56:11.395708",
+      "updated_at": "2025-11-06T09:56:11.395712"
     },
     "zhu_ach_10": {
       "id": "zhu_ach_10",
       "section": "成就荣誉",
-      "content": "2009年 发表《弹箭惯性主轴测试方法研究》EI收录",
+      "content": "2009 发表《弹箭惯性主轴测试方法研究》EI收录",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.806094",
-      "updated_at": "2025-11-05T18:11:41.806096"
+      "created_at": "2025-11-06T09:56:11.395851",
+      "updated_at": "2025-11-06T09:56:11.395855"
     },
     "zhu_ach_11": {
       "id": "zhu_ach_11",
       "section": "成就荣誉",
-      "content": "2004-2008年 校奖学金、校“社会活动积极分子”、校“优秀团干”",
+      "content": "2004-2008 校奖学金，校“社会活动积极分子”、校“优秀团干”",
       "helpful": true,
       "harmful": false,
       "neutral": 0,
-      "created_at": "2025-11-05T18:11:41.806202",
-      "updated_at": "2025-11-05T18:11:41.806204"
+      "created_at": "2025-11-06T09:56:11.395994",
+      "updated_at": "2025-11-06T09:56:11.395998"
     },
     "小张_exp_1": {
       "id": "小张_exp_1",
