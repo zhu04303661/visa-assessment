@@ -6,7 +6,7 @@ from openai import AzureOpenAI
 
 endpoint = os.getenv("ENDPOINT_URL", "https://ennew-openai-east-us-2.openai.azure.com/")
 deployment = os.getenv("DEPLOYMENT_NAME", "gpt-4.1-nano")
-subscription_key = "xxxxxxxxxxxxxx"
+subscription_key = "a8a0daf1ab5342948e3e1aee239d59cd"
 #os.getenv("AZURE_OPENAI_API_KEY", "REPLACE_WITH_YOUR_KEY_VALUE_HERE")
 
 

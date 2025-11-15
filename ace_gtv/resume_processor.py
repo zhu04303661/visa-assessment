@@ -628,6 +628,13 @@ def call_ai_for_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> Di
         
         field_description = field_focus.get(field, "综合领域")
         
+        # 处理projects列表（可能是字典列表）
+        projects = extracted_info.get('projects', [])
+        if projects and isinstance(projects[0], dict):
+            projects_text = ', '.join([f"{p.get('name', 'N/A')} ({p.get('years', 'N/A')})" for p in projects[:5]])
+        else:
+            projects_text = ', '.join([str(p) for p in projects[:5]]) if projects else 'N/A'
+        
         user_prompt = f"""
 请基于以下申请人信息进行GTV资格评估：
 
@@ -637,7 +644,7 @@ def call_ai_for_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> Di
 - 工作经验: {extracted_info.get('experience', 'N/A')}
 - 技能专长: {', '.join(extracted_info.get('skills', []))}
 - 主要成就: {', '.join(extracted_info.get('achievements', []))}
-- 项目经验: {', '.join(extracted_info.get('projects', []))}
+- 项目经验: {projects_text}
 - 认证资质: {', '.join(extracted_info.get('certifications', []))}
 - 个人总结: {extracted_info.get('summary', 'N/A')}
 
@@ -837,7 +844,14 @@ def _get_default_gtv_assessment(extracted_info: Dict[str, Any], field: str) -> D
 
     skills_text = "、".join(skills[:5]) if skills else "核心技能尚待补充"
     achievements_text = "、".join(achievements[:3]) if achievements else "可补充具有说服力的业绩案例"
-    projects_text = "、".join(projects[:3]) if projects else "需要补充代表性项目"
+    # 处理projects列表（可能是字典列表）
+    if projects:
+        if isinstance(projects[0], dict):
+            projects_text = "、".join([f"{p.get('name', 'N/A')}" for p in projects[:3]])
+        else:
+            projects_text = "、".join([str(p) for p in projects[:3]])
+    else:
+        projects_text = "需要补充代表性项目"
 
     industry_impact_score = min(9, 5 + len(achievements) // 2 + len(projects) // 2)
     company_impact_score = min(9, 5 + len(projects) // 2)

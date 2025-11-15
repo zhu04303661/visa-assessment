@@ -7,14 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowRight, Loader2, FileText, Upload, AlertCircle, MessageSquare } from "lucide-react"
+import { ArrowRight, Loader2, FileText, Upload, AlertCircle, CheckCircle2, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/i18n"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { ErrorDialog } from "@/components/error-dialog"
-import { ConsultationBooking } from "@/components/consultation-booking"
 import { AssessmentLoading } from "@/components/assessment-loading"
 
 type FormData = {
@@ -46,16 +44,27 @@ export function AssessmentForm() {
     message: "",
     errorDetails: undefined,
   })
-  const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false)
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
     phone: "",
-    field: "",
+    field: "digital-technology", // 默认值，后端会自动分析实际领域
     resumeText: "",
     additionalInfo: "",
   })
+
+  // 计算表单完成度
+  const formProgress = () => {
+    let completed = 0
+    let total = 3
+    if (formData.name.trim()) completed++
+    if (formData.email.trim()) completed++
+    if (formData.resumeText.trim() || uploadedFile) completed++
+    return { completed, total, percentage: (completed / total) * 100 }
+  }
+
+  const progress = formProgress()
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -67,7 +76,7 @@ export function AssessmentForm() {
     const reader = new FileReader()
     reader.onload = async (event) => {
       const text = event.target?.result as string
-      setFormData({ ...formData, resumeText: text })
+      setFormData((prevData) => ({ ...prevData, resumeText: text }))
     }
     reader.readAsText(file)
   }
@@ -79,14 +88,27 @@ export function AssessmentForm() {
     console.log("[v0] 表单数据:", formData)
     console.log("[v0] 当前URL:", window.location.href)
 
-    if (!formData.resumeText || formData.resumeText.trim().length < 50) {
-      console.log("[v0] 简历文本长度不足")
-      setErrorState({
-        isOpen: true,
-        title: "简历无效",
-        message: t("form.upload.resume.error") || "请提供至少50个字符的有效简历",
-      })
-      return
+    // 验证简历：如果是文件上传模式，检查是否有文件；如果是粘贴模式，检查文本长度
+    if (uploadMethod === "upload") {
+      if (!uploadedFile) {
+        console.log("[v0] 文件上传模式但未选择文件")
+        setErrorState({
+          isOpen: true,
+          title: language === "en" ? "No File Selected" : "未选择文件",
+          message: language === "en" ? "Please select a resume file to upload" : "请选择要上传的简历文件",
+        })
+        return
+      }
+    } else {
+      if (!formData.resumeText || formData.resumeText.trim().length < 50) {
+        console.log("[v0] 简历文本长度不足")
+        setErrorState({
+          isOpen: true,
+          title: language === "en" ? "Invalid Resume" : "简历无效",
+          message: t("form.upload.resume.error") || (language === "en" ? "Please provide at least 50 characters" : "请提供至少50个字符的有效简历"),
+        })
+        return
+      }
     }
 
     console.log("[v0] 开始设置状态...")
@@ -243,128 +265,148 @@ export function AssessmentForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="mb-6 flex items-center justify-end">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* 语言切换器 */}
+      <div className="flex items-center justify-end">
         <LanguageSwitcher />
       </div>
 
-      <div className="space-y-6">
-        {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("form.q1.title")}</CardTitle>
-            <CardDescription>{t("form.upload.basic.desc")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="name">{t("form.q1.name")}</Label>
-              <Input
-                id="name"
-                placeholder={t("form.q1.name.placeholder")}
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">{t("form.upload.email")}</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder={t("form.upload.email.placeholder")}
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">{t("form.upload.phone")}</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder={t("form.upload.phone.placeholder")}
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
-            </div>
-          </CardContent>
-        </Card>
+      {/* 进度指示器 */}
+      <div className="rounded-lg border bg-card p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-muted-foreground">
+            {language === "en" ? "Form Progress" : "表单完成度"}
+          </span>
+          <span className="text-sm font-semibold text-primary">
+            {progress.completed}/{progress.total}
+          </span>
+        </div>
+        <div className="w-full bg-muted rounded-full h-2">
+          <div
+            className="bg-primary h-2 rounded-full transition-all duration-300"
+            style={{ width: `${progress.percentage}%` }}
+          />
+        </div>
+      </div>
 
-        {/* Field Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("form.q2.title")}</CardTitle>
-            <CardDescription>{t("form.q2.desc")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Label>{t("form.q2.field")}</Label>
-            <RadioGroup
-              value={formData.field}
-              onValueChange={(value) => setFormData({ ...formData, field: value })}
-              required
-              className="mt-3"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="digital-technology" id="digital-technology" />
-                <Label htmlFor="digital-technology" className="cursor-pointer font-normal">
-                  {t("form.q1.tech")}
+      {/* 主要表单区域 - 合并为一个流畅的卡片 */}
+      <Card className="shadow-lg border-2">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <CardTitle className="text-2xl">{t("form.title")}</CardTitle>
+          </div>
+          <CardDescription className="text-base mt-2">
+            {t("form.subtitle")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6 space-y-6">
+          {/* 基本信息 - 使用网格布局 */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              {t("form.q1.title")}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-medium">
+                  {t("form.q1.name")} <span className="text-destructive">*</span>
                 </Label>
+                <Input
+                  id="name"
+                  placeholder={t("form.q1.name.placeholder")}
+                  value={formData.name}
+                  onChange={(e) => {
+                    setFormData((prevData) => ({ ...prevData, name: e.target.value }))
+                  }}
+                  required
+                  className="h-11"
+                />
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="arts-culture" id="arts-culture" />
-                <Label htmlFor="arts-culture" className="cursor-pointer font-normal">
-                  {t("form.q1.arts")}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  {t("form.upload.email")} <span className="text-destructive">*</span>
                 </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={t("form.upload.email.placeholder")}
+                  value={formData.email}
+                  onChange={(e) => {
+                    setFormData((prevData) => ({ ...prevData, email: e.target.value }))
+                  }}
+                  required
+                  className="h-11"
+                />
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="research-academia" id="research-academia" />
-                <Label htmlFor="research-academia" className="cursor-pointer font-normal">
-                  {t("form.q1.research")}
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-medium">
+                  {t("form.upload.phone")}
                 </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder={t("form.upload.phone.placeholder")}
+                  value={formData.phone}
+                  onChange={(e) => {
+                    setFormData((prevData) => ({ ...prevData, phone: e.target.value }))
+                  }}
+                  className="h-11"
+                />
               </div>
-            </RadioGroup>
-          </CardContent>
-        </Card>
+            </div>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("form.upload.resume.title")}</CardTitle>
-            <CardDescription>{t("form.upload.resume.paste")}</CardDescription>
-          </CardHeader>
-          <CardContent>
+          {/* 分隔线 */}
+          <div className="border-t" />
+
+          {/* 简历上传/粘贴 */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              {t("form.upload.resume.title")}
+            </h3>
             <Tabs value={uploadMethod} onValueChange={(v) => setUploadMethod(v as "paste" | "upload")}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="upload">
-                  <Upload className="mr-2 h-4 w-4" />
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="upload" className="gap-2">
+                  <Upload className="h-4 w-4" />
                   {t("form.upload.file")}
                 </TabsTrigger>
-                <TabsTrigger value="paste">
-                  <FileText className="mr-2 h-4 w-4" />
+                <TabsTrigger value="paste" className="gap-2">
+                  <FileText className="h-4 w-4" />
                   {t("form.upload.paste")}
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="upload" className="space-y-4">
-                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-8 text-center transition-colors hover:border-muted-foreground/50">
-                  <Upload className="mb-4 h-12 w-12 text-muted-foreground" />
-                  <Label htmlFor="file-upload" className="cursor-pointer">
-                    <span className="text-sm font-medium text-primary hover:underline">{t("form.upload.click")}</span>
-                    <span className="text-sm text-muted-foreground"> {t("form.upload.or.drag")}</span>
-                  </Label>
-                  <Input
-                    id="file-upload"
-                    type="file"
-                    accept=".txt,.pdf,.doc,.docx"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <p className="mt-2 text-xs text-muted-foreground">{t("form.upload.formats")}</p>
+                <div className="relative">
+                  <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-primary/30 bg-muted/30 p-12 text-center transition-all hover:border-primary/50 hover:bg-muted/50">
+                    <div className="rounded-full bg-primary/10 p-4 mb-4">
+                      <Upload className="h-8 w-8 text-primary" />
+                    </div>
+                    <Label htmlFor="file-upload" className="cursor-pointer">
+                      <span className="text-base font-semibold text-primary hover:underline">
+                        {t("form.upload.click")}
+                      </span>
+                      <span className="text-sm text-muted-foreground"> {t("form.upload.or.drag")}</span>
+                    </Label>
+                    <Input
+                      id="file-upload"
+                      type="file"
+                      accept=".txt,.pdf,.doc,.docx"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <p className="mt-3 text-xs text-muted-foreground">{t("form.upload.formats")}</p>
+                  </div>
                 </div>
                 {uploadedFile && (
-                  <div className="flex items-center gap-2 rounded-lg border bg-muted/50 p-3">
-                    <FileText className="h-5 w-5 text-primary" />
+                  <div className="flex items-center gap-3 rounded-lg border-2 border-primary/20 bg-primary/5 p-4">
+                    <div className="rounded-full bg-primary/10 p-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{uploadedFile.name}</p>
+                      <p className="text-sm font-semibold">{uploadedFile.name}</p>
                       <p className="text-xs text-muted-foreground">{(uploadedFile.size / 1024).toFixed(2)} KB</p>
                     </div>
                     <Button
@@ -373,8 +415,9 @@ export function AssessmentForm() {
                       size="sm"
                       onClick={() => {
                         setUploadedFile(null)
-                        setFormData({ ...formData, resumeText: "" })
+                        setFormData((prevData) => ({ ...prevData, resumeText: "" }))
                       }}
+                      className="text-destructive hover:text-destructive"
                     >
                       {t("form.upload.remove")}
                     </Button>
@@ -382,139 +425,106 @@ export function AssessmentForm() {
                 )}
               </TabsContent>
 
-              <TabsContent value="paste" className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <FileText className="h-4 w-4" />
-                  <span>{t("form.upload.resume.paste.hint")}</span>
-                </div>
+              <TabsContent value="paste" className="space-y-3">
                 <Textarea
                   id="resumeText"
                   placeholder={t("form.upload.resume.paste.placeholder")}
-                  rows={12}
+                  rows={10}
                   value={formData.resumeText}
-                  onChange={(e) => setFormData({ ...formData, resumeText: e.target.value })}
+                  onChange={(e) => {
+                    setFormData((prevData) => ({ ...prevData, resumeText: e.target.value }))
+                  }}
                   required
-                  className="font-mono text-sm"
+                  className="font-mono text-sm min-h-[200px]"
                 />
-                <p className="text-xs text-muted-foreground">
-                  {formData.resumeText.length} {t("form.upload.resume.characters")}
-                </p>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{formData.resumeText.length} {t("form.upload.resume.characters")}</span>
+                  {formData.resumeText.length < 50 && (
+                    <span className="text-destructive">
+                      {language === "en" ? "At least 50 characters required" : "至少需要50个字符"}
+                    </span>
+                  )}
+                </div>
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Additional Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("form.upload.additional.title")}</CardTitle>
-            <CardDescription>{t("form.upload.additional.desc")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Information Completion Notice */}
-            <div className="space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
-              <div className="flex gap-3">
-                <AlertCircle className="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
-                <div className="space-y-2 flex-1">
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-100">
-                    {t("form.upload.additional.notice.title")}
-                  </h4>
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
-                    {t("form.upload.additional.notice.desc")}
-                  </p>
-                  <div className="mt-3 text-sm text-blue-800 dark:text-blue-200 whitespace-pre-line font-mono text-xs">
-                    {t("form.upload.additional.notice.items")}
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* 分隔线 */}
+          <div className="border-t" />
 
-            {/* Additional Information Textarea */}
-            <div>
-              <Label htmlFor="additionalInfo" className="mb-2">{t("form.upload.additional.title")}</Label>
-              <Textarea
-                id="additionalInfo"
-                placeholder={t("form.upload.additional.placeholder")}
-                rows={6}
-                value={formData.additionalInfo}
-                onChange={(e) => setFormData({ ...formData, additionalInfo: e.target.value })}
-              />
-            </div>
+          {/* 补充信息 - 简化设计 */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-primary" />
+              {t("form.upload.additional.title")}
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                ({language === "en" ? "Optional" : "可选"})
+              </span>
+            </h3>
+            <Textarea
+              id="additionalInfo"
+              placeholder={t("form.upload.additional.placeholder")}
+              rows={4}
+              value={formData.additionalInfo}
+              onChange={(e) => {
+                setFormData((prevData) => ({ ...prevData, additionalInfo: e.target.value }))
+              }}
+              className="resize-none"
+            />
+            <p className="mt-2 text-xs text-muted-foreground">
+              {language === "en" 
+                ? "Add any additional achievements, awards, or information not mentioned in your resume"
+                : "补充简历中未提及的成就、奖项或其他相关信息"}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
-            {/* One-on-One Consultation Invitation */}
-            <div className="space-y-4 rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-950">
-              <div className="flex gap-3">
-                <MessageSquare className="h-5 w-5 flex-shrink-0 text-purple-600 dark:text-purple-400 mt-0.5" />
-                <div className="space-y-3 flex-1">
-                  <h4 className="font-semibold text-purple-900 dark:text-purple-100">
-                    {t("form.upload.additional.notice.consultation")}
-                  </h4>
-                  <p className="text-sm text-purple-800 dark:text-purple-200">
-                    {t("form.upload.additional.notice.consultation.desc")}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="default"
-                    size="sm"
-                    className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 mt-2"
-                    onClick={() => {
-                      // TODO: Implement consultation booking functionality
-                      console.log("Booking consultation...")
-                      setIsConsultationModalOpen(true)
-                    }}
-                  >
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    {t("form.upload.additional.notice.consultation.button")}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* 提交按钮区域 */}
+      <div className="flex justify-center pt-4">
+        <Button 
+          type="submit" 
+          disabled={isSubmitting || progress.completed < progress.total} 
+          size="lg" 
+          className="w-full sm:w-auto min-w-[200px] group"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              {isAnalyzing ? t("form.upload.analyzing") : t("form.submitting")}
+            </>
+          ) : (
+            <>
+              {t("form.upload.submit")}
+              <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </>
+          )}
+        </Button>
+      </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end pt-6 gap-4">
-          <Button type="submit" disabled={isSubmitting} size="lg" className="group">
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                {isAnalyzing ? t("form.upload.analyzing") : t("form.submitting")}
-              </>
-            ) : (
-              <>
-                {t("form.upload.submit")}
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </>
-            )}
-          </Button>
-          
-          {/* 测试跳转按钮 */}
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="lg"
-            onClick={() => {
-              console.log("[v0] 测试跳转按钮被点击")
-              console.log("[v0] 当前URL:", window.location.href)
-              router.push("/results")
-            }}
-          >
-            测试跳转
-          </Button>
+      {/* 提示信息 */}
+      <div className="rounded-lg bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-4">
+        <div className="flex gap-3">
+          <Sparkles className="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
+          <div className="text-sm text-blue-900 dark:text-blue-100">
+            <p className="font-semibold mb-1">
+              {language === "en" ? "AI-Powered Analysis" : "AI智能分析"}
+            </p>
+            <p className="text-blue-800 dark:text-blue-200">
+              {language === "en"
+                ? "Our AI will automatically analyze your resume, identify your professional field, and provide a comprehensive GTV eligibility assessment."
+                : "我们的AI将自动分析您的简历，识别您的专业领域，并提供全面的GTV资格评估。"}
+            </p>
+          </div>
         </div>
       </div>
+
       <ErrorDialog
         isOpen={errorState.isOpen}
         onClose={() => setErrorState({ ...errorState, isOpen: false })}
         title={errorState.title}
         message={errorState.message}
         errorDetails={errorState.errorDetails}
-      />
-      <ConsultationBooking
-        isOpen={isConsultationModalOpen}
-        onClose={() => setIsConsultationModalOpen(false)}
-        userName={formData.name}
-        userEmail={formData.email}
       />
       <AssessmentLoading isOpen={isSubmitting && isAnalyzing} />
     </form>

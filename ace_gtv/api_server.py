@@ -23,6 +23,17 @@ from logger_config import setup_module_logger
 # 初始化日志
 logger = setup_module_logger("api_server", os.getenv("LOG_LEVEL", "INFO"))
 
+# 导入 Supabase 路由
+try:
+    from auth_routes import auth_bp
+    from assessment_routes import assessment_bp
+    from chat_routes import chat_bp
+    from file_routes import file_bp
+    SUPABASE_ROUTES_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"⚠️ Supabase 路由导入失败: {e}")
+    SUPABASE_ROUTES_AVAILABLE = False
+
 # 导入Agent和分析器
 try:
     from scoring_agent_lite import ScoringAgent
@@ -99,6 +110,16 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB
 
+# 注册 Supabase 路由（如果可用）
+if SUPABASE_ROUTES_AVAILABLE:
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(assessment_bp)
+    app.register_blueprint(chat_bp)
+    app.register_blueprint(file_bp)
+    logger.info("✅ Supabase 路由注册成功")
+else:
+    logger.warning("⚠️ Supabase 路由不可用，相关功能将被禁用")
+
 # 全局Agent实例
 scoring_agent: Optional[ScoringAgent] = None
 knowledge_extractor: Optional[KnowledgeExtractor] = None
@@ -124,25 +145,17 @@ def initialize_services():
     # 初始化评分Agent
     if scoring_agent is None and ScoringAgent is not None:
         try:
-            try:
-                from langchain_openai import ChatOpenAI
-                
-                openai_api_key = os.getenv("OPENAI_API_KEY")
-                if openai_api_key:
-                    llm = ChatOpenAI(
-                        api_key=openai_api_key,
-                        model="gpt-4-turbo-preview",
-                        temperature=0.7,
-                    )
-                    scoring_agent = ScoringAgent(llm)
-                    logger.info("✅ ScoringAgent 初始化成功")
-                else:
-                    logger.warning("⚠️ OPENAI_API_KEY 未设置，评分Agent使用Mock模式")
-            except ImportError as e:
-                logger.warning(f"⚠️ LangChain导入失败: {e}，评分Agent使用Mock模式")
+            openai_api_key = os.getenv("OPENAI_API_KEY")
+            if openai_api_key:
+                # ScoringAgent 构造函数期望接收 openai_api_key 字符串，而不是 llm 对象
+                scoring_agent = ScoringAgent(openai_api_key=openai_api_key)
+                logger.info("✅ ScoringAgent 初始化成功")
+            else:
+                logger.warning("⚠️ OPENAI_API_KEY 未设置，评分Agent使用Mock模式")
+                scoring_agent = ScoringAgent()  # 使用默认的Mock模式
             
         except Exception as e:
-            logger.error(f"❌ 评分Agent初始化错误: {e}")
+            logger.error(f"❌ 评分Agent初始化错误: {e}", exc_info=True)
     
     # 初始化知识提取器
     if knowledge_extractor is None and KnowledgeExtractor is not None:
