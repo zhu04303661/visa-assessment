@@ -174,6 +174,36 @@ check_port() {
 info "🚀 启动GTV评估系统统一后端服务..."
 
 # 优先使用已存在的虚拟环境，其次尝试创建 .venv
+VENV_DIR="$ROOT_DIR/venv"
+if [ ! -d "$VENV_DIR" ]; then
+  VENV_DIR="$ROOT_DIR/.venv"
+fi
+
+# 检查并创建虚拟环境
+if [ ! -d "$VENV_DIR" ]; then
+  echo "📦 虚拟环境不存在，正在创建..."
+  "$PYTHON_BIN" -m venv "$VENV_DIR" || {
+    echo "❌ 虚拟环境创建失败"
+    exit 1
+  }
+  echo "✅ 虚拟环境已创建: $VENV_DIR"
+else
+  echo "✅ 使用现有虚拟环境: $VENV_DIR"
+fi
+
+# 激活虚拟环境
+echo "🔌 激活虚拟环境..."
+source "$VENV_DIR/bin/activate" || {
+  echo "❌ 虚拟环境激活失败"
+  exit 1
+}
+
+# 更新 PYTHON_BIN 为虚拟环境中的 Python
+VENV_PYTHON="$VENV_DIR/bin/python"
+if [ -f "$VENV_PYTHON" ]; then
+  PYTHON_BIN="$VENV_PYTHON"
+  echo "✅ 使用虚拟环境中的 Python: $PYTHON_BIN"
+fi
 
 # 从 .env.local 读取配置（如果存在）
 if [ -f "$ROOT_DIR/.env.local" ]; then
@@ -222,16 +252,47 @@ if [ -n "$PYTHON_BIN" ] && command -v "$PYTHON_BIN" >/dev/null 2>&1; then
   
   EXTRA_PIP_ARGS=(--find-links "$ROOT_DIR")
   "$PYTHON_BIN" -m pip install --upgrade pip -i "$PIP_INDEX_URL" || { echo "❌ pip 升级失败"; exit 1; }
-  if [ -f "$ROOT_DIR/ace_gtv/requirements.txt" ]; then
-    "$PYTHON_BIN" -m pip install --no-cache-dir "${EXTRA_PIP_ARGS[@]}" -r "$ROOT_DIR/ace_gtv/requirements.txt" -i "$PIP_INDEX_URL" || {
-      echo "⚠️  依赖安装失败，尝试分步安装...";
-      if ls "$ROOT_DIR"/openai-*.whl >/dev/null 2>&1; then
-        "$PYTHON_BIN" -m pip install --no-cache-dir "${EXTRA_PIP_ARGS[@]}" "$ROOT_DIR"/openai-*.whl -i "$PIP_INDEX_URL" || { echo "❌ 安装 openai 本地 wheel 失败"; exit 1; }
-        "$PYTHON_BIN" -m pip install --no-cache-dir "${EXTRA_PIP_ARGS[@]}" -r "$ROOT_DIR/ace_gtv/requirements.txt" -i "$PIP_INDEX_URL" || { echo "❌ 依赖安装仍失败"; exit 1; }
-      else
-        echo "❌ 未找到 openai 本地 wheel，依赖安装失败"; exit 1;
-      fi
+  
+  # 针对 macOS ARM 的 numpy 编译问题
+  if [[ "$OSTYPE" == "darwin"* ]] && [[ $(uname -m) == "arm64" ]]; then
+    echo "🍎 检测到 macOS ARM，先安装 numpy（使用二进制包）..."
+    # 优先使用官方 PyPI 源安装 numpy（有更多预编译包）
+    "$PYTHON_BIN" -m pip install --only-binary=:all: numpy==1.26.4 -i https://pypi.org/simple || {
+      echo "⚠️  numpy 1.26.4 安装失败，尝试安装兼容版本..."
+      "$PYTHON_BIN" -m pip install --only-binary=:all: "numpy>=1.24.0,<2.0.0" -i https://pypi.org/simple || {
+        echo "⚠️  尝试安装 numpy 2.x 版本（如果兼容）..."
+        "$PYTHON_BIN" -m pip install --only-binary=:all: "numpy>=2.0.0" -i https://pypi.org/simple || {
+          echo "⚠️  所有二进制包安装失败，跳过 numpy（将在安装 requirements.txt 时处理）..."
+        }
+      }
     }
+  fi
+  
+  if [ -f "$ROOT_DIR/ace_gtv/requirements.txt" ]; then
+    # 对于 macOS ARM，跳过已安装的 numpy
+    if [[ "$OSTYPE" == "darwin"* ]] && [[ $(uname -m) == "arm64" ]]; then
+      echo "📦 安装其他依赖（跳过 numpy）..."
+      "$PYTHON_BIN" -m pip install --no-cache-dir "${EXTRA_PIP_ARGS[@]}" -r "$ROOT_DIR/ace_gtv/requirements.txt" --ignore-installed numpy -i "$PIP_INDEX_URL" || {
+        echo "⚠️  依赖安装失败，尝试分步安装...";
+        if ls "$ROOT_DIR"/openai-*.whl >/dev/null 2>&1; then
+          "$PYTHON_BIN" -m pip install --no-cache-dir "${EXTRA_PIP_ARGS[@]}" "$ROOT_DIR"/openai-*.whl -i "$PIP_INDEX_URL" || { echo "❌ 安装 openai 本地 wheel 失败"; exit 1; }
+          "$PYTHON_BIN" -m pip install --no-cache-dir "${EXTRA_PIP_ARGS[@]}" -r "$ROOT_DIR/ace_gtv/requirements.txt" --ignore-installed numpy -i "$PIP_INDEX_URL" || { echo "❌ 依赖安装仍失败"; exit 1; }
+        else
+          echo "❌ 未找到 openai 本地 wheel，依赖安装失败"; exit 1;
+        fi
+      }
+    else
+      echo "📦 安装所有依赖..."
+      "$PYTHON_BIN" -m pip install --no-cache-dir "${EXTRA_PIP_ARGS[@]}" -r "$ROOT_DIR/ace_gtv/requirements.txt" -i "$PIP_INDEX_URL" || {
+        echo "⚠️  依赖安装失败，尝试分步安装...";
+        if ls "$ROOT_DIR"/openai-*.whl >/dev/null 2>&1; then
+          "$PYTHON_BIN" -m pip install --no-cache-dir "${EXTRA_PIP_ARGS[@]}" "$ROOT_DIR"/openai-*.whl -i "$PIP_INDEX_URL" || { echo "❌ 安装 openai 本地 wheel 失败"; exit 1; }
+          "$PYTHON_BIN" -m pip install --no-cache-dir "${EXTRA_PIP_ARGS[@]}" -r "$ROOT_DIR/ace_gtv/requirements.txt" -i "$PIP_INDEX_URL" || { echo "❌ 依赖安装仍失败"; exit 1; }
+        else
+          echo "❌ 未找到 openai 本地 wheel，依赖安装失败"; exit 1;
+        fi
+      }
+    fi
   else
     echo "⚠️  未找到 requirements.txt，跳过依赖安装"
   fi

@@ -22,7 +22,7 @@ Pillow==11.0.0  # 兼容Python 3.13的最新版本
 
 # 数据处理和分析
 pandas==2.2.3  # 兼容Python 3.13的版本
-numpy==1.26.4  # 兼容Python 3.13的版本
+numpy>=1.24.0  # 兼容Python 3.13的版本，允许使用2.x版本
 
 # 日志和配置
 python-dotenv==1.0.0

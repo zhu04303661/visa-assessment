@@ -3,13 +3,26 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Menu, X, MessageCircle, FileCheck, Home, Info } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Menu, X, MessageCircle, FileCheck, Home, Info, LogIn, User, LogOut } from "lucide-react"
 import { useLanguage } from "@/lib/i18n"
+import { useAuth } from "@/lib/supabase/auth-context"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { AuthDialog } from "@/components/auth-dialog"
 
 export function Navbar() {
   const { t, language } = useLanguage()
+  const { user, signOut, loading: authLoading } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
+  const [authDialogOpen, setAuthDialogOpen] = useState(false)
 
   const navItems = [
     { href: "/", label: language === "en" ? "Home" : "首页", icon: Home },
@@ -53,10 +66,119 @@ export function Navbar() {
               )
             })}
             <LanguageSwitcher />
+            
+            {/* Auth Section */}
+            {authLoading ? (
+              <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+            ) : user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback>
+                        {user.email?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.user_metadata?.full_name || "User"}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      {language === "en" ? "Profile" : "个人资料"}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      await signOut()
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {language === "en" ? "Sign Out" : "退出登录"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setAuthDialogOpen(true)}
+                className="gap-2"
+              >
+                <LogIn className="h-4 w-4" />
+                {language === "en" ? "Sign In" : "登录"}
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
           <div className="flex md:hidden items-center gap-2">
+            {!authLoading && !user && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setAuthDialogOpen(true)}
+                className="gap-2"
+              >
+                <LogIn className="h-4 w-4" />
+                {language === "en" ? "Sign In" : "登录"}
+              </Button>
+            )}
+            {!authLoading && user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback>
+                        {user.email?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.user_metadata?.full_name || "User"}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      {language === "en" ? "Profile" : "个人资料"}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      await signOut()
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {language === "en" ? "Sign Out" : "退出登录"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <LanguageSwitcher />
             <Button
               variant="ghost"
@@ -91,6 +213,9 @@ export function Navbar() {
           </div>
         )}
       </div>
+      
+      {/* Auth Dialog */}
+      <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
     </nav>
   )
 }

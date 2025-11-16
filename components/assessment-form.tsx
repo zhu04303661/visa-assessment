@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -31,6 +31,47 @@ type ErrorState = {
   errorDetails?: string
 }
 
+// localStorage缓存键名
+const CACHE_KEY = "gtv_assessment_basic_info"
+
+// 从localStorage加载缓存的基本信息
+const loadCachedBasicInfo = (): Partial<FormData> => {
+  if (typeof window === "undefined") return {}
+  
+  try {
+    const cached = localStorage.getItem(CACHE_KEY)
+    if (cached) {
+      const parsed = JSON.parse(cached)
+      return {
+        name: parsed.name || "",
+        email: parsed.email || "",
+        phone: parsed.phone || "",
+        field: parsed.field || "digital-technology",
+      }
+    }
+  } catch (error) {
+    console.warn("加载缓存数据失败:", error)
+  }
+  return {}
+}
+
+// 保存基本信息到localStorage
+const saveBasicInfoToCache = (data: Partial<FormData>) => {
+  if (typeof window === "undefined") return
+  
+  try {
+    const basicInfo = {
+      name: data.name || "",
+      email: data.email || "",
+      phone: data.phone || "",
+      field: data.field || "digital-technology",
+    }
+    localStorage.setItem(CACHE_KEY, JSON.stringify(basicInfo))
+  } catch (error) {
+    console.warn("保存缓存数据失败:", error)
+  }
+}
+
 export function AssessmentForm() {
   const router = useRouter()
   const { t, language } = useLanguage()
@@ -45,14 +86,23 @@ export function AssessmentForm() {
     errorDetails: undefined,
   })
 
-  const [formData, setFormData] = useState<FormData>({
-    name: "",
-    email: "",
-    phone: "",
-    field: "digital-technology", // 默认值，后端会自动分析实际领域
-    resumeText: "",
-    additionalInfo: "",
+  // 初始化表单数据，优先从缓存加载
+  const [formData, setFormData] = useState<FormData>(() => {
+    const cached = loadCachedBasicInfo()
+    return {
+      name: cached.name || "",
+      email: cached.email || "",
+      phone: cached.phone || "",
+      field: cached.field || "digital-technology", // 默认值，后端会自动分析实际领域
+      resumeText: "",
+      additionalInfo: "",
+    }
   })
+
+  // 当基本信息字段变化时，保存到localStorage
+  useEffect(() => {
+    saveBasicInfoToCache(formData)
+  }, [formData.name, formData.email, formData.phone, formData.field])
 
   // 计算表单完成度
   const formProgress = () => {
