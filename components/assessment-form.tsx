@@ -66,24 +66,99 @@ export function AssessmentForm() {
 
   const progress = formProgress()
 
+  // 生成请求ID的工具函数
+  const generateRequestId = () => {
+    return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  }
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const requestId = generateRequestId()
+    const startTime = Date.now()
+    
+    console.log(`[上传全链路][${requestId}] ========== 文件上传流程开始 ==========`)
+    console.log(`[上传全链路][${requestId}] 时间戳: ${new Date().toISOString()}`)
+    console.log(`[上传全链路][${requestId}] 用户代理: ${navigator.userAgent}`)
+    console.log(`[上传全链路][${requestId}] 当前URL: ${window.location.href}`)
+    
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file) {
+      console.warn(`[上传全链路][${requestId}] ⚠️ 未选择文件，流程终止`)
+      return
+    }
+
+    console.log(`[上传全链路][${requestId}] 📁 文件信息:`, {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      lastModified: new Date(file.lastModified).toISOString(),
+      sizeKB: (file.size / 1024).toFixed(2),
+      sizeMB: (file.size / (1024 * 1024)).toFixed(2)
+    })
 
     setUploadedFile(file)
+    console.log(`[上传全链路][${requestId}] ✅ 文件已设置到状态 (uploadedFile)`)
 
     // Read file content
+    console.log(`[上传全链路][${requestId}] 📖 开始读取文件内容...`)
     const reader = new FileReader()
-    reader.onload = async (event) => {
-      const text = event.target?.result as string
-      setFormData((prevData) => ({ ...prevData, resumeText: text }))
+    
+    reader.onerror = (error) => {
+      console.error(`[上传全链路][${requestId}] ❌ 文件读取错误:`, error)
+      console.error(`[上传全链路][${requestId}] 错误详情:`, {
+        error: error,
+        errorType: error.type,
+        timestamp: new Date().toISOString()
+      })
     }
+    
+    reader.onloadstart = () => {
+      console.log(`[上传全链路][${requestId}] 🔄 文件读取开始 (onloadstart)`)
+    }
+    
+    reader.onprogress = (progressEvent) => {
+      if (progressEvent.lengthComputable) {
+        const percentLoaded = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+        console.log(`[上传全链路][${requestId}] 📊 读取进度: ${percentLoaded}% (${progressEvent.loaded}/${progressEvent.total} bytes)`)
+      }
+    }
+    
+    reader.onload = async (event) => {
+      const loadTime = Date.now() - startTime
+      console.log(`[上传全链路][${requestId}] ✅ 文件读取完成，耗时: ${loadTime}ms`)
+      
+      const text = event.target?.result as string
+      const textLength = text?.length || 0
+      
+      console.log(`[上传全链路][${requestId}] 📄 文件内容统计:`, {
+        textLength: textLength,
+        textLengthKB: (textLength / 1024).toFixed(2),
+        first100Chars: text?.substring(0, 100) || '',
+        hasContent: !!text,
+        isEmpty: !text || text.trim().length === 0
+      })
+      
+      setFormData((prevData) => ({ ...prevData, resumeText: text }))
+      console.log(`[上传全链路][${requestId}] ✅ 文件内容已设置到表单数据 (resumeText)`)
+      
+      const totalTime = Date.now() - startTime
+      console.log(`[上传全链路][${requestId}] ========== 文件上传流程完成 ==========`)
+      console.log(`[上传全链路][${requestId}] ⏱️ 总耗时: ${totalTime}ms`)
+      console.log(`[上传全链路][${requestId}] 请求ID将在提交时继续使用`)
+    }
+    
     reader.readAsText(file)
+    console.log(`[上传全链路][${requestId}] 📤 FileReader.readAsText() 已调用`)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    const submitRequestId = generateRequestId()
+    const submitStartTime = Date.now()
+    
+    console.log(`[上传全链路][${submitRequestId}] ========== 表单提交流程开始 ==========`)
+    console.log(`[上传全链路][${submitRequestId}] 时间戳: ${new Date().toISOString()}`)
+    console.log(`[上传全链路][${submitRequestId}] 当前URL: ${window.location.href}`)
     console.log("[v0] 表单提交开始...")
     console.log("[v0] 表单数据:", formData)
     console.log("[v0] 当前URL:", window.location.href)
@@ -91,6 +166,7 @@ export function AssessmentForm() {
     // 验证简历：如果是文件上传模式，检查是否有文件；如果是粘贴模式，检查文本长度
     if (uploadMethod === "upload") {
       if (!uploadedFile) {
+        console.log(`[上传全链路][${submitRequestId}] ⚠️ 文件上传模式但未选择文件`)
         console.log("[v0] 文件上传模式但未选择文件")
         setErrorState({
           isOpen: true,
@@ -99,8 +175,10 @@ export function AssessmentForm() {
         })
         return
       }
+      console.log(`[上传全链路][${submitRequestId}] ✅ 文件上传模式验证通过，文件: ${uploadedFile.name}`)
     } else {
       if (!formData.resumeText || formData.resumeText.trim().length < 50) {
+        console.log(`[上传全链路][${submitRequestId}] ⚠️ 简历文本长度不足`)
         console.log("[v0] 简历文本长度不足")
         setErrorState({
           isOpen: true,
@@ -109,12 +187,14 @@ export function AssessmentForm() {
         })
         return
       }
+      console.log(`[上传全链路][${submitRequestId}] ✅ 文本粘贴模式验证通过，文本长度: ${formData.resumeText.length}`)
     }
 
     console.log("[v0] 开始设置状态...")
     setIsSubmitting(true)
     setIsAnalyzing(true)
     console.log("[v0] 状态已设置，开始API调用...")
+    console.log(`[上传全链路][${submitRequestId}] 🔄 UI状态已更新: isSubmitting=true, isAnalyzing=true`)
 
     try {
       console.log("[v0] Submitting resume for analysis...")
@@ -123,7 +203,19 @@ export function AssessmentForm() {
       
       if (uploadedFile && uploadMethod === "upload") {
         // 使用文件上传方式，调用后台Python API服务
+        console.log(`[上传全链路][${submitRequestId}] ========== 开始API请求 (文件上传模式) ==========`)
+        console.log(`[上传全链路][${submitRequestId}] 📤 准备发送文件到后端API`)
         console.log("[v0] Using file upload method, calling Python API service...")
+        
+        console.log(`[上传全链路][${submitRequestId}] 📋 请求参数:`, {
+          fileName: uploadedFile.name,
+          fileSize: uploadedFile.size,
+          fileType: uploadedFile.type,
+          name: formData.name,
+          email: formData.email,
+          field: formData.field,
+          additionalInfoLength: formData.additionalInfo.length
+        })
         
         const formDataToSend = new FormData()
         formDataToSend.append('resume', uploadedFile)
@@ -131,11 +223,20 @@ export function AssessmentForm() {
         formDataToSend.append('email', formData.email)
         formDataToSend.append('field', formData.field)
         formDataToSend.append('additionalInfo', formData.additionalInfo)
+        formDataToSend.append('requestId', submitRequestId) // 传递请求ID到后端
+
+        const apiStartTime = Date.now()
+        console.log(`[上传全链路][${submitRequestId}] 🌐 发起fetch请求到 /api/analyze-resume`)
+        console.log(`[上传全链路][${submitRequestId}] 请求时间: ${new Date().toISOString()}`)
 
         response = await fetch("/api/analyze-resume", {
           method: "POST",
           body: formDataToSend,
         })
+        
+        const apiTime = Date.now() - apiStartTime
+        console.log(`[上传全链路][${submitRequestId}] 📥 API响应接收，耗时: ${apiTime}ms`)
+        console.log(`[上传全链路][${submitRequestId}] HTTP状态: ${response.status} ${response.statusText}`)
       } else {
         // 使用文本输入方式，保持原有逻辑
         console.log("[v0] Using text input method...")
@@ -157,8 +258,11 @@ export function AssessmentForm() {
 
       // 检查HTTP响应状态
       if (!response.ok) {
-        console.error(`[v0] 后端服务返回错误: ${response.status} ${response.statusText}`)
         const errorText = await response.text()
+        console.error(`[上传全链路][${submitRequestId}] ❌ API请求失败`)
+        console.error(`[上传全链路][${submitRequestId}] HTTP错误: ${response.status} ${response.statusText}`)
+        console.error(`[上传全链路][${submitRequestId}] 错误内容: ${errorText.substring(0, 500)}`)
+        console.error(`[v0] 后端服务返回错误: ${response.status} ${response.statusText}`)
         
         setErrorState({
           isOpen: true,
@@ -168,15 +272,29 @@ export function AssessmentForm() {
         })
         setIsSubmitting(false)
         setIsAnalyzing(false)
+        console.log(`[上传全链路][${submitRequestId}] ========== 表单提交流程失败 ==========`)
         return
       }
 
+      console.log(`[上传全链路][${submitRequestId}] ✅ API请求成功，开始解析响应`)
+      const parseStartTime = Date.now()
       const analysisResult = await response.json()
+      const parseTime = Date.now() - parseStartTime
+      console.log(`[上传全链路][${submitRequestId}] 📄 JSON解析完成，耗时: ${parseTime}ms`)
 
+      console.log(`[上传全链路][${submitRequestId}] 📊 响应数据摘要:`, {
+        hasError: !!analysisResult.error,
+        hasGtvAnalysis: !!analysisResult.gtvAnalysis,
+        hasAnalysis: !!analysisResult.analysis,
+        success: analysisResult.success
+      })
       console.log("[v0] Analysis result received:", analysisResult)
 
       // 检查响应数据中的错误
       if (analysisResult.error) {
+        console.error(`[上传全链路][${submitRequestId}] ❌ 分析结果包含错误`)
+        console.error(`[上传全链路][${submitRequestId}] 错误信息:`, analysisResult.error)
+        console.error(`[上传全链路][${submitRequestId}] 错误详情:`, analysisResult.details)
         console.error("[v0] 分析结果包含错误:", analysisResult.error)
         setErrorState({
           isOpen: true,
@@ -186,22 +304,31 @@ export function AssessmentForm() {
         })
         setIsSubmitting(false)
         setIsAnalyzing(false)
+        console.log(`[上传全链路][${submitRequestId}] ========== 表单提交流程失败 (业务错误) ==========`)
         return
       }
 
+      console.log(`[上传全链路][${submitRequestId}] 💾 开始存储数据到sessionStorage`)
       // 存储正确的数据结构到sessionStorage
       if (analysisResult.gtvAnalysis) {
         sessionStorage.setItem("assessmentData", JSON.stringify(analysisResult.gtvAnalysis))
         // 同时存储完整的响应数据，包括PDF文件信息
         sessionStorage.setItem("fullAssessmentData", JSON.stringify(analysisResult))
+        console.log(`[上传全链路][${submitRequestId}] ✅ 数据已存储 (包含gtvAnalysis)`)
       } else {
         sessionStorage.setItem("assessmentData", JSON.stringify(analysisResult))
         sessionStorage.setItem("fullAssessmentData", JSON.stringify(analysisResult))
+        console.log(`[上传全链路][${submitRequestId}] ✅ 数据已存储 (完整响应)`)
       }
       
       // 重置状态
       setIsSubmitting(false)
       setIsAnalyzing(false)
+      console.log(`[上传全链路][${submitRequestId}] 🔄 UI状态已重置: isSubmitting=false, isAnalyzing=false`)
+      
+      const totalSubmitTime = Date.now() - submitStartTime
+      console.log(`[上传全链路][${submitRequestId}] ⏱️ 表单提交总耗时: ${totalSubmitTime}ms`)
+      console.log(`[上传全链路][${submitRequestId}] ========== 表单提交流程成功完成 ==========`)
       
       console.log("[v0] 准备跳转到结果页面...")
       console.log("[v0] 当前URL:", window.location.href)
@@ -236,6 +363,11 @@ export function AssessmentForm() {
       // 方法3: 添加一个测试按钮来手动跳转
       console.log("[v0] 如果页面没有跳转，请检查浏览器控制台错误信息")
     } catch (error) {
+      const errorTime = Date.now() - submitStartTime
+      console.error(`[上传全链路][${submitRequestId}] ❌ ========== 表单提交流程异常 ==========`)
+      console.error(`[上传全链路][${submitRequestId}] 异常耗时: ${errorTime}ms`)
+      console.error(`[上传全链路][${submitRequestId}] 异常类型:`, error instanceof Error ? error.constructor.name : typeof error)
+      console.error(`[上传全链路][${submitRequestId}] 异常信息:`, error)
       console.error("[v0] Error analyzing resume:", error)
       
       // 提取详细的错误信息
@@ -245,11 +377,14 @@ export function AssessmentForm() {
       if (error instanceof TypeError) {
         errorMessage = "网络连接失败，请检查您的网络连接"
         errorDetails = error.message
+        console.error(`[上传全链路][${submitRequestId}] 错误类型: TypeError (网络错误)`)
       } else if (error instanceof Error) {
         errorMessage = error.message || errorMessage
         errorDetails = error.stack?.substring(0, 500) || ""
+        console.error(`[上传全链路][${submitRequestId}] 错误堆栈:`, error.stack)
       } else {
         errorDetails = String(error)
+        console.error(`[上传全链路][${submitRequestId}] 未知错误类型:`, typeof error)
       }
       
       setErrorState({
@@ -261,6 +396,7 @@ export function AssessmentForm() {
       
       setIsSubmitting(false)
       setIsAnalyzing(false)
+      console.log(`[上传全链路][${submitRequestId}] ========== 表单提交流程异常结束 ==========`)
     }
   }
 
@@ -384,7 +520,18 @@ export function AssessmentForm() {
                     <div className="rounded-full bg-primary/10 p-4 mb-4">
                       <Upload className="h-8 w-8 text-primary" />
                     </div>
-                    <Label htmlFor="file-upload" className="cursor-pointer">
+                    <Label 
+                      htmlFor="file-upload" 
+                      className="cursor-pointer"
+                      onClick={() => {
+                        const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+                        console.log(`[上传全链路][${requestId}] 🖱️ 用户点击上传按钮`)
+                        console.log(`[上传全链路][${requestId}] 点击时间: ${new Date().toISOString()}`)
+                        console.log(`[上传全链路][${requestId}] 点击位置: 上传按钮 (Label)`)
+                        console.log(`[上传全链路][${requestId}] 当前上传模式: ${uploadMethod}`)
+                        console.log(`[上传全链路][${requestId}] 当前已上传文件: ${uploadedFile?.name || '无'}`)
+                      }}
+                    >
                       <span className="text-base font-semibold text-primary hover:underline">
                         {t("form.upload.click")}
                       </span>
@@ -395,6 +542,11 @@ export function AssessmentForm() {
                       type="file"
                       accept=".txt,.pdf,.doc,.docx"
                       onChange={handleFileUpload}
+                      onClick={(e) => {
+                        const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+                        console.log(`[上传全链路][${requestId}] 🖱️ Input元素被点击 (文件选择对话框即将打开)`)
+                        console.log(`[上传全链路][${requestId}] 点击时间: ${new Date().toISOString()}`)
+                      }}
                       className="hidden"
                     />
                     <p className="mt-3 text-xs text-muted-foreground">{t("form.upload.formats")}</p>

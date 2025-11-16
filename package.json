@@ -6,7 +6,7 @@
     "build": "next build",
     "dev": "next dev --hostname 0.0.0.0 -p 80",
     "lint": "next lint",
-    "start": "next start --hostname 0.0.0.0"
+    "start": "next start --hostname 0.0.0.0 -p 80"
   },
   "dependencies": {
     "@ai-sdk/azure": "^2.0.53",

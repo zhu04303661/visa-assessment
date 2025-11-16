@@ -7,26 +7,54 @@ const PYTHON_API_BASE_URL =
   "http://localhost:5005"
 
 export async function POST(request: Request) {
-  const requestId = Date.now().toString()
-  console.log(`[${requestId}] 开始处理简历分析请求`)
+  const serverRequestId = Date.now().toString()
+  const startTime = Date.now()
+  
+  console.log(`[上传全链路][${serverRequestId}] ========== 后端API开始处理请求 ==========`)
+  console.log(`[上传全链路][${serverRequestId}] 时间戳: ${new Date().toISOString()}`)
+  console.log(`[${serverRequestId}] 开始处理简历分析请求`)
   
   try {
     // 检查请求类型
     const contentType = request.headers.get('content-type') || ''
-    console.log(`[${requestId}] 请求内容类型: ${contentType}`)
+    console.log(`[上传全链路][${serverRequestId}] 📥 请求头信息:`, {
+      contentType: contentType,
+      userAgent: request.headers.get('user-agent') || 'N/A',
+      referer: request.headers.get('referer') || 'N/A',
+      origin: request.headers.get('origin') || 'N/A'
+    })
+    console.log(`[${serverRequestId}] 请求内容类型: ${contentType}`)
     
     if (contentType.includes('multipart/form-data')) {
       // 处理文件上传 - 调用Python服务
-      console.log(`[${requestId}] 处理文件上传请求`)
+      console.log(`[上传全链路][${serverRequestId}] ========== 处理文件上传请求 ==========`)
+      console.log(`[${serverRequestId}] 处理文件上传请求`)
       
+      const formDataParseStart = Date.now()
       const formData = await request.formData()
+      const formDataParseTime = Date.now() - formDataParseStart
+      console.log(`[上传全链路][${serverRequestId}] ✅ FormData解析完成，耗时: ${formDataParseTime}ms`)
+      
       const resumeFile = formData.get('resume') as File
       const name = formData.get('name') as string || "N/A"
       const email = formData.get('email') as string || "N/A"
       const field = formData.get('field') as string || "digital-technology"
       const additionalInfo = formData.get('additionalInfo') as string || ""
+      const clientRequestId = formData.get('requestId') as string || serverRequestId // 使用客户端请求ID或生成新的
 
-      console.log(`[${requestId}] 文件信息:`, {
+      console.log(`[上传全链路][${clientRequestId}] 📋 请求参数提取完成`)
+      console.log(`[上传全链路][${clientRequestId}] 客户端请求ID: ${clientRequestId}`)
+      console.log(`[上传全链路][${clientRequestId}] 服务端请求ID: ${serverRequestId}`)
+      console.log(`[上传全链路][${clientRequestId}] 文件信息:`, {
+        fileName: resumeFile?.name,
+        fileSize: resumeFile?.size,
+        fileType: resumeFile?.type,
+        name,
+        email,
+        field,
+        additionalInfoLength: additionalInfo.length
+      })
+      console.log(`[${serverRequestId}] 文件信息:`, {
         fileName: resumeFile?.name,
         fileSize: resumeFile?.size,
         fileType: resumeFile?.type,
@@ -39,20 +67,28 @@ export async function POST(request: Request) {
       // 基础内容健康检查（防乱码/二进制误传）
       if (resumeFile && typeof resumeFile.arrayBuffer === 'function') {
         try {
+          console.log(`[上传全链路][${clientRequestId}] 🔍 开始文件内容健康检查`)
+          const healthCheckStart = Date.now()
           const buf = await resumeFile.arrayBuffer()
           const bytes = new Uint8Array(buf).slice(0, 64)
           const nonTextRatio = Array.from(bytes).filter(b => b === 0 || b > 127).length / Math.max(1, bytes.length)
-          console.log(`[${requestId}] 文件内容前64字节非ASCII比例: ${nonTextRatio.toFixed(2)}`)
+          const healthCheckTime = Date.now() - healthCheckStart
+          console.log(`[上传全链路][${clientRequestId}] 📊 文件内容健康检查完成，耗时: ${healthCheckTime}ms`)
+          console.log(`[上传全链路][${clientRequestId}] 文件内容前64字节非ASCII比例: ${nonTextRatio.toFixed(2)}`)
+          console.log(`[${serverRequestId}] 文件内容前64字节非ASCII比例: ${nonTextRatio.toFixed(2)}`)
           if (nonTextRatio > 0.3) {
-            console.warn(`[${requestId}] 警告: 上传文件可能为二进制/包含较多非文本字节，建议检查源文件或转为TXT/PDF`)
+            console.warn(`[上传全链路][${clientRequestId}] ⚠️ 警告: 上传文件可能为二进制/包含较多非文本字节，建议检查源文件或转为TXT/PDF`)
+            console.warn(`[${serverRequestId}] 警告: 上传文件可能为二进制/包含较多非文本字节，建议检查源文件或转为TXT/PDF`)
           }
         } catch (e) {
-          console.warn(`[${requestId}] 无法读取文件字节用于健康检查`, e)
+          console.warn(`[上传全链路][${clientRequestId}] ⚠️ 无法读取文件字节用于健康检查`, e)
+          console.warn(`[${serverRequestId}] 无法读取文件字节用于健康检查`, e)
         }
       }
       
       if (!resumeFile) {
-        console.error(`[${requestId}] 错误: 没有提供简历文件`)
+        console.error(`[上传全链路][${clientRequestId}] ❌ 错误: 没有提供简历文件`)
+        console.error(`[${serverRequestId}] 错误: 没有提供简历文件`)
         return Response.json(
           { error: "No resume file provided" },
           { status: 400 }
@@ -60,7 +96,9 @@ export async function POST(request: Request) {
       }
       
       // 转发到Python简历处理服务
-      console.log(`[${requestId}] 转发请求到Python简历处理服务`)
+      console.log(`[上传全链路][${clientRequestId}] ========== 转发请求到Python服务 ==========`)
+      console.log(`[上传全链路][${clientRequestId}] 🌐 准备调用Python API`)
+      console.log(`[${serverRequestId}] 转发请求到Python简历处理服务`)
       
       const pythonFormData = new FormData()
       pythonFormData.append('resume', resumeFile)
@@ -68,25 +106,40 @@ export async function POST(request: Request) {
       pythonFormData.append('email', email)
       pythonFormData.append('field', field)
       pythonFormData.append('additionalInfo', additionalInfo)
+      pythonFormData.append('requestId', clientRequestId) // 传递请求ID到Python服务
       
       try {
         const uploadUrl = `${PYTHON_API_BASE_URL.replace(/\/$/, '')}/api/resume/upload`
-        console.log(`[${requestId}] 调用Python API: ${uploadUrl}`)
+        console.log(`[上传全链路][${clientRequestId}] 📡 Python API URL: ${uploadUrl}`)
+        console.log(`[上传全链路][${clientRequestId}] 请求ID: ${clientRequestId}`)
+        console.log(`[${serverRequestId}] 调用Python API: ${uploadUrl}`)
         
+        const pythonApiStart = Date.now()
         const pythonResponse = await fetch(uploadUrl, {
           method: 'POST',
           body: pythonFormData
         })
+        const pythonApiTime = Date.now() - pythonApiStart
         
-        console.log(`[${requestId}] Python API响应状态: ${pythonResponse.status}`)
+        console.log(`[上传全链路][${clientRequestId}] 📥 Python API响应接收，耗时: ${pythonApiTime}ms`)
+        console.log(`[上传全链路][${clientRequestId}] HTTP状态: ${pythonResponse.status} ${pythonResponse.statusText}`)
+        console.log(`[${serverRequestId}] Python API响应状态: ${pythonResponse.status}`)
         
         if (!pythonResponse.ok) {
           const errorText = await pythonResponse.text()
-          console.error(`[${requestId}] Python服务错误: ${pythonResponse.status} - ${errorText}`)
+          console.error(`[上传全链路][${clientRequestId}] ❌ Python服务错误`)
+          console.error(`[上传全链路][${clientRequestId}] HTTP状态: ${pythonResponse.status}`)
+          console.error(`[上传全链路][${clientRequestId}] 错误内容: ${errorText.substring(0, 500)}`)
+          console.error(`[${serverRequestId}] Python服务错误: ${pythonResponse.status} - ${errorText}`)
           throw new Error(`Python服务错误: ${pythonResponse.status}`)
         }
         
+        console.log(`[上传全链路][${clientRequestId}] ✅ Python API调用成功，开始解析响应`)
+        const parseStart = Date.now()
         const pythonData = await pythonResponse.json()
+        const parseTime = Date.now() - parseStart
+        console.log(`[上传全链路][${clientRequestId}] 📄 JSON解析完成，耗时: ${parseTime}ms`)
+        
         // 打印安全预览，避免控制台乱码
         const _preview = (obj: any) => {
           try {
@@ -96,33 +149,45 @@ export async function POST(request: Request) {
             return '<unprintable>'
           }
         }
-        console.log(`[${requestId}] Python服务响应(预览):`, _preview(pythonData))
+        console.log(`[上传全链路][${clientRequestId}] 📊 Python服务响应摘要:`, {
+          success: pythonData.success,
+          hasAnalysis: !!pythonData.analysis,
+          hasError: !!pythonData.error,
+          message: pythonData.message?.substring(0, 100) || 'N/A'
+        })
+        console.log(`[${serverRequestId}] Python服务响应(预览):`, _preview(pythonData))
         // 后端返回数据健康检查
         const fieldsToCheck = ['name','email','phone'] as const
         for (const key of fieldsToCheck) {
           const val = pythonData?.analysis?.[key]
           if (typeof val === 'string' && /PK\x01\x02|\x00\x00\xFF\xFF/.test(val)) {
-            console.warn(`[${requestId}] 警告: 字段 ${key} 疑似包含二进制/乱码片段，原值截断预览:`, val.slice(0, 120))
+            console.warn(`[${serverRequestId}] 警告: 字段 ${key} 疑似包含二进制/乱码片段，原值截断预览:`, val.slice(0, 120))
           }
         }
-        console.log(`[${requestId}] Python服务响应(完整对象已上方预览)`)
+        console.log(`[${serverRequestId}] Python服务响应(完整对象已上方预览)`)
         
         if (!pythonData.success) {
-          console.error(`[${requestId}] Python服务处理失败:`, pythonData.error)
+          console.error(`[${serverRequestId}] Python服务处理失败:`, pythonData.error)
           return Response.json(
             { error: pythonData.error || "简历处理失败" },
             { status: 500 }
           )
         }
         
-        console.log(`[${requestId}] 文件上传处理成功`)
+        console.log(`[上传全链路][${clientRequestId}] ✅ 文件上传处理成功`)
+        console.log(`[${serverRequestId}] 文件上传处理成功`)
         
         // 转换Python服务的结果为前端期望的格式
         const extractedInfo = pythonData.analysis || {}
+        console.log(`[上传全链路][${clientRequestId}] 📋 提取的信息字段:`, Object.keys(extractedInfo))
 
         // 调用Python服务的GTV评估API
+        console.log(`[上传全链路][${clientRequestId}] ========== 开始调用GTV评估API ==========`)
         console.log("[v0] 开始调用GTV评估API...")
         const gtvUrl = `${PYTHON_API_BASE_URL.replace(/\/$/, '')}/api/resume/gtv-assessment`
+        console.log(`[上传全链路][${clientRequestId}] 📡 GTV评估API URL: ${gtvUrl}`)
+        
+        const gtvApiStart = Date.now()
         const gtvResponse = await fetch(gtvUrl, {
           method: 'POST',
           headers: {
@@ -132,16 +197,29 @@ export async function POST(request: Request) {
             extracted_info: extractedInfo,
             field: field,
             name: name,
-            email: email
+            email: email,
+            requestId: clientRequestId // 传递请求ID
           })
         })
+        const gtvApiTime = Date.now() - gtvApiStart
 
         if (!gtvResponse.ok) {
+          console.error(`[上传全链路][${clientRequestId}] ❌ GTV评估API调用失败`)
+          console.error(`[上传全链路][${clientRequestId}] HTTP状态: ${gtvResponse.status} ${gtvResponse.statusText}`)
           console.error("[v0] GTV评估API调用失败:", gtvResponse.status, gtvResponse.statusText)
           throw new Error(`GTV评估失败: ${gtvResponse.statusText}`)
         }
 
+        console.log(`[上传全链路][${clientRequestId}] 📥 GTV评估API响应接收，耗时: ${gtvApiTime}ms`)
+        const gtvParseStart = Date.now()
         const gtvData = await gtvResponse.json()
+        const gtvParseTime = Date.now() - gtvParseStart
+        console.log(`[上传全链路][${clientRequestId}] 📄 GTV评估JSON解析完成，耗时: ${gtvParseTime}ms`)
+        console.log(`[上传全链路][${clientRequestId}] 📊 GTV评估结果摘要:`, {
+          success: gtvData.success,
+          hasGtvAnalysis: !!gtvData.gtvAnalysis,
+          hasError: !!gtvData.error
+        })
         console.log("[v0] GTV评估结果:", gtvData)
 
         if (!gtvData.success) {
@@ -180,17 +258,31 @@ export async function POST(request: Request) {
           pdf_filename: gtvData.pdf_filename
         }
         
+        const totalTime = Date.now() - startTime
+        console.log(`[上传全链路][${clientRequestId}] ⏱️ 后端API总耗时: ${totalTime}ms`)
+        console.log(`[上传全链路][${clientRequestId}] 📊 返回数据摘要:`, {
+          hasGtvAnalysis: !!responseData.gtvAnalysis,
+          hasOcAssessment: !!responseData.ocAssessment,
+          ocAssessmentType: typeof responseData.ocAssessment,
+          ocResultsCount: (responseData.ocAssessment as any)?.oc_results?.length || 0
+        })
         console.log("[v0] 📤 返回数据摘要:", {
           hasGtvAnalysis: !!responseData.gtvAnalysis,
           hasOcAssessment: !!responseData.ocAssessment,
           ocAssessmentType: typeof responseData.ocAssessment,
-          ocResultsCount: responseData.ocAssessment?.oc_results?.length || 0
+          ocResultsCount: (responseData.ocAssessment as any)?.oc_results?.length || 0
         })
+        console.log(`[上传全链路][${clientRequestId}] ========== 后端API处理成功完成 ==========`)
         
         return Response.json(responseData)
         
       } catch (pythonError) {
-        console.error(`[${requestId}] Python服务调用失败:`, pythonError)
+        const errorTime = Date.now() - startTime
+        console.error(`[上传全链路][${clientRequestId}] ❌ ========== Python服务调用失败 ==========`)
+        console.error(`[上传全链路][${clientRequestId}] 异常耗时: ${errorTime}ms`)
+        console.error(`[上传全链路][${clientRequestId}] 异常类型:`, pythonError instanceof Error ? pythonError.constructor.name : typeof pythonError)
+        console.error(`[上传全链路][${clientRequestId}] 异常信息:`, pythonError)
+        console.error(`[${serverRequestId}] Python服务调用失败:`, pythonError)
         return Response.json(
           { error: "简历处理服务暂时不可用" },
           { status: 503 }
@@ -198,11 +290,12 @@ export async function POST(request: Request) {
       }
     } else {
       // 处理JSON请求 - 保持原有逻辑
-      console.log(`[${requestId}] 处理JSON文本输入请求`)
+      console.log(`[上传全链路][${serverRequestId}] ========== 处理JSON文本输入请求 ==========`)
+      console.log(`[${serverRequestId}] 处理JSON文本输入请求`)
       
       const configValidation = validateAIConfig()
       if (!configValidation.isValid) {
-        console.error(`[${requestId}] AI配置错误:`, configValidation.errors)
+        console.error(`[${serverRequestId}] AI配置错误:`, configValidation.errors)
         return Response.json(
           {
             error: "AI configuration error",
@@ -219,7 +312,14 @@ export async function POST(request: Request) {
       const resumeText = body.resumeText
       const additionalInfo = body.additionalInfo
 
-      console.log(`[${requestId}] JSON请求信息:`, {
+      console.log(`[上传全链路][${serverRequestId}] 📋 JSON请求信息:`, {
+        name,
+        email,
+        field,
+        resumeTextLength: resumeText?.length || 0,
+        additionalInfoLength: additionalInfo?.length || 0
+      })
+      console.log(`[${serverRequestId}] JSON请求信息:`, {
         name,
         email,
         field,
@@ -575,7 +675,15 @@ Return JSON with:
       }
     }
   } catch (error) {
-    console.error(`[${requestId}] 简历分析错误:`, error)
+    const errorTime = Date.now() - startTime
+    console.error(`[上传全链路][${serverRequestId}] ❌ ========== 后端API处理异常 ==========`)
+    console.error(`[上传全链路][${serverRequestId}] 异常耗时: ${errorTime}ms`)
+    console.error(`[上传全链路][${serverRequestId}] 异常类型:`, error instanceof Error ? error.constructor.name : typeof error)
+    console.error(`[上传全链路][${serverRequestId}] 异常信息:`, error)
+    if (error instanceof Error) {
+      console.error(`[上传全链路][${serverRequestId}] 错误堆栈:`, error.stack)
+    }
+    console.error(`[${serverRequestId}] 简历分析错误:`, error)
     return Response.json(
       {
         error: "Analysis failed",
