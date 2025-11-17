@@ -76,50 +76,98 @@ echo "🛑 停止现有 PM2 进程..."
 pm2 stop frontend 2>/dev/null || true
 pm2 delete frontend 2>/dev/null || true
 
+# 清除缓存
+echo "🧹 清除缓存..."
+CACHE_CLEANED=false
+
+# 清除 Next.js 构建缓存（开发模式下清除，生产模式下保留）
+if [ "$MODE" = "development" ]; then
+    if [ -d ".next" ]; then
+        echo "   📦 清除 .next 构建缓存（开发模式）..."
+        rm -rf .next
+        CACHE_CLEANED=true
+    fi
+else
+    echo "   ℹ️  生产模式：保留 .next 构建文件"
+fi
+
+
 # 生产模式：先构建应用
 if [ "$MODE" = "production" ]; then
-    echo "🏗️  生产模式：检查是否需要构建..."
+    echo "🏗️  生产模式：开始构建..."
     
-    # 检查 .next 目录是否存在且不是空的
-    if [ ! -d ".next" ] || [ -z "$(ls -A .next 2>/dev/null)" ]; then
-        echo "📦 开始构建生产版本..."
-        npm run build
-        if [ $? -ne 0 ]; then
-            echo "❌ 构建失败，退出"
-            exit 1
-        fi
-        echo "✅ 构建完成"
-    elif [ "$BUILD_BEFORE_START" = "true" ]; then
-        echo "🔄 强制重新构建..."
-        npm run build
-        if [ $? -ne 0 ]; then
-            echo "❌ 构建失败，退出"
-            exit 1
-        fi
-        echo "✅ 构建完成"
+    # 检查是否安装了 pnpm
+    if command -v pnpm >/dev/null 2>&1; then
+        echo "   📦 使用 pnpm 构建..."
+        BUILD_CMD="pnpm run build"
     else
-        echo "✅ 检测到已存在的构建文件，跳过构建"
+        echo "   📦 使用 npm 构建..."
+        BUILD_CMD="npm run build"
+    fi
+    
+    echo "   📤 执行构建命令: $BUILD_CMD"
+    $BUILD_CMD
+    if [ $? -ne 0 ]; then
+        echo "❌ 构建失败，退出"
+        exit 1
+    fi
+    echo "✅ 构建完成"
+    
+    # 验证构建结果
+    if [ ! -d ".next" ] || [ -z "$(ls -A .next/static 2>/dev/null)" ]; then
+        echo "⚠️  警告: 构建目录为空或不完整"
+    else
+        echo "✅ 构建文件验证通过"
+        echo "   📊 静态文件统计:"
+        echo "      - CSS文件: $(find .next/static/css -name '*.css' 2>/dev/null | wc -l) 个"
+        echo "      - JS文件: $(find .next/static/chunks -name '*.js' 2>/dev/null | wc -l) 个"
     fi
 fi
 
 echo "⚛️ 启动 Next.js 应用 (端口 80, 模式: $MODE)..."
 # 检查node是否有绑定80端口的权限
 NODE_PATH=$(which node)
-START_CMD="npm -- run dev"
-if [ "$MODE" = "production" ]; then
-    START_CMD="npm -- start"
+
+# 检查是否安装了 pnpm
+if command -v pnpm >/dev/null 2>&1; then
+    echo "✅ 检测到 pnpm，使用 pnpm 启动"
+    START_CMD="pnpm -- run dev"
+    if [ "$MODE" = "production" ]; then
+        START_CMD="pnpm -- start"
+    fi
+else
+    echo "⚠️  未检测到 pnpm，使用 npm 启动"
+    START_CMD="npm -- run dev"
+    if [ "$MODE" = "production" ]; then
+        START_CMD="npm -- start"
+    fi
 fi
+echo "📝 启动命令: $START_CMD"
 
 if ! getcap "$NODE_PATH" 2>/dev/null | grep -q "cap_net_bind_service"; then
     echo "🔧 设置node绑定80端口权限..."
     sudo setcap 'cap_net_bind_service=+ep' "$NODE_PATH" 2>/dev/null || {
         echo "⚠️  无法设置权限，尝试使用sudo启动PM2..."
+        echo "📤 执行启动命令: sudo -E pm2 start --name frontend $START_CMD"
         sudo -E pm2 start --name frontend $START_CMD
+        echo "✅ PM2启动命令已执行（使用sudo）"
     }
 else
     echo "✅ node已有绑定80端口权限"
     # 使用PM2启动应用，确保SSH退出后继续运行
+    echo "📤 执行启动命令: pm2 start --name frontend $START_CMD"
+    echo "📋 启动参数:"
+    echo "   - 进程名称: frontend"
+    echo "   - 运行模式: $MODE"
+    echo "   - 端口: 80"
+    echo "   - 命令: $START_CMD"
     pm2 start --name frontend $START_CMD
+    if [ $? -eq 0 ]; then
+        echo "✅ PM2启动命令执行成功"
+    else
+        echo "❌ PM2启动命令执行失败，退出码: $?"
+        exit 1
+    fi
 fi
 
 echo "✅ Next.js 应用已通过PM2启动 ($MODE 模式)"

@@ -39,12 +39,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 加载用户资料
   const loadUserProfile = async (userId: string) => {
+    // 检查 Supabase 配置
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      // Supabase 未配置，设置默认 profile
+      setProfile({
+        id: userId,
+        role: 'guest',
+      })
+      return
+    }
+
     try {
-      const { data, error } = await supabase
+      // 设置超时，避免无限等待
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('加载用户资料超时')), 3000)
+      })
+
+      const queryPromise = supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .single()
+
+      let result: any
+      try {
+        result = await Promise.race([queryPromise, timeoutPromise])
+      } catch (timeoutError) {
+        // 超时或查询失败，使用默认 profile
+        console.warn('加载用户资料超时或失败，使用默认配置:', timeoutError)
+        setProfile({
+          id: userId,
+          role: 'guest',
+        })
+        return
+      }
+
+      const { data, error } = result
 
       if (error) {
         // 检查错误类型
@@ -158,33 +191,97 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    // 获取初始会话
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        await loadUserProfile(session.user.id)
-      } else {
+    let mounted = true
+    
+    // 检查 Supabase 配置
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    
+    // 如果 Supabase 未配置，直接设置 loading 为 false
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.warn('⚠️ Supabase 环境变量未配置，认证功能将不可用')
+      if (mounted) {
+        setLoading(false)
+        setUser(null)
+        setSession(null)
         setProfile(null)
       }
-      setLoading(false)
-    })
+      return
+    }
+
+    // 设置超时，确保 loading 状态不会一直为 true
+    const timeoutId = setTimeout(() => {
+      if (mounted) {
+        console.warn('⚠️ 认证初始化超时，继续使用未认证状态')
+        setLoading(false)
+      }
+    }, 5000) // 5秒超时
+
+    // 获取初始会话
+    supabase.auth.getSession()
+      .then(async ({ data: { session }, error }) => {
+        clearTimeout(timeoutId)
+        
+        if (error) {
+          console.warn('获取会话时出错:', error.message)
+        }
+        
+        if (!mounted) return
+        
+        setSession(session)
+        setUser(session?.user ?? null)
+        
+        if (session?.user) {
+          try {
+            await loadUserProfile(session.user.id)
+          } catch (err) {
+            console.warn('加载用户资料失败:', err)
+            // 即使加载资料失败，也设置 loading 为 false
+          }
+        } else {
+          setProfile(null)
+        }
+        
+        setLoading(false)
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId)
+        console.error('获取会话异常:', error)
+        if (mounted) {
+          setLoading(false)
+          setUser(null)
+          setSession(null)
+          setProfile(null)
+        }
+      })
 
     // 监听认证状态变化
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return
+      
       setSession(session)
       setUser(session?.user ?? null)
+      
       if (session?.user) {
-        await loadUserProfile(session.user.id)
+        try {
+          await loadUserProfile(session.user.id)
+        } catch (err) {
+          console.warn('加载用户资料失败:', err)
+        }
       } else {
         setProfile(null)
       }
+      
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      clearTimeout(timeoutId)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {

@@ -1,10 +1,39 @@
 import { generateText } from "ai"
 import { getAIModel, getAIOptions, validateAIConfig } from "@/lib/ai-config"
 
+// Next.js Route Segment Config - 设置更长的超时时间（5分钟）
+export const maxDuration = 300 // 5分钟
+export const dynamic = 'force-dynamic'
+
 const PYTHON_API_BASE_URL =
   process.env.RESUME_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
   "http://localhost:5005"
+
+// 创建带超时的fetch包装函数
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs: number = 120000 // 默认2分钟超时
+): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+    return response
+  } catch (error: any) {
+    clearTimeout(timeoutId)
+    if (error.name === 'AbortError') {
+      throw new Error(`请求超时 (${timeoutMs}ms): ${url}`)
+    }
+    throw error
+  }
+}
 
 export async function POST(request: Request) {
   const serverRequestId = Date.now().toString()
@@ -115,10 +144,15 @@ export async function POST(request: Request) {
         console.log(`[${serverRequestId}] 调用Python API: ${uploadUrl}`)
         
         const pythonApiStart = Date.now()
-        const pythonResponse = await fetch(uploadUrl, {
-          method: 'POST',
-          body: pythonFormData
-        })
+        // 使用带超时的fetch，设置3分钟超时（简历处理可能需要较长时间）
+        const pythonResponse = await fetchWithTimeout(
+          uploadUrl,
+          {
+            method: 'POST',
+            body: pythonFormData
+          },
+          180000 // 3分钟超时
+        )
         const pythonApiTime = Date.now() - pythonApiStart
         
         console.log(`[上传全链路][${clientRequestId}] 📥 Python API响应接收，耗时: ${pythonApiTime}ms`)
@@ -188,19 +222,24 @@ export async function POST(request: Request) {
         console.log(`[上传全链路][${clientRequestId}] 📡 GTV评估API URL: ${gtvUrl}`)
         
         const gtvApiStart = Date.now()
-        const gtvResponse = await fetch(gtvUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        // 使用带超时的fetch，设置2分钟超时
+        const gtvResponse = await fetchWithTimeout(
+          gtvUrl,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              extracted_info: extractedInfo,
+              field: field,
+              name: name,
+              email: email,
+              requestId: clientRequestId // 传递请求ID
+            })
           },
-          body: JSON.stringify({
-            extracted_info: extractedInfo,
-            field: field,
-            name: name,
-            email: email,
-            requestId: clientRequestId // 传递请求ID
-          })
-        })
+          120000 // 2分钟超时
+        )
         const gtvApiTime = Date.now() - gtvApiStart
 
         if (!gtvResponse.ok) {
@@ -282,9 +321,49 @@ export async function POST(request: Request) {
         console.error(`[上传全链路][${clientRequestId}] 异常耗时: ${errorTime}ms`)
         console.error(`[上传全链路][${clientRequestId}] 异常类型:`, pythonError instanceof Error ? pythonError.constructor.name : typeof pythonError)
         console.error(`[上传全链路][${clientRequestId}] 异常信息:`, pythonError)
+        
+        // 检查是否是超时错误
+        const errorMessage = pythonError instanceof Error ? pythonError.message : String(pythonError)
+        const isTimeout = errorMessage.includes('超时') || errorMessage.includes('timeout') || errorMessage.includes('AbortError')
+        
+        if (isTimeout) {
+          console.error(`[上传全链路][${clientRequestId}] ⏱️ 请求超时，后端服务响应时间过长`)
+          console.error(`[${serverRequestId}] Python服务调用超时:`, pythonError)
+          return Response.json(
+            { 
+              error: "请求超时",
+              message: "后端服务处理时间过长，请稍后重试或联系管理员",
+              details: `处理耗时: ${errorTime}ms，已超过超时限制`
+            },
+            { status: 504 } // 504 Gateway Timeout
+          )
+        }
+        
+        // 检查是否是连接错误
+        const isConnectionError = errorMessage.includes('ECONNREFUSED') || 
+                                 errorMessage.includes('fetch failed') ||
+                                 errorMessage.includes('Failed to fetch')
+        
+        if (isConnectionError) {
+          console.error(`[上传全链路][${clientRequestId}] 🔌 连接错误，后端服务可能未启动`)
+          console.error(`[${serverRequestId}] Python服务连接失败:`, pythonError)
+          return Response.json(
+            { 
+              error: "后端服务不可用",
+              message: "无法连接到后端服务，请检查服务是否正常运行",
+              details: `连接URL: ${PYTHON_API_BASE_URL}`
+            },
+            { status: 503 } // 503 Service Unavailable
+          )
+        }
+        
         console.error(`[${serverRequestId}] Python服务调用失败:`, pythonError)
         return Response.json(
-          { error: "简历处理服务暂时不可用" },
+          { 
+            error: "简历处理服务暂时不可用",
+            message: errorMessage || "后端服务处理失败，请稍后重试",
+            details: `错误类型: ${pythonError instanceof Error ? pythonError.constructor.name : typeof pythonError}`
+          },
           { status: 503 }
         )
       }
