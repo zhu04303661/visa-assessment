@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -38,11 +39,15 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-bold text-xl">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold">
-                惜
-              </div>
+              <Image 
+                src="/xichi_logo.svg" 
+                alt="Xichi Group Logo" 
+                width={32} 
+                height={32} 
+                className="h-8 w-8 rounded-lg"
+              />
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {language === "en" ? "Xichi Immigration" : "惜池移民"}
+                {language === "en" ? "Xichi Group" : "惜池集团"}
               </span>
               <span className="hidden sm:inline text-xs text-muted-foreground ml-2">
                 {language === "en" ? "UK Immigration Service Provider" : "英国移民服务供应商"}

@@ -62,7 +62,7 @@ export default function AboutPage() {
         <div className="mb-16 text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-medium text-primary">
             <Building2 className="h-4 w-4" />
-            <span>{language === "en" ? "About Xichi Immigration" : "关于惜池移民"}</span>
+            <span>{language === "en" ? "About Xichi Group" : "关于惜池集团"}</span>
           </div>
           <h1 className="mb-6 text-balance text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
             {language === "en" 
@@ -71,8 +71,8 @@ export default function AboutPage() {
           </h1>
           <p className="mx-auto max-w-3xl text-pretty text-lg leading-relaxed text-muted-foreground md:text-xl">
             {language === "en"
-              ? "Xichi Immigration is a professional UK immigration service provider. We are committed to providing the most professional, efficient, and secure UK immigration services. Welcome to partner with Xichi to create a better future together. We look forward to providing you with the most professional, efficient, and secure UK immigration services."
-              : "惜池移民是一家专业的英国移民服务供应商。我们致力于为您提供最专业、最高效、最安全的英国移民服务。欢迎您与惜池携手合作，共创美好未来。我们期待为您提供最专业、最高效、最安全的英国移民服务。"}
+              ? "Xichi Group is a professional UK immigration service provider. We are committed to providing the most professional, efficient, and secure UK immigration services. Welcome to partner with Xichi Group to create a better future together. We look forward to providing you with the most professional, efficient, and secure UK immigration services."
+              : "惜池集团是一家专业的英国移民服务供应商。我们致力于为您提供最专业、最高效、最安全的英国移民服务。欢迎您与惜池集团携手合作，共创美好未来。我们期待为您提供最专业、最高效、最安全的英国移民服务。"}
           </p>
         </div>
 
@@ -116,7 +116,7 @@ export default function AboutPage() {
         {/* Why Choose Us */}
         <div className="mb-16">
           <h2 className="mb-8 text-center text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-            {language === "en" ? "Why Choose Xichi Immigration?" : "为什么选择惜池移民？"}
+            {language === "en" ? "Why Choose Xichi Group?" : "为什么选择惜池集团？"}
           </h2>
           <div className="grid gap-6 md:grid-cols-2">
             <Card className="border-border/50">

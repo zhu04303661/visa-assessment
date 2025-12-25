@@ -9,8 +9,8 @@ import { AuthProvider } from "@/lib/supabase/auth-context"
 import { Suspense } from "react"
 
 export const metadata: Metadata = {
-  title: "惜池移民 | Xichi Immigration - 专业英国移民服务",
-  description: "惜池移民提供专业的英国移民和签证服务，包括创业移民、全球人才签证(GTV)、技术工作签证等。AI智能评估，专家一对一咨询。",
+  title: "惜池集团 | Xichi Group - 专业英国移民服务",
+  description: "惜池集团提供专业的英国移民和签证服务，包括创业移民、全球人才签证(GTV)、技术工作签证等。AI智能评估，专家一对一咨询。",
   generator: "v0.app",
 }
 
