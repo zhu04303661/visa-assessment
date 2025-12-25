@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -16,15 +13,6 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // 静态资源配置
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : undefined,
-  experimental: {
-    // 允许在开发时从指定来源访问 Next 静态资源
-    allowedDevOrigins: [
-      process.env.NEXT_PUBLIC_DEV_ORIGIN || 'http://0.0.0.0:3000',
-      'http://8.155.147.19',
-      'http://localhost:80',
-      'http://0.0.0.0:80'
-    ],
-  },
   // 添加安全头部，但确保不阻止样式加载
   async headers() {
     return [
