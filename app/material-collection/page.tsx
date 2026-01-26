@@ -495,6 +495,25 @@ export default function MaterialCollectionPage() {
     }
   }
 
+  // 获取分类标签的颜色
+  const getCategoryColor = (categoryId: string, itemId?: string): string => {
+    // "其他文档" 标记为红色（视为未分类）
+    if (itemId === 'other_docs') {
+      return 'bg-red-100 text-red-700 border-red-300'
+    }
+    
+    const colorMap: { [key: string]: string } = {
+      'folder_1': 'bg-blue-100 text-blue-800 border-blue-300',      // 基础材料 - 蓝色
+      'folder_2': 'bg-green-100 text-green-800 border-green-300',   // 工作证明 - 绿色
+      'folder_3': 'bg-purple-100 text-purple-800 border-purple-300', // 推荐信 - 紫色
+      'folder_4': 'bg-orange-100 text-orange-800 border-orange-300', // 贡献证明 - 橙色
+      'folder_5': 'bg-cyan-100 text-cyan-800 border-cyan-300',      // 媒体报道 - 青色
+      'folder_6': 'bg-pink-100 text-pink-800 border-pink-300',      // 学术成就 - 粉色
+      'folder_7': 'bg-yellow-100 text-yellow-800 border-yellow-300', // 其他材料 - 黄色
+    }
+    return colorMap[categoryId] || 'bg-gray-100 text-gray-800 border-gray-300'
+  }
+
   // 获取所有可用的分类选项
   const getCategoryOptions = () => {
     const options: {value: string; label: string; items: {value: string; label: string}[]}[] = []
@@ -1235,16 +1254,22 @@ export default function MaterialCollectionPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__all__">全部文件</SelectItem>
-                    <SelectItem value="__untagged__">未分类文件</SelectItem>
+                    <SelectItem value="__untagged__" className="text-red-600">
+                      <span className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                        未分类文件
+                      </span>
+                    </SelectItem>
                     {getCategoryOptions().map((cat) => (
                       <div key={cat.value}>
-                        <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50">
+                        <div className={`px-2 py-1 text-xs font-semibold ${getCategoryColor(cat.value)}`}>
                           {cat.label}
                         </div>
                         {cat.items.map((item) => (
                           <SelectItem 
                             key={`${cat.value}|${item.value}`} 
                             value={`${cat.value}|${item.value}`}
+                            className="pl-4"
                           >
                             {item.label}
                           </SelectItem>
@@ -1317,15 +1342,15 @@ export default function MaterialCollectionPage() {
                               {savingTagFileId === file.id && (
                                 <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                               )}
-                              {/* 显示当前标签（只有一个） */}
-                              {currentTags && currentTags.length > 0 && (() => {
+                              {/* 显示当前标签（只有一个）或未分类警示 */}
+                              {currentTags && currentTags.length > 0 ? (() => {
                                 const tag = currentTags[0] // 只取第一个标签
                                 const catInfo = categories[tag.categoryId]
                                 const itemInfo = catInfo?.items?.find((i: any) => i.item_id === tag.itemId)
                                 return (
                                   <Badge 
-                                    variant="secondary" 
-                                    className="text-xs flex items-center gap-1"
+                                    variant="outline" 
+                                    className={`text-xs flex items-center gap-1 border ${getCategoryColor(tag.categoryId, tag.itemId)}`}
                                   >
                                     {itemInfo?.name || tag.itemId}
                                     <X 
@@ -1334,7 +1359,14 @@ export default function MaterialCollectionPage() {
                                     />
                                   </Badge>
                                 )
-                              })()}
+                              })() : (
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-xs bg-red-100 text-red-700 border-red-300"
+                                >
+                                  未分类
+                                </Badge>
+                              )}
                               {/* 选择/更换标签 */}
                               <Select
                                 value={currentTags && currentTags.length > 0 ? `${currentTags[0].categoryId}|${currentTags[0].itemId}` : ''}
@@ -1352,14 +1384,14 @@ export default function MaterialCollectionPage() {
                                 <SelectContent>
                                   {categoryOptions.map((cat) => (
                                     <div key={cat.value}>
-                                      <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50">
+                                      <div className={`px-2 py-1 text-xs font-semibold ${getCategoryColor(cat.value)}`}>
                                         {cat.label}
                                       </div>
                                       {cat.items.map((item) => (
                                         <SelectItem 
                                           key={`${cat.value}|${item.value}`} 
                                           value={`${cat.value}|${item.value}`}
-                                          className="text-xs"
+                                          className="text-xs pl-4"
                                         >
                                           {item.label}
                                         </SelectItem>
