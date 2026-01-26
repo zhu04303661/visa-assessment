@@ -60,14 +60,19 @@ import {
   Copy,
   Download,
   Settings,
+  ExternalLink,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import { UnifiedFilePreview } from "@/components/unified-file-preview"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { Mindmap } from "@/components/mindmap"
 import ReactMarkdown from 'react-markdown'
+
+// API 基础 URL
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5004'
 
 // 类型定义
 interface Project {
@@ -150,6 +155,10 @@ export default function CopywritingPage() {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
   const [isDocumentViewerOpen, setIsDocumentViewerOpen] = useState(false)
   const [isAgentDialogOpen, setIsAgentDialogOpen] = useState(false)
+  
+  // 文件预览
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewingFile, setPreviewingFile] = useState<any>(null)
   
   // 表单状态
   const [newProjectForm, setNewProjectForm] = useState({
@@ -241,16 +250,59 @@ export default function CopywritingPage() {
     }
   }
   
-  // 加载原始材料
+  // 加载原始材料（从材料收集页面的已上传文件列表）
   const loadRawMaterials = async (projectId: string) => {
     try {
-      const data = await apiCall(`/api/projects/${projectId}/materials`)
-      if (data.success) {
-        setRawMaterials(data.data || {})
+      const data = await apiCall(`/api/projects/${projectId}/material-collection`)
+      if (data.success && data.data?.categories) {
+        // 按分类整理文件
+        const categorizedFiles: Record<string, any[]> = {}
+        const cats = data.data.categories
+        
+        Object.entries(cats).forEach(([categoryId, category]: [string, any]) => {
+          category.items?.forEach((item: any) => {
+            if (item.files && item.files.length > 0) {
+              const categoryName = item.name || category.name
+              if (!categorizedFiles[categoryName]) {
+                categorizedFiles[categoryName] = []
+              }
+              item.files.forEach((file: any) => {
+                // 避免重复添加
+                const exists = categorizedFiles[categoryName].some((f: any) => f.id === file.id)
+                if (!exists) {
+                  categorizedFiles[categoryName].push(file)
+                }
+              })
+            }
+          })
+        })
+        
+        setRawMaterials(categorizedFiles)
       }
     } catch (err) {
       console.error("加载原始材料失败")
     }
+  }
+  
+  // 获取预览URL
+  const getPreviewUrl = (file: any) => {
+    if (file.file_url) return file.file_url
+    return `${API_BASE}/api/files/preview/${file.id}`
+  }
+  
+  // 预览文件
+  const handlePreviewFile = (file: any) => {
+    const fileName = file.file_name || file.name
+    const fileType = (file.file_type || fileName?.split('.').pop() || '').toLowerCase()
+    
+    setPreviewingFile({ 
+      id: file.id,
+      file_name: fileName,
+      file_type: fileType,
+      file_size: file.file_size || file.size,
+      file_url: file.file_url
+    })
+    setPreviewOpen(true)
   }
   
   // 加载文档内容
@@ -833,40 +885,42 @@ export default function CopywritingPage() {
                                   <Badge variant="outline" className="text-xs">{files.length}</Badge>
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                  {files.map((file: any, idx: number) => (
+                                  {files.map((file: any, idx: number) => {
+                                    const fileName = file.file_name || file.name
+                                    const fileSize = file.file_size || file.size
+                                    const uploadedAt = file.uploaded_at || file.modified
+                                    
+                                    return (
                                     <div 
-                                      key={idx}
+                                      key={file.id || idx}
                                       className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-                                      onClick={() => {
-                                        if (file.content) {
-                                          setSelectedDocument({ path: file.name, content: file.content })
-                                          setIsDocumentViewerOpen(true)
-                                        }
-                                      }}
+                                      onClick={() => handlePreviewFile(file)}
                                     >
-                                      <div className="flex-shrink-0">
-                                        {file.name?.endsWith('.pdf') ? (
+                                      <div className="shrink-0">
+                                        {fileName?.endsWith('.pdf') ? (
                                           <FileText className="h-8 w-8 text-red-500" />
-                                        ) : file.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                                        ) : fileName?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                                           <FileText className="h-8 w-8 text-green-500" />
-                                        ) : file.name?.match(/\.(doc|docx)$/i) ? (
+                                        ) : fileName?.match(/\.(doc|docx)$/i) ? (
                                           <FileText className="h-8 w-8 text-blue-500" />
+                                        ) : fileName?.match(/\.(xls|xlsx)$/i) ? (
+                                          <FileText className="h-8 w-8 text-emerald-500" />
                                         ) : (
                                           <FileText className="h-8 w-8 text-gray-500" />
                                         )}
                                       </div>
                                       <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate">{file.name}</p>
+                                        <p className="text-sm font-medium truncate">{fileName}</p>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                          <span>{file.size ? `${(file.size / 1024).toFixed(1)} KB` : ''}</span>
-                                          {file.modified && (
-                                            <span>{new Date(file.modified).toLocaleDateString()}</span>
+                                          {fileSize && <span>{(fileSize / 1024).toFixed(1)} KB</span>}
+                                          {uploadedAt && (
+                                            <span>{new Date(uploadedAt).toLocaleDateString()}</span>
                                           )}
                                         </div>
                                       </div>
                                       <Eye className="h-4 w-4 text-muted-foreground" />
                                     </div>
-                                  ))}
+                                  )})}
                                 </div>
                               </div>
                             ))}
@@ -1589,6 +1643,13 @@ export default function CopywritingPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 统一文件预览组件 */}
+      <UnifiedFilePreview
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        file={previewingFile}
+      />
 
       <Footer />
     </div>

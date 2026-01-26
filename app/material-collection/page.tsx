@@ -64,9 +64,11 @@ import {
   ArrowLeft,
   FolderArchive,
   Filter,
+  ExternalLink,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import { UnifiedFilePreview } from "@/components/unified-file-preview"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
@@ -700,17 +702,8 @@ export default function MaterialCollectionPage() {
 
   // 预览文件
   const handlePreviewFile = (file: MaterialFile) => {
-    const fileType = file.file_type.toLowerCase()
-    const previewUrl = `${API_BASE}/api/files/preview/${file.id}`
-    
-    // 图片和PDF在弹窗中预览
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'].includes(fileType)) {
-      setPreviewingFile(file)
-      setPreviewOpen(true)
-    } else {
-      // 其他文件类型下载
-      window.open(previewUrl, '_blank')
-    }
+    setPreviewingFile(file)
+    setPreviewOpen(true)
   }
   
   // 获取预览URL
@@ -2068,69 +2061,12 @@ export default function MaterialCollectionPage() {
         </DialogContent>
       </Dialog>
       
-      {/* 文件预览弹窗 */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-          <DialogHeader className="shrink-0">
-            <DialogTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5" />
-              文件预览
-            </DialogTitle>
-            <DialogDescription>
-              {previewingFile?.file_name}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex-1 min-h-0 overflow-auto">
-            {previewingFile && (
-              <>
-                {['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(previewingFile.file_type.toLowerCase()) ? (
-                  // 图片预览
-                  <div className="flex items-center justify-center p-4">
-                    <img
-                      src={getPreviewUrl(previewingFile)}
-                      alt={previewingFile.file_name}
-                      className="max-w-full max-h-[60vh] object-contain rounded"
-                    />
-                  </div>
-                ) : previewingFile.file_type.toLowerCase() === 'pdf' ? (
-                  // PDF预览
-                  <iframe
-                    src={getPreviewUrl(previewingFile)}
-                    className="w-full h-[60vh] border-0 rounded"
-                    title={previewingFile.file_name}
-                  />
-                ) : (
-                  // 其他文件类型
-                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <File className="h-16 w-16 mb-4" />
-                    <p>此文件类型不支持预览</p>
-                    <Button
-                      variant="outline"
-                      className="mt-4"
-                      onClick={() => window.open(getPreviewUrl(previewingFile), '_blank')}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      下载文件
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-          
-          <DialogFooter className="shrink-0 border-t pt-4">
-            <Button
-              variant="outline"
-              onClick={() => previewingFile && window.open(getPreviewUrl(previewingFile), '_blank')}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              下载
-            </Button>
-            <Button onClick={() => setPreviewOpen(false)}>关闭</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* 统一文件预览组件 */}
+      <UnifiedFilePreview
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        file={previewingFile}
+      />
       
       {/* 删除确认对话框 */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
