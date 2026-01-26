@@ -270,11 +270,33 @@ export function OCAssessmentDisplay({ ocResults, ocAssessment, summary, language
                         {language === "en" ? "Evidence Provided" : "提供的证据"}
                       </p>
                       <ul className="space-y-1">
-                        {oc.evidence.map((ev, idx) => (
-                          <li key={idx} className="text-sm text-gray-700">
-                            • {ev}
-                          </li>
-                        ))}
+                        {oc.evidence.map((ev, idx) => {
+                          // 处理 evidence 可能是字符串或对象的情况
+                          let evidenceText: string
+                          if (typeof ev === 'string') {
+                            evidenceText = ev
+                          } else if (typeof ev === 'object' && ev !== null) {
+                            // 如果是对象，格式化显示
+                            if (ev.certificate_id || ev.name || ev.institution || ev.date) {
+                              // 证书对象格式
+                              const parts: string[] = []
+                              if (ev.name) parts.push(ev.name)
+                              if (ev.institution) parts.push(`(${ev.institution})`)
+                              if (ev.date) parts.push(`- ${ev.date}`)
+                              evidenceText = parts.length > 0 ? parts.join(' ') : JSON.stringify(ev)
+                            } else {
+                              // 其他对象格式，尝试提取常见字段或转换为字符串
+                              evidenceText = ev.description || ev.text || ev.title || JSON.stringify(ev)
+                            }
+                          } else {
+                            evidenceText = String(ev)
+                          }
+                          return (
+                            <li key={idx} className="text-sm text-gray-700">
+                              • {evidenceText}
+                            </li>
+                          )
+                        })}
                       </ul>
                     </div>
                   )}
@@ -286,11 +308,19 @@ export function OCAssessmentDisplay({ ocResults, ocAssessment, summary, language
                         {language === "en" ? "Matched Keywords" : "匹配关键词"}
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        {oc.matched_keywords.map((keyword) => (
-                          <Badge key={keyword} variant="outline">
-                            {keyword}
-                          </Badge>
-                        ))}
+                        {oc.matched_keywords.map((keyword, idx) => {
+                          // 确保 keyword 是字符串
+                          const keywordText = typeof keyword === 'string' 
+                            ? keyword 
+                            : (typeof keyword === 'object' && keyword !== null 
+                                ? (keyword.name || keyword.text || keyword.title || JSON.stringify(keyword))
+                                : String(keyword))
+                          return (
+                            <Badge key={idx} variant="outline">
+                              {keywordText}
+                            </Badge>
+                          )
+                        })}
                       </div>
                     </div>
                   )}
@@ -302,14 +332,22 @@ export function OCAssessmentDisplay({ ocResults, ocAssessment, summary, language
                         {language === "en" ? "Improvement Suggestions" : "改进建议"}
                       </p>
                       <ul className="space-y-2">
-                        {oc.improvement_suggestions.map((suggestion, idx) => (
-                          <li
-                            key={idx}
-                            className="rounded bg-blue-50 p-2 text-sm text-blue-900"
-                          >
-                            {idx + 1}. {suggestion}
-                          </li>
-                        ))}
+                        {oc.improvement_suggestions.map((suggestion, idx) => {
+                          // 确保 suggestion 是字符串
+                          const suggestionText = typeof suggestion === 'string'
+                            ? suggestion
+                            : (typeof suggestion === 'object' && suggestion !== null
+                                ? (suggestion.description || suggestion.text || suggestion.title || JSON.stringify(suggestion))
+                                : String(suggestion))
+                          return (
+                            <li
+                              key={idx}
+                              className="rounded bg-blue-50 p-2 text-sm text-blue-900"
+                            >
+                              {idx + 1}. {suggestionText}
+                            </li>
+                          )
+                        })}
                       </ul>
                     </div>
                   )}

@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowRight, Loader2, FileText, Upload, AlertCircle, CheckCircle2, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/i18n"
+import { useAuth } from "@/lib/supabase/auth-context"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { ErrorDialog } from "@/components/error-dialog"
 import { AssessmentLoading } from "@/components/assessment-loading"
@@ -75,6 +76,7 @@ const saveBasicInfoToCache = (data: Partial<FormData>) => {
 export function AssessmentForm() {
   const router = useRouter()
   const { t, language } = useLanguage()
+  const { user, session } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
@@ -369,6 +371,98 @@ export function AssessmentForm() {
         sessionStorage.setItem("assessmentData", JSON.stringify(analysisResult))
         sessionStorage.setItem("fullAssessmentData", JSON.stringify(analysisResult))
         console.log(`[上传全链路][${submitRequestId}] ✅ 数据已存储 (完整响应)`)
+      }
+
+      // 保存评估数据到 Supabase
+      try {
+        console.log(`[上传全链路][${submitRequestId}] 💾 开始保存评估数据到 Supabase`)
+        
+        // 1. 如果有上传的文件，先上传到 Supabase Storage
+        let resumeFileUrl: string | null = null
+        let resumeFileName: string | null = null
+        
+        if (uploadedFile && uploadMethod === "upload" && user) {
+          try {
+            console.log(`[上传全链路][${submitRequestId}] 📤 上传简历文件到 Supabase Storage`)
+            const uploadFormData = new FormData()
+            uploadFormData.append('file', uploadedFile)
+            uploadFormData.append('userId', user.id)
+
+            const uploadResponse = await fetch('/api/assessments/upload-resume', {
+              method: 'POST',
+              body: uploadFormData,
+            })
+
+            if (uploadResponse.ok) {
+              const uploadResult = await uploadResponse.json()
+              resumeFileUrl = uploadResult.fileUrl || null
+              resumeFileName = uploadResult.fileName || null
+              console.log(`[上传全链路][${submitRequestId}] ✅ 简历文件上传成功: ${resumeFileUrl}`)
+            } else {
+              console.warn(`[上传全链路][${submitRequestId}] ⚠️ 简历文件上传失败，继续保存评估数据`)
+            }
+          } catch (uploadErr) {
+            console.warn(`[上传全链路][${submitRequestId}] ⚠️ 简历文件上传异常:`, uploadErr)
+            // 文件上传失败不影响评估数据的保存
+          }
+        }
+
+        // 2. 保存评估数据到 Supabase（支持匿名用户）
+        const assessmentDataToSave = {
+          userId: user?.id || null, // 如果用户未登录，userId 为 null
+          applicantName: formData.name,
+          applicantEmail: formData.email,
+          applicantPhone: formData.phone,
+          field: formData.field,
+          resumeText: formData.resumeText || null,
+          resumeFileName: resumeFileName,
+          resumeFileUrl: resumeFileUrl,
+          additionalInfo: formData.additionalInfo || null,
+          assessmentData: analysisResult.gtvAnalysis || analysisResult,
+          overallScore: analysisResult.gtvAnalysis?.overallScore || analysisResult.overallScore || null,
+          eligibilityLevel: analysisResult.gtvAnalysis?.eligibilityLevel || analysisResult.eligibilityLevel || null,
+          gtvPathway: analysisResult.gtvAnalysis?.gtvPathway || analysisResult.gtvPathway || null,
+        }
+
+        console.log(`[上传全链路][${submitRequestId}] 📝 准备保存评估数据:`, {
+          hasUser: !!user,
+          userId: user?.id || 'anonymous',
+          applicantEmail: formData.email,
+          hasAssessmentData: !!assessmentDataToSave.assessmentData,
+        })
+
+        const saveResponse = await fetch('/api/assessments/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(assessmentDataToSave),
+        })
+
+        if (saveResponse.ok) {
+          const saveResult = await saveResponse.json()
+          console.log(`[上传全链路][${submitRequestId}] ✅ 评估数据保存成功:`, {
+            assessmentId: saveResult.assessmentId,
+            userId: user?.id || 'anonymous',
+          })
+        } else {
+          const errorText = await saveResponse.text()
+          let errorData
+          try {
+            errorData = JSON.parse(errorText)
+          } catch {
+            errorData = { error: errorText }
+          }
+          console.error(`[上传全链路][${submitRequestId}] ❌ 评估数据保存失败:`, {
+            status: saveResponse.status,
+            statusText: saveResponse.statusText,
+            error: errorData,
+          })
+          // 保存失败不影响用户查看结果，但记录详细错误信息
+        }
+      } catch (saveErr) {
+        console.warn(`[上传全链路][${submitRequestId}] ⚠️ 保存评估数据异常:`, saveErr)
+        // 保存失败不影响用户查看结果
       }
       
       // 重置状态

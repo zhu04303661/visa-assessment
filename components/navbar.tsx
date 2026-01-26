@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Menu, X, MessageCircle, FileCheck, Home, Info, LogIn, User, LogOut } from "lucide-react"
+import { Menu, X, MessageCircle, FileCheck, Home, Info, LogIn, User, LogOut, Wand2, FolderOpen, ClipboardList, Tags } from "lucide-react"
 import { useLanguage } from "@/lib/i18n"
 import { useAuth } from "@/lib/supabase/auth-context"
 import { LanguageSwitcher } from "@/components/language-switcher"
@@ -28,6 +28,10 @@ export function Navbar() {
   const navItems = [
     { href: "/", label: language === "en" ? "Home" : "首页", icon: Home },
     { href: "/assessment", label: language === "en" ? "GTV Assessment" : "GTV资格评估", icon: FileCheck },
+    { href: "/material-collection", label: language === "en" ? "Materials" : "材料收集", icon: ClipboardList },
+    { href: "/material-tags", label: language === "en" ? "Tag Settings" : "标签设置", icon: Tags },
+    { href: "/copywriting", label: language === "en" ? "AI Copywriting" : "AI文案", icon: Wand2 },
+    { href: "/document-management", label: language === "en" ? "Documents" : "文案管理", icon: FolderOpen },
     { href: "/chat", label: language === "en" ? "AI Consultation" : "AI咨询", icon: MessageCircle },
     { href: "/about", label: language === "en" ? "About Us" : "关于我们", icon: Info },
   ]
