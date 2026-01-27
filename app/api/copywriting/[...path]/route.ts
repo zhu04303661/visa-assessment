@@ -31,6 +31,32 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
       body,
     })
 
+    // 检查响应类型，如果是文件下载则直接返回二进制流
+    const responseContentType = response.headers.get('content-type') || ''
+    if (responseContentType.includes('application/zip') || 
+        responseContentType.includes('application/octet-stream') ||
+        responseContentType.includes('application/pdf') ||
+        responseContentType.includes('application/msword') ||
+        responseContentType.includes('application/vnd.openxmlformats')) {
+      // 文件下载：直接返回二进制流
+      const blob = await response.blob()
+      const headers = new Headers()
+      
+      // 复制必要的响应头
+      const contentDisposition = response.headers.get('content-disposition')
+      if (contentDisposition) {
+        headers.set('content-disposition', contentDisposition)
+      }
+      headers.set('content-type', responseContentType)
+      headers.set('content-length', blob.size.toString())
+      
+      return new NextResponse(blob, { 
+        status: response.status,
+        headers 
+      })
+    }
+
+    // JSON响应
     const data = await response.json()
     return NextResponse.json(data, { status: response.status })
   } catch (error) {

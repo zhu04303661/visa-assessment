@@ -147,6 +147,7 @@ export default function CopywritingPage() {
   
   const [loading, setLoading] = useState(false)
   const [processing, setProcessing] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   
@@ -492,6 +493,77 @@ export default function CopywritingPage() {
     }
   }
   
+  // 打包下载所有材料
+  const handleDownloadAllMaterials = async () => {
+    if (!selectedProject) return
+    
+    try {
+      setDownloading(true)
+      setSuccess("正在打包材料，请稍候...")
+      
+      // 直接请求下载API
+      const response = await fetch(`/api/copywriting/api/projects/${selectedProject.project_id}/material-collection/download-all`)
+      
+      // 检查响应类型
+      const contentType = response.headers.get('content-type') || ''
+      
+      if (!response.ok) {
+        // 尝试解析错误信息
+        if (contentType.includes('application/json')) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `下载失败 (${response.status})`)
+        } else {
+          throw new Error(`下载失败 (${response.status})`)
+        }
+      }
+      
+      // 确保是ZIP文件
+      if (!contentType.includes('application/zip')) {
+        // 可能是JSON错误响应
+        if (contentType.includes('application/json')) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || "服务器返回了非文件响应")
+        }
+        throw new Error("服务器返回了非文件响应")
+      }
+      
+      // 获取文件名
+      const contentDisposition = response.headers.get('content-disposition')
+      let filename = `${selectedProject.client_name}_材料.zip`
+      if (contentDisposition) {
+        // 优先解析 filename*=UTF-8'' 格式（RFC 5987）
+        const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;\s]+)/i)
+        if (utf8Match) {
+          filename = decodeURIComponent(utf8Match[1])
+        } else {
+          // 回退到普通 filename 格式
+          const filenameMatch = contentDisposition.match(/filename=['"]?([^;\n"']+)['"]?/i)
+          if (filenameMatch) {
+            filename = filenameMatch[1]
+          }
+        }
+      }
+      
+      // 下载文件
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+      setSuccess("材料打包下载成功")
+    } catch (err: any) {
+      console.error("打包下载失败:", err)
+      setError(err.message || "打包下载失败，请检查后端服务是否运行")
+    } finally {
+      setDownloading(false)
+    }
+  }
+  
   // Agent功能
   const runAgentAction = async () => {
     try {
@@ -797,11 +869,11 @@ export default function CopywritingPage() {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => router.push(`/analysis?project=${selectedProject?.project_id}`)}
-                        disabled={!selectedProject}
+                        onClick={() => runWorkflowStep('analyze')}
+                        disabled={processing || !selectedProject}
                       >
-                        <Brain className="h-4 w-4 mr-1" />
-                        分析
+                        {processing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Brain className="h-4 w-4 mr-1" />}
+                        分析材料
                       </Button>
                       <Button 
                         variant="outline" 
@@ -862,11 +934,49 @@ export default function CopywritingPage() {
                             <Upload className="h-5 w-5" />
                             原始材料
                           </CardTitle>
-                          <Badge variant="secondary">
-                            {Object.values(rawMaterials).flat().length} 个文件
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">
+                              {Object.values(rawMaterials).flat().length} 个文件
+                            </Badge>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={handleDownloadAllMaterials}
+                              disabled={downloading || Object.values(rawMaterials).flat().length === 0}
+                            >
+                              {downloading ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <Download className="h-4 w-4 mr-1" />
+                              )}
+                              打包下载
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => runWorkflowStep('analyze')}
+                              disabled={processing || Object.values(rawMaterials).flat().length === 0}
+                              className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
+                            >
+                              {processing ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <Brain className="h-4 w-4 mr-1" />
+                              )}
+                              分析材料
+                            </Button>
+                            {analysisResult && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => setIsAnalysisDialogOpen(true)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                查看结果
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                        <CardDescription>已上传的申请人原始材料</CardDescription>
+                        <CardDescription>已上传的申请人原始材料，点击"分析材料"按钮提取关键信息</CardDescription>
                       </CardHeader>
                       <CardContent>
                         {Object.keys(rawMaterials).length === 0 ? (
