@@ -141,6 +141,22 @@ export default function PackageDetailPage() {
   const [caseSearchKeyword, setCaseSearchKeyword] = useState("")
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false)
   
+  // Agent配置相关
+  const [isAgentConfigOpen, setIsAgentConfigOpen] = useState(false)
+  const [agentConfig, setAgentConfig] = useState<{
+    system_prompt: string
+    user_prompt_template: string
+    custom_instructions: string
+    reference_doc_id: string | null
+  }>({
+    system_prompt: "",
+    user_prompt_template: "",
+    custom_instructions: "",
+    reference_doc_id: null
+  })
+  const [savingConfig, setSavingConfig] = useState(false)
+  const [customInstructions, setCustomInstructions] = useState("")
+  
   const packageInfo = PACKAGE_TYPES[packageType] || { 
     name: packageType, 
     name_en: packageType, 
@@ -225,6 +241,45 @@ export default function PackageDetailPage() {
     }
   }, [packageType, projectId])
   
+  // 加载Agent配置
+  const loadAgentConfig = useCallback(async () => {
+    try {
+      const data = await apiCall(`/api/projects/${projectId}/packages/${packageType}/agent-config`)
+      if (data.success && data.data) {
+        setAgentConfig({
+          system_prompt: data.data.system_prompt || "",
+          user_prompt_template: data.data.user_prompt_template || "",
+          custom_instructions: data.data.custom_instructions || "",
+          reference_doc_id: data.data.reference_doc_id || null
+        })
+      }
+    } catch (err) {
+      console.error("加载Agent配置失败")
+    }
+  }, [projectId, packageType])
+  
+  // 保存Agent配置
+  const saveAgentConfig = async () => {
+    try {
+      setSavingConfig(true)
+      const data = await apiCall(`/api/projects/${projectId}/packages/${packageType}/agent-config`, {
+        method: 'PUT',
+        body: JSON.stringify(agentConfig)
+      })
+      
+      if (data.success) {
+        setSuccess("Agent配置已保存")
+        setTimeout(() => setSuccess(""), 3000)
+      } else {
+        setError(data.error || "保存配置失败")
+      }
+    } catch (err) {
+      setError("保存配置失败")
+    } finally {
+      setSavingConfig(false)
+    }
+  }
+  
   // 保存内容
   const handleSave = async () => {
     if (!content.trim()) {
@@ -274,10 +329,17 @@ export default function PackageDetailPage() {
       setError("")
       setIsAIDialogOpen(false)
       
+      // 合并自定义指令
+      const combinedInstructions = [
+        agentConfig.custom_instructions,
+        customInstructions
+      ].filter(Boolean).join("\n\n")
+      
       const data = await apiCall(`/api/projects/${projectId}/packages/${packageType}/generate`, {
         method: 'POST',
         body: JSON.stringify({
-          reference_doc_id: selectedRefDocId || undefined
+          reference_doc_id: selectedRefDocId && selectedRefDocId !== "none" ? selectedRefDocId : undefined,
+          custom_instructions: combinedInstructions || undefined
         })
       })
       
@@ -286,6 +348,7 @@ export default function PackageDetailPage() {
         setSuccess("AI生成完成，请查看并编辑")
         setCurrentVersion(data.version || currentVersion)
         loadVersions()
+        setCustomInstructions("") // 清空临时指令
         setTimeout(() => setSuccess(""), 3000)
       } else {
         setError(data.error || "AI生成失败")
@@ -412,8 +475,9 @@ export default function PackageDetailPage() {
       loadContent()
       loadVersions()
       loadCases()
+      loadAgentConfig()
     }
-  }, [projectId, packageType, loadProject, loadContent, loadVersions, loadCases])
+  }, [projectId, packageType, loadProject, loadContent, loadVersions, loadCases, loadAgentConfig])
   
   // 检查是否有未保存的更改
   const hasChanges = content !== originalContent
@@ -639,6 +703,67 @@ export default function PackageDetailPage() {
                 </ScrollArea>
               </CardContent>
             </Card>
+            
+            {/* Agent配置卡片 */}
+            <Card className="mt-4">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Bot className="h-5 w-5" />
+                  Agent配置
+                </CardTitle>
+                <CardDescription>
+                  自定义AI生成行为
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                {/* 自定义指令 */}
+                <div className="space-y-2">
+                  <Label className="text-sm">自定义指令</Label>
+                  <Textarea
+                    value={agentConfig.custom_instructions}
+                    onChange={(e) => setAgentConfig({
+                      ...agentConfig,
+                      custom_instructions: e.target.value
+                    })}
+                    placeholder="添加特殊要求，如语气、风格、重点等..."
+                    className="h-20 text-sm"
+                  />
+                </div>
+                
+                {/* 系统提示词预览 */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">系统提示词</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsAgentConfigOpen(true)}
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      编辑
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {agentConfig.system_prompt || "使用默认提示词"}
+                  </p>
+                </div>
+                
+                <Button 
+                  size="sm" 
+                  className="w-full"
+                  onClick={saveAgentConfig}
+                  disabled={savingConfig}
+                >
+                  {savingConfig ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  保存配置
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
@@ -718,6 +843,23 @@ export default function PackageDetailPage() {
               )}
             </div>
             
+            {/* 自定义指令 */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Edit className="h-4 w-4" />
+                自定义指令（可选）
+              </Label>
+              <Textarea
+                value={customInstructions}
+                onChange={(e) => setCustomInstructions(e.target.value)}
+                placeholder="添加特殊要求，如语气、风格、重点关注内容等..."
+                className="h-24"
+              />
+              <p className="text-xs text-muted-foreground">
+                这些指令将与已保存的Agent配置合并使用
+              </p>
+            </div>
+            
             {/* 生成说明 */}
             <div className="bg-muted/50 rounded-lg p-4 space-y-2">
               <h4 className="font-medium text-sm">生成说明</h4>
@@ -741,6 +883,106 @@ export default function PackageDetailPage() {
                 <Sparkles className="h-4 w-4 mr-2" />
               )}
               开始生成
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Agent配置编辑对话框 */}
+      <Dialog open={isAgentConfigOpen} onOpenChange={setIsAgentConfigOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              Agent 提示词配置
+            </DialogTitle>
+            <DialogDescription>
+              自定义此材料包的AI生成行为，调整系统提示词和用户提示词模板
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="max-h-[500px]">
+            <div className="space-y-6 py-4 pr-4">
+              {/* 系统提示词 */}
+              <div className="space-y-2">
+                <Label className="font-medium">系统提示词 (System Prompt)</Label>
+                <p className="text-xs text-muted-foreground">
+                  定义AI的角色和行为准则，留空使用默认提示词
+                </p>
+                <Textarea
+                  value={agentConfig.system_prompt}
+                  onChange={(e) => setAgentConfig({
+                    ...agentConfig,
+                    system_prompt: e.target.value
+                  })}
+                  placeholder={`你是一位专业的GTV签证${packageInfo.name}撰写专家...`}
+                  className="min-h-[150px] font-mono text-sm"
+                />
+              </div>
+              
+              {/* 用户提示词模板 */}
+              <div className="space-y-2">
+                <Label className="font-medium">用户提示词模板 (User Prompt Template)</Label>
+                <p className="text-xs text-muted-foreground">
+                  可使用变量: {'{context}'} - 客户信息, {'{custom_instructions}'} - 自定义指令
+                </p>
+                <Textarea
+                  value={agentConfig.user_prompt_template}
+                  onChange={(e) => setAgentConfig({
+                    ...agentConfig,
+                    user_prompt_template: e.target.value
+                  })}
+                  placeholder={`请基于以下申请人信息，撰写${packageInfo.name}：\n\n{context}\n\n{custom_instructions}`}
+                  className="min-h-[120px] font-mono text-sm"
+                />
+              </div>
+              
+              {/* 默认自定义指令 */}
+              <div className="space-y-2">
+                <Label className="font-medium">默认自定义指令</Label>
+                <p className="text-xs text-muted-foreground">
+                  每次生成时都会应用的默认指令
+                </p>
+                <Textarea
+                  value={agentConfig.custom_instructions}
+                  onChange={(e) => setAgentConfig({
+                    ...agentConfig,
+                    custom_instructions: e.target.value
+                  })}
+                  placeholder="请用英文撰写，确保内容专业、有说服力..."
+                  className="min-h-[80px] text-sm"
+                />
+              </div>
+              
+              {/* 提示 */}
+              <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4">
+                <h4 className="font-medium text-sm text-blue-700 dark:text-blue-300 mb-2">
+                  配置说明
+                </h4>
+                <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+                  <li>• 系统提示词定义AI的专业角色和写作风格</li>
+                  <li>• 用户提示词模板控制如何将客户信息传递给AI</li>
+                  <li>• 自定义指令可添加特殊要求，如格式、长度、重点等</li>
+                  <li>• 留空的配置项将使用系统默认值</li>
+                </ul>
+              </div>
+            </div>
+          </ScrollArea>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAgentConfigOpen(false)}>
+              取消
+            </Button>
+            <Button onClick={() => {
+              saveAgentConfig()
+              setIsAgentConfigOpen(false)
+            }} disabled={savingConfig}>
+              {savingConfig ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              保存配置
             </Button>
           </DialogFooter>
         </DialogContent>

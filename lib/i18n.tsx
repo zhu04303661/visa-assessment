@@ -648,8 +648,10 @@ const translations = {
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("zh")
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const saved = localStorage.getItem("language") as Language
     if (saved && (saved === "en" || saved === "zh")) {
       setLanguageState(saved)
@@ -661,11 +663,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("language", lang)
   }
 
+  // 在客户端挂载完成前，使用默认语言来避免 hydration 不匹配
+  const currentLanguage = mounted ? language : "zh"
+
   const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations.en] || key
+    return translations[currentLanguage][key as keyof typeof translations.en] || key
   }
 
-  return <LanguageContext.Provider value={{ language, setLanguage, t }}>{children}</LanguageContext.Provider>
+  return <LanguageContext.Provider value={{ language: currentLanguage, setLanguage, t }}>{children}</LanguageContext.Provider>
 }
 
 export function useLanguage() {

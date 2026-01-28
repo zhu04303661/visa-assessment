@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -24,6 +24,12 @@ export function Navbar() {
   const { user, signOut, loading: authLoading } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  
+  // 客户端挂载后才显示认证相关UI，避免hydration不匹配
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const navItems = [
     { href: "/", label: language === "en" ? "Home" : "首页", icon: Home },
@@ -75,8 +81,8 @@ export function Navbar() {
             })}
             <LanguageSwitcher />
             
-            {/* Auth Section */}
-            {authLoading ? (
+            {/* Auth Section - 仅在客户端挂载后渲染以避免hydration不匹配 */}
+            {!mounted || authLoading ? (
               <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
             ) : user ? (
               <DropdownMenu>
@@ -134,7 +140,7 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <div className="flex md:hidden items-center gap-2">
-            {!authLoading && !user && (
+            {mounted && !authLoading && !user && (
               <Button
                 variant="default"
                 size="sm"
@@ -145,7 +151,7 @@ export function Navbar() {
                 {language === "en" ? "Sign In" : "登录"}
               </Button>
             )}
-            {!authLoading && user && (
+            {mounted && !authLoading && user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">

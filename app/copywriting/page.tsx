@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, useCallback, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -131,8 +131,13 @@ interface SuccessCase {
   key_takeaways?: string
 }
 
-export default function CopywritingPage() {
+function CopywritingContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const projectIdFromUrl = searchParams.get('project')
+  
+  // 挂载状态 - 防止hydration不匹配
+  const [mounted, setMounted] = useState(false)
   
   // 状态
   const [projects, setProjects] = useState<Project[]>([])
@@ -216,6 +221,9 @@ export default function CopywritingPage() {
     try {
       // 先设置基本数据
       setSelectedProject(project)
+      
+      // 更新 URL，添加项目 ID 参数
+      router.push(`/copywriting?project=${project.project_id}`, { scroll: false })
       
       // 然后加载完整的项目数据（包含material_packages）
       const data = await apiCall(`/api/projects/${project.project_id}`)
@@ -623,10 +631,25 @@ export default function CopywritingPage() {
     }
   }
   
+  // 挂载检测
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  
   // 初始化
   useEffect(() => {
     loadProjects()
   }, [loadProjects])
+  
+  // 当项目列表加载完成且 URL 中有项目 ID 时，自动选择该项目
+  useEffect(() => {
+    if (projectIdFromUrl && projects.length > 0 && !selectedProject) {
+      const targetProject = projects.find(p => p.project_id === projectIdFromUrl)
+      if (targetProject) {
+        selectProject(targetProject)
+      }
+    }
+  }, [projectIdFromUrl, projects, selectedProject])
   
   // 选择项目时加载详情
   useEffect(() => {
@@ -668,6 +691,50 @@ export default function CopywritingPage() {
     const totalProgress = packages.reduce((sum, p) => sum + (p.progress || 0), 0)
     return Math.round(totalProgress / packages.length)
   }
+  
+  // 状态映射为中文
+  const getStatusLabel = (status: string) => {
+    const statusMap: Record<string, { label: string; color: string }> = {
+      'created': { label: '已创建', color: 'bg-slate-100 text-slate-700' },
+      '1_collecting': { label: '材料收集中', color: 'bg-blue-100 text-blue-700' },
+      '2_analyzing': { label: '分析中', color: 'bg-purple-100 text-purple-700' },
+      '3_drafting': { label: '草稿生成中', color: 'bg-amber-100 text-amber-700' },
+      '4_optimizing': { label: '优化中', color: 'bg-orange-100 text-orange-700' },
+      '5_reviewing': { label: '审核中', color: 'bg-cyan-100 text-cyan-700' },
+      '6_finalizing': { label: '定稿中', color: 'bg-indigo-100 text-indigo-700' },
+      '7_completed': { label: '已完成', color: 'bg-green-100 text-green-700' },
+    }
+    return statusMap[status] || { label: status, color: 'bg-gray-100 text-gray-700' }
+  }
+  
+  // 获取材料统计
+  const getMaterialStats = () => {
+    const totalFiles = Object.values(rawMaterials).flat().length
+    const categories = Object.keys(rawMaterials).length
+    return { totalFiles, categories }
+  }
+  
+  // 工作流步骤配置
+  const workflowSteps = [
+    { key: 'collect', name: '材料收集', icon: Upload, action: () => router.push(`/material-collection?project=${selectedProject?.project_id}`) },
+    { key: 'analyze', name: '材料分析', icon: Brain, action: () => runWorkflowStep('analyze') },
+    { key: 'match', name: '案例匹配', icon: Target, action: () => runWorkflowStep('match') },
+    { key: 'generate', name: '文案生成', icon: Sparkles, action: () => runWorkflowStep('generate') },
+    { key: 'optimize', name: '内容优化', icon: Wand2, action: () => runWorkflowStep('optimize') },
+    { key: 'review', name: '最终审核', icon: FileCheck, action: () => runWorkflowStep('review') },
+  ]
+
+  // 防止hydration不匹配 - 服务端和客户端保持一致的初始渲染
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-sm text-muted-foreground">加载中...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
@@ -691,85 +758,101 @@ export default function CopywritingPage() {
         </div>
       )}
 
-      <div className="container mx-auto max-w-[1800px] p-6 pb-12">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+      <div className="container mx-auto max-w-[1800px] px-4 py-4">
+        {/* Header - 紧凑设计 */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg">
+              <Wand2 className="h-6 w-6 text-white" />
+            </div>
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg">
-                  <Wand2 className="h-8 w-8 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                    AI文案工作台
-                  </h1>
-                  <p className="text-muted-foreground text-sm mt-1">
-                    智能GTV签证申请文案制作系统
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                AI文案工作台
+              </h1>
+              <p className="text-muted-foreground text-xs">
+                智能GTV签证申请文案制作系统
+              </p>
             </div>
-            
-            <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={loadProjects} disabled={loading}>
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                刷新
-              </Button>
-              <Button variant="outline" onClick={() => setIsAgentDialogOpen(true)}>
-                <Brain className="h-4 w-4 mr-2" />
-                AI助手
-              </Button>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                新建项目
-              </Button>
-            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={loadProjects} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setIsAgentDialogOpen(true)}>
+              <Brain className="h-4 w-4 mr-1.5" />
+              AI助手
+            </Button>
+            <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              新建项目
+            </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           {/* 项目列表 */}
           <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FolderOpen className="h-5 w-5 text-primary" />
-                项目列表
-              </CardTitle>
-              <CardDescription>共 {projects.length} 个项目</CardDescription>
+            <CardHeader className="py-3 px-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FolderOpen className="h-4 w-4 text-primary" />
+                  项目列表
+                </CardTitle>
+                <Badge variant="secondary" className="text-xs">{projects.length}</Badge>
+              </div>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[600px] pr-2">
-                <div className="space-y-2">
-                  {projects.map((project) => (
-                    <Card
-                      key={project.project_id}
-                      className={`p-3 cursor-pointer transition-all hover:shadow-md ${
-                        selectedProject?.project_id === project.project_id 
-                          ? 'border-primary shadow-md bg-primary/5' 
-                          : ''
-                      }`}
-                      onClick={() => selectProject(project)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold truncate">{project.client_name}</h4>
-                          <p className="text-xs text-muted-foreground">{project.visa_type}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Progress value={calculateProgress(project)} className="h-1 flex-1" />
-                            <span className="text-xs text-muted-foreground">{calculateProgress(project)}%</span>
+            <CardContent className="px-2 pb-2">
+              <ScrollArea className="h-[calc(100vh-280px)] min-h-[400px]">
+                <div className="space-y-1 px-2">
+                  {projects.map((project) => {
+                    const isSelected = selectedProject?.project_id === project.project_id
+                    const progress = calculateProgress(project)
+                    const status = getStatusLabel(project.status)
+                    
+                    return (
+                      <div
+                        key={project.project_id}
+                        className={`p-2.5 rounded-lg cursor-pointer transition-all ${
+                          isSelected 
+                            ? 'bg-primary/10 border border-primary shadow-sm' 
+                            : 'hover:bg-muted/50 border border-transparent'
+                        }`}
+                        onClick={() => selectProject(project)}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
+                            isSelected ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {project.client_name.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium text-sm truncate">{project.client_name}</h4>
+                              <ChevronRight className={`h-3.5 w-3.5 ${isSelected ? 'text-primary' : 'text-muted-foreground/50'}`} />
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] text-muted-foreground">{project.visa_type}</span>
+                              <span className={`text-[10px] px-1 py-0 rounded ${status.color}`}>
+                                {status.label}
+                              </span>
+                            </div>
+                            {progress > 0 && (
+                              <div className="mt-1.5">
+                                <Progress value={progress} className="h-0.5" />
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground ml-2" />
                       </div>
-                    </Card>
-                  ))}
+                    )
+                  })}
                   
                   {projects.length === 0 && !loading && (
                     <div className="text-center py-8 text-muted-foreground">
-                      <FolderOpen className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                      <p>暂无项目</p>
-                      <Button variant="link" onClick={() => setIsCreateDialogOpen(true)}>
+                      <FolderOpen className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">暂无项目</p>
+                      <Button variant="link" size="sm" onClick={() => setIsCreateDialogOpen(true)}>
                         创建第一个项目
                       </Button>
                     </div>
@@ -780,317 +863,306 @@ export default function CopywritingPage() {
           </Card>
 
           {/* 主内容区 */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-3 space-y-4">
             {selectedProject ? (
               <>
-                {/* 项目概览 */}
-                <Card>
-                  <CardHeader>
+                {/* 项目头部 - 紧凑设计 */}
+                <Card className="overflow-hidden">
+                  <div className="bg-gradient-to-r from-violet-500/10 to-purple-500/10 p-4">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="text-2xl">{selectedProject.client_name}</CardTitle>
-                        <CardDescription>
-                          项目ID: {selectedProject.project_id} | 
-                          案件ID: {selectedProject.case_id} | 
-                          签证类型: {selectedProject.visa_type}
-                        </CardDescription>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                          {selectedProject.client_name.charAt(0)}
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-bold">{selectedProject.client_name}</h2>
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <FileText className="h-3.5 w-3.5" />
+                              {selectedProject.visa_type}
+                            </span>
+                            <span>ID: {selectedProject.project_id.slice(0, 8)}</span>
+                            <Badge className={getStatusLabel(selectedProject.status).color}>
+                              {getStatusLabel(selectedProject.status).label}
+                            </Badge>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex items-center gap-2">
                         <Button 
                           variant="outline" 
-                          onClick={() => setIsUploadDialogOpen(true)}
+                          size="sm"
+                          onClick={() => router.push(`/material-collection?project=${selectedProject.project_id}`)}
                         >
-                          <Upload className="h-4 w-4 mr-2" />
-                          上传材料
+                          <FolderOpen className="h-4 w-4 mr-1.5" />
+                          材料收集
                         </Button>
                         <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setIsUploadDialogOpen(true)}
+                        >
+                          <Upload className="h-4 w-4 mr-1.5" />
+                          上传
+                        </Button>
+                        <Button 
+                          size="sm"
                           onClick={() => runWorkflowStep('full')}
                           disabled={processing}
+                          className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
                         >
                           {processing ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
                           ) : (
-                            <Zap className="h-4 w-4 mr-2" />
+                            <Zap className="h-4 w-4 mr-1.5" />
                           )}
                           一键生成
                         </Button>
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">整体进度</span>
-                          <span className="text-sm text-muted-foreground">{calculateProgress(selectedProject)}%</span>
-                        </div>
-                        <Progress value={calculateProgress(selectedProject)} className="h-2" />
-                      </div>
-                      <Badge variant={selectedProject.status === '7_completed' ? 'default' : 'secondary'}>
-                        {selectedProject.status}
-                      </Badge>
+                  </div>
+                  
+                  {/* 工作流程 - 可点击的进度条 */}
+                  <div className="px-4 py-3 border-t bg-muted/30">
+                    <div className="flex items-center gap-1">
+                      {workflowSteps.map((step, index) => {
+                        const statusEntry = Object.entries(workflowStatus).find(([k]) => k.includes(step.key))
+                        const stepStatus = statusEntry ? statusEntry[1].status : 'pending'
+                        const isCompleted = stepStatus === 'completed'
+                        const isActive = stepStatus === 'in_progress'
+                        const StepIcon = step.icon
+                        
+                        return (
+                          <div key={step.key} className="flex items-center flex-1">
+                            <button
+                              onClick={step.action}
+                              disabled={processing}
+                              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-medium transition-all ${
+                                isCompleted 
+                                  ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300' 
+                                  : isActive 
+                                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300' 
+                                    : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground'
+                              } ${processing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            >
+                              {isActive ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : isCompleted ? (
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              ) : (
+                                <StepIcon className="h-3.5 w-3.5" />
+                              )}
+                              <span className="hidden sm:inline">{step.name}</span>
+                            </button>
+                            {index < workflowSteps.length - 1 && (
+                              <ChevronRight className={`h-4 w-4 mx-0.5 ${isCompleted ? 'text-green-500' : 'text-muted-foreground/30'}`} />
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
 
-                {/* 工作流程 */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Layers className="h-5 w-5 text-primary" />
-                      工作流程
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      {Object.entries(workflowStatus).map(([key, stage], index, arr) => (
-                        <div key={key} className="flex items-center">
-                          <div className="flex flex-col items-center">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                              stage.status === 'completed' ? 'bg-green-100 dark:bg-green-900' :
-                              stage.status === 'in_progress' ? 'bg-blue-100 dark:bg-blue-900' :
-                              'bg-gray-100 dark:bg-gray-800'
-                            }`}>
-                              {getStageIcon(stage.status)}
-                            </div>
-                            <span className="text-xs mt-2 text-center max-w-[80px]">{stage.name}</span>
-                          </div>
-                          {index < arr.length - 1 && (
-                            <div className={`w-12 h-0.5 mx-2 ${
-                              stage.status === 'completed' ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'
-                            }`} />
-                          )}
-                        </div>
-                      ))}
+                {/* 快速统计卡片 */}
+                <div className="grid grid-cols-4 gap-3">
+                  <Card className="p-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('packages')}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{getMaterialStats().totalFiles}</p>
+                        <p className="text-xs text-muted-foreground">原始材料</p>
+                      </div>
                     </div>
-                    
-                    {/* 工作流操作按钮 */}
-                    <div className="grid grid-cols-5 gap-2 mt-6">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => runWorkflowStep('analyze')}
-                        disabled={processing || !selectedProject}
-                      >
-                        {processing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Brain className="h-4 w-4 mr-1" />}
-                        分析材料
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => runWorkflowStep('match')}
-                        disabled={processing}
-                      >
-                        <Target className="h-4 w-4 mr-1" />
-                        匹配
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => runWorkflowStep('generate')}
-                        disabled={processing}
-                      >
-                        <Sparkles className="h-4 w-4 mr-1" />
-                        生成
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => runWorkflowStep('optimize')}
-                        disabled={processing}
-                      >
-                        <Wand2 className="h-4 w-4 mr-1" />
-                        优化
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => runWorkflowStep('review')}
-                        disabled={processing}
-                      >
-                        <FileCheck className="h-4 w-4 mr-1" />
-                        审核
-                      </Button>
+                  </Card>
+                  <Card className="p-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('packages')}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                        <Layers className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{Object.keys(selectedProject.material_packages || {}).length}</p>
+                        <p className="text-xs text-muted-foreground">材料包</p>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </Card>
+                  <Card className="p-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('cases')}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                        <BookOpen className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{matchedCases.length}</p>
+                        <p className="text-xs text-muted-foreground">匹配案例</p>
+                      </div>
+                    </div>
+                  </Card>
+                  <Card 
+                    className="p-3 cursor-pointer hover:shadow-md transition-shadow" 
+                    onClick={handleDownloadAllMaterials}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                        {downloading ? (
+                          <Loader2 className="h-5 w-5 text-green-600 animate-spin" />
+                        ) : (
+                          <Download className="h-5 w-5 text-green-600" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">打包下载</p>
+                        <p className="text-xs text-muted-foreground">全部材料</p>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
 
                 {/* 详细内容Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="packages">材料包</TabsTrigger>
-                    <TabsTrigger value="documents">文档</TabsTrigger>
-                    <TabsTrigger value="cases">参考案例</TabsTrigger>
-                    <TabsTrigger value="history">操作历史</TabsTrigger>
+                    <TabsTrigger value="packages" className="flex items-center gap-1.5">
+                      <Layers className="h-4 w-4" />
+                      材料包
+                    </TabsTrigger>
+                    <TabsTrigger value="documents" className="flex items-center gap-1.5">
+                      <FileText className="h-4 w-4" />
+                      文档
+                    </TabsTrigger>
+                    <TabsTrigger value="cases" className="flex items-center gap-1.5">
+                      <BookOpen className="h-4 w-4" />
+                      参考案例
+                    </TabsTrigger>
+                    <TabsTrigger value="history" className="flex items-center gap-1.5">
+                      <Clock className="h-4 w-4" />
+                      操作历史
+                    </TabsTrigger>
                   </TabsList>
 
                   {/* 材料包 */}
-                  <TabsContent value="packages" className="mt-4 space-y-6">
-                    {/* 原始材料列表 */}
+                  <TabsContent value="packages" className="mt-4 space-y-4">
+                    {/* 原始材料 - 紧凑折叠设计 */}
                     <Card>
-                      <CardHeader className="pb-3">
+                      <CardHeader className="py-3">
                         <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <Upload className="h-5 w-5" />
-                            原始材料
-                          </CardTitle>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary">
-                              {Object.values(rawMaterials).flat().length} 个文件
+                          <div className="flex items-center gap-3">
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <Upload className="h-4 w-4" />
+                              原始材料
+                            </CardTitle>
+                            <Badge variant="secondary" className="text-xs">
+                              {getMaterialStats().categories} 分类 · {getMaterialStats().totalFiles} 文件
                             </Badge>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={handleDownloadAllMaterials}
-                              disabled={downloading || Object.values(rawMaterials).flat().length === 0}
-                            >
-                              {downloading ? (
-                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                              ) : (
-                                <Download className="h-4 w-4 mr-1" />
-                              )}
-                              打包下载
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              onClick={() => runWorkflowStep('analyze')}
-                              disabled={processing || Object.values(rawMaterials).flat().length === 0}
-                              className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
-                            >
-                              {processing ? (
-                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                              ) : (
-                                <Brain className="h-4 w-4 mr-1" />
-                              )}
-                              分析材料
-                            </Button>
+                          </div>
+                          <div className="flex items-center gap-2">
                             {analysisResult && (
                               <Button 
                                 size="sm" 
                                 variant="outline"
                                 onClick={() => setIsAnalysisDialogOpen(true)}
                               >
-                                <Eye className="h-4 w-4 mr-1" />
-                                查看结果
+                                <Eye className="h-3.5 w-3.5 mr-1" />
+                                分析结果
                               </Button>
                             )}
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => router.push(`/material-collection?project=${selectedProject.project_id}`)}
+                            >
+                              <FolderOpen className="h-3.5 w-3.5 mr-1" />
+                              管理材料
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                router.push(`/copywriting/${selectedProject.project_id}/extraction`)
+                              }}
+                            >
+                              <FileText className="h-3.5 w-3.5 mr-1" />
+                              内容提取
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                router.push(`/copywriting/${selectedProject.project_id}/framework`)
+                              }}
+                            >
+                              <Target className="h-3.5 w-3.5 mr-1" />
+                              GTV框架
+                            </Button>
                           </div>
                         </div>
-                        <CardDescription>已上传的申请人原始材料，点击"分析材料"按钮提取关键信息</CardDescription>
                       </CardHeader>
-                      <CardContent>
-                        {Object.keys(rawMaterials).length === 0 ? (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <Upload className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                            <p>暂无原始材料</p>
-                            <p className="text-sm mt-1">点击"上传材料"按钮上传PDF、Word、图片或链接</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-4">
-                            {Object.entries(rawMaterials).map(([category, files]) => (
-                              <div key={category}>
-                                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                                  <FolderOpen className="h-4 w-4" />
-                                  {category}
-                                  <Badge variant="outline" className="text-xs">{files.length}</Badge>
-                                </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                  {files.map((file: any, idx: number) => {
-                                    const fileName = file.file_name || file.name
-                                    const fileSize = file.file_size || file.size
-                                    const uploadedAt = file.uploaded_at || file.modified
-                                    
-                                    return (
-                                    <div 
-                                      key={file.id || idx}
-                                      className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-                                      onClick={() => handlePreviewFile(file)}
-                                    >
-                                      <div className="shrink-0">
-                                        {fileName?.endsWith('.pdf') ? (
-                                          <FileText className="h-8 w-8 text-red-500" />
-                                        ) : fileName?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                                          <FileText className="h-8 w-8 text-green-500" />
-                                        ) : fileName?.match(/\.(doc|docx)$/i) ? (
-                                          <FileText className="h-8 w-8 text-blue-500" />
-                                        ) : fileName?.match(/\.(xls|xlsx)$/i) ? (
-                                          <FileText className="h-8 w-8 text-emerald-500" />
-                                        ) : (
-                                          <FileText className="h-8 w-8 text-gray-500" />
-                                        )}
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate">{fileName}</p>
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                          {fileSize && <span>{(fileSize / 1024).toFixed(1)} KB</span>}
-                                          {uploadedAt && (
-                                            <span>{new Date(uploadedAt).toLocaleDateString()}</span>
-                                          )}
-                                        </div>
-                                      </div>
-                                      <Eye className="h-4 w-4 text-muted-foreground" />
-                                    </div>
-                                  )})}
+                      {Object.keys(rawMaterials).length > 0 && (
+                        <CardContent className="pt-0">
+                          <ScrollArea className="max-h-[200px]">
+                            <div className="flex flex-wrap gap-2">
+                              {Object.entries(rawMaterials).map(([category, files]) => (
+                                <div 
+                                  key={category} 
+                                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted/50 text-xs"
+                                >
+                                  <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                                  <span className="font-medium">{category}</span>
+                                  <Badge variant="outline" className="text-[10px] h-4 px-1">{files.length}</Badge>
                                 </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </CardContent>
+                      )}
                     </Card>
 
-                    {/* 材料包状态 */}
-                    <div>
-                      <h3 className="text-lg font-medium mb-4">材料包状态（点击进入编辑）</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {Object.entries(selectedProject.material_packages || {}).map(([key, pkg]) => (
+                    {/* 材料包网格 - 更紧凑 */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      {Object.entries(selectedProject.material_packages || {}).map(([key, pkg]) => {
+                        const pkgStatusMap: Record<string, { label: string; color: string }> = {
+                          'completed': { label: '已完成', color: 'bg-green-100 text-green-700' },
+                          'optimized': { label: '已优化', color: 'bg-blue-100 text-blue-700' },
+                          'draft': { label: '草稿', color: 'bg-amber-100 text-amber-700' },
+                          'pending': { label: '待处理', color: 'bg-gray-100 text-gray-600' },
+                        }
+                        const pkgStatus = pkgStatusMap[pkg.status] || pkgStatusMap['pending']
+                        
+                        return (
                           <Card 
                             key={key} 
-                            className="hover:shadow-md transition-shadow cursor-pointer hover:border-primary"
+                            className="group hover:shadow-md transition-all cursor-pointer hover:border-primary relative overflow-hidden"
                             onClick={() => router.push(`/copywriting/${selectedProject.project_id}/${key}`)}
                           >
-                            <CardHeader className="pb-2">
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <CardTitle className="text-base">{pkg.name}</CardTitle>
-                                  <CardDescription className="text-xs">{pkg.name_en}</CardDescription>
+                            {/* 进度条背景 */}
+                            <div 
+                              className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-violet-500 to-purple-500 transition-all"
+                              style={{ width: `${pkg.progress || 0}%` }}
+                            />
+                            
+                            <CardContent className="p-3">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium text-sm truncate">{pkg.name}</h4>
+                                  <p className="text-[10px] text-muted-foreground truncate">{pkg.name_en}</p>
                                 </div>
                                 {pkg.required && (
-                                  <Badge variant="outline" className="text-xs">必需</Badge>
+                                  <span className="text-[10px] text-orange-600 font-medium">必需</span>
                                 )}
                               </div>
-                            </CardHeader>
-                            <CardContent>
-                              <p className="text-sm text-muted-foreground mb-3">{pkg.description}</p>
-                              <div className="flex items-center gap-2">
-                                <Progress value={pkg.progress || 0} className="h-1 flex-1" />
-                                <span className="text-xs">{pkg.progress || 0}%</span>
-                              </div>
-                              <div className="flex items-center justify-between mt-3">
-                                <Badge variant={
-                                  pkg.status === 'completed' ? 'default' :
-                                  pkg.status === 'optimized' ? 'secondary' :
-                                  pkg.status === 'draft' ? 'outline' :
-                                  'secondary'
-                                }>
-                                  {pkg.status || 'pending'}
+                              
+                              <div className="flex items-center justify-between mt-2">
+                                <Badge className={`text-[10px] px-1.5 py-0 ${pkgStatus.color}`}>
+                                  {pkgStatus.label}
                                 </Badge>
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    router.push(`/copywriting/${selectedProject.project_id}/${key}`)
-                                  }}
-                                >
-                                  <Edit className="h-4 w-4 mr-1" />
-                                  编辑
-                                </Button>
+                                <span className="text-[10px] text-muted-foreground">{pkg.progress || 0}%</span>
                               </div>
                             </CardContent>
                           </Card>
-                        ))}
-                      </div>
+                        )
+                      })}
                     </div>
                   </TabsContent>
 
@@ -1763,5 +1835,21 @@ export default function CopywritingPage() {
 
       <Footer />
     </div>
+  )
+}
+
+// 导出带 Suspense 包装的组件，正确处理 useSearchParams
+export default function CopywritingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-sm text-muted-foreground">加载中...</p>
+        </div>
+      </div>
+    }>
+      <CopywritingContent />
+    </Suspense>
   )
 }

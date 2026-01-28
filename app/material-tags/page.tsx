@@ -142,18 +142,19 @@ export default function MaterialTagsPage() {
     loadCategories()
   }, [loadCategories])
 
-  // 保存所有分类
-  const saveCategories = async () => {
+  // 保存所有分类（支持传入新数据直接保存）
+  const saveCategories = async (newCategories?: Categories) => {
+    const dataToSave = newCategories || categories
     try {
       setSaving(true)
       const data = await apiCall('/api/material-collection/categories', {
         method: 'PUT',
-        body: JSON.stringify({ categories })
+        body: JSON.stringify({ categories: dataToSave })
       })
       
       if (data.success) {
-        setSuccess('分类保存成功')
-        setTimeout(() => setSuccess(null), 3000)
+        setSuccess('已自动保存')
+        setTimeout(() => setSuccess(null), 2000)
       } else {
         setError(data.error || '保存失败')
       }
@@ -165,7 +166,7 @@ export default function MaterialTagsPage() {
     }
   }
 
-  // 添加新分类
+  // 添加新分类（自动保存）
   const addCategory = () => {
     const newId = `folder_${Object.keys(categories).length + 1}`
     const newCat: Category = {
@@ -176,37 +177,47 @@ export default function MaterialTagsPage() {
       items: []
     }
     
-    setCategories(prev => ({
-      ...prev,
+    const updatedCategories = {
+      ...categories,
       [newId]: newCat
-    }))
+    }
     
+    setCategories(updatedCategories)
     setNewCategoryOpen(false)
     setNewCategory({ name: '', name_en: '', description: '', order: 0, items: [] })
+    
+    // 自动保存
+    saveCategories(updatedCategories)
   }
 
-  // 更新分类
+  // 更新分类（自动保存）
   const updateCategory = () => {
     if (!editingCategory) return
     
-    setCategories(prev => ({
-      ...prev,
+    const updatedCategories = {
+      ...categories,
       [editingCategory.id]: editingCategory.data
-    }))
+    }
     
+    setCategories(updatedCategories)
     setEditCategoryOpen(false)
     setEditingCategory(null)
+    
+    // 自动保存
+    saveCategories(updatedCategories)
   }
 
-  // 删除分类
+  // 删除分类（自动保存）
   const deleteCategory = (categoryId: string) => {
     if (!confirm('确定要删除这个分类吗？分类下的所有材料项也会被删除。')) return
     
-    setCategories(prev => {
-      const newCats = { ...prev }
-      delete newCats[categoryId]
-      return newCats
-    })
+    const updatedCategories = { ...categories }
+    delete updatedCategories[categoryId]
+    
+    setCategories(updatedCategories)
+    
+    // 自动保存
+    saveCategories(updatedCategories)
   }
 
   // 添加材料项
@@ -226,61 +237,75 @@ export default function MaterialTagsPage() {
     setEditItemOpen(true)
   }
 
-  // 更新材料项
+  // 更新材料项（自动保存）
   const updateItem = () => {
     if (!editingItem) return
     
     // 先关闭对话框，防止重复提交
     setEditItemOpen(false)
     
-    setCategories(prev => {
-      const newCats = { ...prev }
-      const category = newCats[editingItem.categoryId]
-      
-      if (editingItem.isNew) {
-        // 检查是否已存在相同 ID 的项，避免重复添加
-        const exists = category.items.some(i => i.item_id === editingItem.item.item_id)
-        if (!exists) {
-          category.items.push(editingItem.item)
-        }
-      } else {
-        const index = category.items.findIndex(i => i.item_id === editingItem.item.item_id)
-        if (index >= 0) {
-          category.items[index] = editingItem.item
-        }
-      }
-      
-      return newCats
-    })
+    const updatedCategories = { ...categories }
+    const category = { ...updatedCategories[editingItem.categoryId] }
+    category.items = [...category.items]
     
+    if (editingItem.isNew) {
+      // 检查是否已存在相同 ID 的项，避免重复添加
+      const exists = category.items.some(i => i.item_id === editingItem.item.item_id)
+      if (!exists) {
+        category.items.push(editingItem.item)
+      }
+    } else {
+      const index = category.items.findIndex(i => i.item_id === editingItem.item.item_id)
+      if (index >= 0) {
+        category.items[index] = editingItem.item
+      }
+    }
+    
+    updatedCategories[editingItem.categoryId] = category
+    setCategories(updatedCategories)
     setEditingItem(null)
+    
+    // 自动保存
+    saveCategories(updatedCategories)
   }
 
-  // 删除材料项
+  // 删除材料项（自动保存）
   const deleteItem = (categoryId: string, itemId: string) => {
     if (!confirm('确定要删除这个材料项吗？')) return
     
-    setCategories(prev => {
-      const newCats = { ...prev }
-      newCats[categoryId].items = newCats[categoryId].items.filter(i => i.item_id !== itemId)
-      return newCats
-    })
+    const updatedCategories = { ...categories }
+    updatedCategories[categoryId] = {
+      ...updatedCategories[categoryId],
+      items: updatedCategories[categoryId].items.filter(i => i.item_id !== itemId)
+    }
+    
+    setCategories(updatedCategories)
+    
+    // 自动保存
+    saveCategories(updatedCategories)
   }
 
-  // 移动材料项
+  // 移动材料项（自动保存）
   const moveItem = (categoryId: string, itemIndex: number, direction: 'up' | 'down') => {
-    setCategories(prev => {
-      const newCats = { ...prev }
-      const items = [...newCats[categoryId].items]
-      const newIndex = direction === 'up' ? itemIndex - 1 : itemIndex + 1
-      
-      if (newIndex < 0 || newIndex >= items.length) return prev
-      
-      ;[items[itemIndex], items[newIndex]] = [items[newIndex], items[itemIndex]]
-      newCats[categoryId].items = items
-      
-      return newCats
-    })
+    const items = [...categories[categoryId].items]
+    const newIndex = direction === 'up' ? itemIndex - 1 : itemIndex + 1
+    
+    if (newIndex < 0 || newIndex >= items.length) return
+    
+    ;[items[itemIndex], items[newIndex]] = [items[newIndex], items[itemIndex]]
+    
+    const updatedCategories = {
+      ...categories,
+      [categoryId]: {
+        ...categories[categoryId],
+        items
+      }
+    }
+    
+    setCategories(updatedCategories)
+    
+    // 自动保存
+    saveCategories(updatedCategories)
   }
 
   // 导出分类配置
@@ -295,7 +320,7 @@ export default function MaterialTagsPage() {
     URL.revokeObjectURL(url)
   }
 
-  // 导入分类配置
+  // 导入分类配置（自动保存）
   const importCategories = () => {
     const input = document.createElement('input')
     input.type = 'file'
@@ -308,7 +333,8 @@ export default function MaterialTagsPage() {
         const text = await file.text()
         const data = JSON.parse(text)
         setCategories(data)
-        setSuccess('分类配置导入成功，请点击保存按钮保存到服务器')
+        // 自动保存到服务器
+        saveCategories(data)
       } catch (err) {
         setError('导入失败：文件格式错误')
       }

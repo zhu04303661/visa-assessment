@@ -89,22 +89,6 @@ class CopywritingDatabase:
                     )
                 ''')
                 
-                # ==================== 原始材料表 ====================
-                cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS raw_materials (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        project_id TEXT NOT NULL,
-                        category TEXT NOT NULL,
-                        filename TEXT NOT NULL,
-                        file_path TEXT,
-                        content TEXT,
-                        file_size INTEGER DEFAULT 0,
-                        file_type TEXT,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (project_id) REFERENCES projects (project_id)
-                    )
-                ''')
-                
                 # ==================== 生成文档表 ====================
                 cursor.execute('''
                     CREATE TABLE IF NOT EXISTS generated_documents (
@@ -223,15 +207,75 @@ class CopywritingDatabase:
                     )
                 ''')
                 
+                # ==================== Agent提示词配置表 ====================
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS agent_prompts (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        project_id TEXT NOT NULL,
+                        package_type TEXT NOT NULL,
+                        system_prompt TEXT,
+                        user_prompt_template TEXT,
+                        reference_doc_id INTEGER,
+                        reference_structure TEXT,
+                        custom_instructions TEXT,
+                        created_by TEXT DEFAULT 'user',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (project_id) REFERENCES projects (project_id),
+                        UNIQUE(project_id, package_type)
+                    )
+                ''')
+                
+                # ==================== 客户信息脉络图表 ====================
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS client_profile_map (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        project_id TEXT UNIQUE NOT NULL,
+                        personal_info TEXT,
+                        education TEXT,
+                        career_timeline TEXT,
+                        technical_expertise TEXT,
+                        achievements TEXT,
+                        connections TEXT,
+                        mindmap_data TEXT,
+                        raw_analysis TEXT,
+                        version INTEGER DEFAULT 1,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (project_id) REFERENCES projects (project_id)
+                    )
+                ''')
+                
+                # ==================== GTV框架表 ====================
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS gtv_framework (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        project_id TEXT UNIQUE NOT NULL,
+                        domain_positioning TEXT,
+                        mc_criteria TEXT,
+                        oc_criteria TEXT,
+                        recommenders TEXT,
+                        personal_statement_points TEXT,
+                        evidence_list TEXT,
+                        framework_data TEXT,
+                        version INTEGER DEFAULT 1,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (project_id) REFERENCES projects (project_id)
+                    )
+                ''')
+                
                 # 创建索引
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_projects_status ON projects (status)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_projects_client ON projects (client_name)')
-                cursor.execute('CREATE INDEX IF NOT EXISTS idx_materials_project ON raw_materials (project_id)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_documents_project ON generated_documents (project_id)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_cases_industry ON success_cases (industry)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_cases_pathway ON success_cases (pathway)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_versions_project ON document_versions (project_id, package_type)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_package_contents ON package_contents (project_id, package_type)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_agent_prompts ON agent_prompts (project_id, package_type)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_profile_map ON client_profile_map (project_id)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_gtv_framework ON gtv_framework (project_id)')
                 
                 conn.commit()
                 logger.info("数据库表结构初始化完成")
@@ -432,16 +476,25 @@ class CopywritingDatabase:
     def add_raw_material(self, project_id: str, category: str, filename: str,
                         file_path: str = None, content: str = None,
                         file_size: int = 0, file_type: str = None) -> Dict[str, Any]:
-        """添加原始材料"""
+        """添加原始材料（使用material_files表）"""
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 
+                # 映射旧的 category 到新的 category_id 和 item_id
+                category_mapping = {
+                    '简历': ('cv_docs', 'applicant_cv'),
+                    '推荐信': ('ref_letter', 'ref1_letter'),
+                    '证书': ('degree_cert', 'highest_degree'),
+                    '证明': ('evidence', 'other_evidence'),
+                }
+                category_id, item_id = category_mapping.get(category, ('uncategorized', 'other'))
+                
                 cursor.execute('''
-                    INSERT INTO raw_materials 
-                    (project_id, category, filename, file_path, content, file_size, file_type)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (project_id, category, filename, file_path, content, file_size, file_type))
+                    INSERT INTO material_files 
+                    (project_id, category_id, item_id, file_name, file_path, file_size, file_type, description)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (project_id, category_id, item_id, filename, file_path or '', file_size, file_type, content))
                 
                 material_id = cursor.lastrowid
                 logger.info(f"原始材料添加成功: {filename}")
@@ -452,28 +505,28 @@ class CopywritingDatabase:
             return {"success": False, "error": str(e)}
     
     def get_raw_materials(self, project_id: str) -> Dict[str, Any]:
-        """获取项目的原始材料"""
+        """获取项目的原始材料（从material_files表读取）"""
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 
                 cursor.execute('''
-                    SELECT * FROM raw_materials WHERE project_id = ? ORDER BY category, created_at
+                    SELECT * FROM material_files WHERE project_id = ? ORDER BY category_id, uploaded_at
                 ''', (project_id,))
                 
                 materials = {}
                 for row in cursor.fetchall():
                     data = dict(row)
-                    category = data['category']
+                    category = data['category_id']
                     if category not in materials:
                         materials[category] = []
                     materials[category].append({
                         "id": data['id'],
-                        "name": data['filename'],
+                        "name": data['file_name'],
                         "path": data['file_path'],
-                        "content": data['content'],
+                        "content": data.get('description', ''),
                         "size": data['file_size'],
-                        "modified": data['created_at']
+                        "modified": data['uploaded_at']
                     })
                 
                 return {"success": True, "data": materials}
@@ -1176,6 +1229,249 @@ class CopywritingDatabase:
         except Exception as e:
             logger.error(f"获取材料包概览失败: {e}")
             return {"success": False, "error": str(e), "data": {}}
+
+    # ==================== Agent提示词管理 ====================
+    
+    def save_agent_prompt(self, project_id: str, package_type: str, 
+                         system_prompt: str = None, user_prompt_template: str = None,
+                         reference_doc_id: int = None, reference_structure: str = None,
+                         custom_instructions: str = None) -> Dict[str, Any]:
+        """保存或更新Agent提示词配置"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    INSERT INTO agent_prompts 
+                    (project_id, package_type, system_prompt, user_prompt_template, 
+                     reference_doc_id, reference_structure, custom_instructions, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(project_id, package_type) 
+                    DO UPDATE SET 
+                        system_prompt = COALESCE(excluded.system_prompt, system_prompt),
+                        user_prompt_template = COALESCE(excluded.user_prompt_template, user_prompt_template),
+                        reference_doc_id = COALESCE(excluded.reference_doc_id, reference_doc_id),
+                        reference_structure = COALESCE(excluded.reference_structure, reference_structure),
+                        custom_instructions = COALESCE(excluded.custom_instructions, custom_instructions),
+                        updated_at = CURRENT_TIMESTAMP
+                ''', (project_id, package_type, system_prompt, user_prompt_template,
+                     reference_doc_id, reference_structure, custom_instructions))
+                
+                return {"success": True}
+                
+        except Exception as e:
+            logger.error(f"保存Agent配置失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def get_agent_prompt(self, project_id: str, package_type: str) -> Dict[str, Any]:
+        """获取Agent提示词配置"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    SELECT * FROM agent_prompts 
+                    WHERE project_id = ? AND package_type = ?
+                ''', (project_id, package_type))
+                
+                row = cursor.fetchone()
+                
+                if row:
+                    return {
+                        "success": True,
+                        "data": {
+                            "id": row['id'],
+                            "project_id": row['project_id'],
+                            "package_type": row['package_type'],
+                            "system_prompt": row['system_prompt'],
+                            "user_prompt_template": row['user_prompt_template'],
+                            "reference_doc_id": row['reference_doc_id'],
+                            "reference_structure": row['reference_structure'],
+                            "custom_instructions": row['custom_instructions'],
+                            "updated_at": row['updated_at']
+                        }
+                    }
+                
+                return {"success": True, "data": None}
+                
+        except Exception as e:
+            logger.error(f"获取Agent配置失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    # ==================== 客户信息脉络图管理 ====================
+    
+    def save_profile_map(self, project_id: str, profile_data: Dict) -> Dict[str, Any]:
+        """保存或更新客户信息脉络图"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # 获取当前版本号
+                cursor.execute('''
+                    SELECT version FROM client_profile_map WHERE project_id = ?
+                ''', (project_id,))
+                
+                row = cursor.fetchone()
+                new_version = (row['version'] + 1) if row else 1
+                
+                cursor.execute('''
+                    INSERT INTO client_profile_map 
+                    (project_id, personal_info, education, career_timeline, 
+                     technical_expertise, achievements, connections, mindmap_data, 
+                     raw_analysis, version, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(project_id) 
+                    DO UPDATE SET 
+                        personal_info = excluded.personal_info,
+                        education = excluded.education,
+                        career_timeline = excluded.career_timeline,
+                        technical_expertise = excluded.technical_expertise,
+                        achievements = excluded.achievements,
+                        connections = excluded.connections,
+                        mindmap_data = excluded.mindmap_data,
+                        raw_analysis = excluded.raw_analysis,
+                        version = excluded.version,
+                        updated_at = CURRENT_TIMESTAMP
+                ''', (
+                    project_id,
+                    json.dumps(profile_data.get("personal_info"), ensure_ascii=False),
+                    json.dumps(profile_data.get("education"), ensure_ascii=False),
+                    json.dumps(profile_data.get("career_timeline"), ensure_ascii=False),
+                    json.dumps(profile_data.get("technical_expertise"), ensure_ascii=False),
+                    json.dumps(profile_data.get("achievements"), ensure_ascii=False),
+                    json.dumps(profile_data.get("connections"), ensure_ascii=False),
+                    json.dumps(profile_data.get("mindmap_data"), ensure_ascii=False),
+                    json.dumps(profile_data.get("raw_analysis"), ensure_ascii=False),
+                    new_version
+                ))
+                
+                return {"success": True, "version": new_version}
+                
+        except Exception as e:
+            logger.error(f"保存信息脉络图失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def get_profile_map(self, project_id: str) -> Dict[str, Any]:
+        """获取客户信息脉络图"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    SELECT * FROM client_profile_map WHERE project_id = ?
+                ''', (project_id,))
+                
+                row = cursor.fetchone()
+                
+                if row:
+                    return {
+                        "success": True,
+                        "data": {
+                            "project_id": row['project_id'],
+                            "personal_info": json.loads(row['personal_info']) if row['personal_info'] else None,
+                            "education": json.loads(row['education']) if row['education'] else None,
+                            "career_timeline": json.loads(row['career_timeline']) if row['career_timeline'] else None,
+                            "technical_expertise": json.loads(row['technical_expertise']) if row['technical_expertise'] else None,
+                            "achievements": json.loads(row['achievements']) if row['achievements'] else None,
+                            "connections": json.loads(row['connections']) if row['connections'] else None,
+                            "mindmap_data": json.loads(row['mindmap_data']) if row['mindmap_data'] else None,
+                            "raw_analysis": json.loads(row['raw_analysis']) if row['raw_analysis'] else None,
+                            "version": row['version'],
+                            "updated_at": row['updated_at']
+                        }
+                    }
+                
+                return {"success": True, "data": None}
+                
+        except Exception as e:
+            logger.error(f"获取信息脉络图失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    # ==================== GTV框架管理 ====================
+    
+    def save_gtv_framework(self, project_id: str, framework_data: Dict) -> Dict[str, Any]:
+        """保存或更新GTV框架"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # 获取当前版本号
+                cursor.execute('''
+                    SELECT version FROM gtv_framework WHERE project_id = ?
+                ''', (project_id,))
+                
+                row = cursor.fetchone()
+                new_version = (row['version'] + 1) if row else 1
+                
+                cursor.execute('''
+                    INSERT INTO gtv_framework 
+                    (project_id, domain_positioning, mc_criteria, oc_criteria, 
+                     recommenders, personal_statement_points, evidence_list, 
+                     framework_data, version, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(project_id) 
+                    DO UPDATE SET 
+                        domain_positioning = excluded.domain_positioning,
+                        mc_criteria = excluded.mc_criteria,
+                        oc_criteria = excluded.oc_criteria,
+                        recommenders = excluded.recommenders,
+                        personal_statement_points = excluded.personal_statement_points,
+                        evidence_list = excluded.evidence_list,
+                        framework_data = excluded.framework_data,
+                        version = excluded.version,
+                        updated_at = CURRENT_TIMESTAMP
+                ''', (
+                    project_id,
+                    json.dumps(framework_data.get("domain_positioning"), ensure_ascii=False),
+                    json.dumps(framework_data.get("mc_criteria"), ensure_ascii=False),
+                    json.dumps(framework_data.get("oc_criteria"), ensure_ascii=False),
+                    json.dumps(framework_data.get("recommenders"), ensure_ascii=False),
+                    json.dumps(framework_data.get("personal_statement_points"), ensure_ascii=False),
+                    json.dumps(framework_data.get("evidence_list"), ensure_ascii=False),
+                    json.dumps(framework_data, ensure_ascii=False),
+                    new_version
+                ))
+                
+                return {"success": True, "version": new_version}
+                
+        except Exception as e:
+            logger.error(f"保存GTV框架失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def get_gtv_framework(self, project_id: str) -> Dict[str, Any]:
+        """获取GTV框架"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    SELECT * FROM gtv_framework WHERE project_id = ?
+                ''', (project_id,))
+                
+                row = cursor.fetchone()
+                
+                if row:
+                    return {
+                        "success": True,
+                        "data": {
+                            "project_id": row['project_id'],
+                            "domain_positioning": json.loads(row['domain_positioning']) if row['domain_positioning'] else None,
+                            "mc_criteria": json.loads(row['mc_criteria']) if row['mc_criteria'] else None,
+                            "oc_criteria": json.loads(row['oc_criteria']) if row['oc_criteria'] else None,
+                            "recommenders": json.loads(row['recommenders']) if row['recommenders'] else None,
+                            "personal_statement_points": json.loads(row['personal_statement_points']) if row['personal_statement_points'] else None,
+                            "evidence_list": json.loads(row['evidence_list']) if row['evidence_list'] else None,
+                            "framework_data": json.loads(row['framework_data']) if row['framework_data'] else None,
+                            "version": row['version'],
+                            "updated_at": row['updated_at']
+                        }
+                    }
+                
+                return {"success": True, "data": None}
+                
+        except Exception as e:
+            logger.error(f"获取GTV框架失败: {e}")
+            return {"success": False, "error": str(e)}
 
     def add_sample_cases(self) -> Dict[str, Any]:
         """添加示例案例"""

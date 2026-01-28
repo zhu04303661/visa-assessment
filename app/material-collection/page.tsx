@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, useCallback, useRef, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -211,8 +211,10 @@ function formatDate(dateStr: string): string {
   })
 }
 
-export default function MaterialCollectionPage() {
+function MaterialCollectionContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const projectIdFromUrl = searchParams.get('project')
   
   // 状态
   const [projects, setProjects] = useState<Project[]>([])
@@ -996,9 +998,22 @@ export default function MaterialCollectionPage() {
 
   // 初始化
   useEffect(() => {
-    loadProjects()
-    loadFormTemplates()
+    const initPage = async () => {
+      await loadProjects()
+      await loadFormTemplates()
+    }
+    initPage()
   }, [loadProjects, loadFormTemplates])
+  
+  // 当项目列表加载完成且URL中有项目ID时，自动选择该项目
+  useEffect(() => {
+    if (projectIdFromUrl && projects.length > 0 && !selectedProject) {
+      const targetProject = projects.find(p => p.project_id === projectIdFromUrl)
+      if (targetProject) {
+        selectProject(targetProject)
+      }
+    }
+  }, [projectIdFromUrl, projects, selectedProject])
 
   // 渲染项目选择视图
   const renderProjectSelection = () => (
@@ -2107,5 +2122,18 @@ export default function MaterialCollectionPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+// 导出带 Suspense 包装的组件，以正确处理 useSearchParams
+export default function MaterialCollectionPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <MaterialCollectionContent />
+    </Suspense>
   )
 }

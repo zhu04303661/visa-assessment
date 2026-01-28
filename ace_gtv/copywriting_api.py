@@ -7,12 +7,27 @@ GTV签证文案制作系统 - API服务
 import os
 import json
 import logging
+import sqlite3
 from datetime import datetime
 from typing import Dict, Any
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from pathlib import Path
+
+# 加载环境变量 - 在其他导入之前
+try:
+    from dotenv import load_dotenv
+    # 尝试加载 .env.local (项目根目录)
+    env_path = Path(__file__).parent.parent / '.env.local'
+    if env_path.exists():
+        load_dotenv(env_path)
+        print(f"已加载环境变量: {env_path}")
+    else:
+        # 尝试加载当前目录的 .env
+        load_dotenv()
+except ImportError:
+    print("警告: python-dotenv 未安装，请手动设置环境变量")
 
 from utils.logger_config import setup_module_logger
 from services.copywriting_project_manager import CopywritingProjectManager
@@ -23,6 +38,8 @@ from database.copywriting_database import CopywritingDatabase
 from processors.material_processor import MaterialProcessor
 from services.raw_material_manager import RawMaterialManager
 from processors.material_analyzer import MaterialAnalyzer
+from agents.content_extraction_agent import ContentExtractionAgent
+from agents.framework_building_agent import FrameworkBuildingAgent
 
 logger = setup_module_logger("copywriting_api", os.getenv("LOG_LEVEL", "INFO"))
 
@@ -79,6 +96,14 @@ try:
     material_analyzer = MaterialAnalyzer(DB_PATH)
     logger.info("材料分析器初始化成功")
     
+    # 初始化内容提取Agent
+    content_extraction_agent = ContentExtractionAgent(DB_PATH, UPLOAD_FOLDER)
+    logger.info("内容提取Agent初始化成功")
+    
+    # 初始化框架构建Agent
+    framework_building_agent = FrameworkBuildingAgent(DB_PATH)
+    logger.info("框架构建Agent初始化成功")
+    
     workflow = CopywritingWorkflow(PROJECTS_PATH, CASES_PATH)
     project_manager = workflow.project_manager
     case_library = workflow.case_library
@@ -91,6 +116,102 @@ except Exception as e:
 def allowed_file(filename):
     """检查文件类型是否允许"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def _outline_to_context(outline: dict) -> str:
+    """
+    将内容大纲转换为上下文格式，用于生成GTV框架
+    
+    大纲格式更精简，避免上下文被截断的问题
+    """
+    parts = []
+    
+    # 1. 申请人概况
+    applicant = outline.get("applicant_profile", {})
+    if applicant:
+        parts.append("=== 申请人概况 ===")
+        if applicant.get("name"):
+            parts.append(f"姓名: {applicant['name']}")
+        if applicant.get("current_position"):
+            parts.append(f"职位: {applicant['current_position']}")
+        if applicant.get("domain"):
+            parts.append(f"领域: {applicant['domain']}")
+        if applicant.get("experience_years"):
+            parts.append(f"经验: {applicant['experience_years']}年")
+        parts.append("")
+    
+    # 2. 文件摘要
+    file_summaries = outline.get("file_summaries", [])
+    if file_summaries:
+        parts.append("=== 材料清单 ===")
+        for fs in file_summaries:
+            filename = fs.get("filename", "未知")
+            summary = fs.get("summary", "")
+            file_type = fs.get("type") or fs.get("content_type", "")
+            relevance = fs.get("relevance", "")
+            
+            parts.append(f"【{filename}】({file_type}) - {relevance}")
+            parts.append(f"  摘要: {summary}")
+            
+            key_points = fs.get("key_points", [])
+            if key_points:
+                parts.append(f"  要点: {'; '.join(key_points)}")
+            parts.append("")
+    
+    # 3. 关键词
+    keywords = outline.get("keywords", [])
+    if keywords:
+        parts.append("=== 关键词 ===")
+        parts.append(", ".join(keywords))
+        parts.append("")
+    
+    # 4. 职业时间线
+    timeline = outline.get("career_timeline", [])
+    if timeline:
+        parts.append("=== 职业经历 ===")
+        for item in timeline:
+            period = item.get("period", "")
+            event = item.get("event", "")
+            parts.append(f"- {period}: {event}")
+        parts.append("")
+    
+    # 5. 成就分类
+    achievements = outline.get("achievement_categories", {})
+    if achievements:
+        parts.append("=== 成就分类 ===")
+        for category, items in achievements.items():
+            if items:
+                parts.append(f"【{category}】")
+                for item in items:
+                    parts.append(f"  - {item}")
+        parts.append("")
+    
+    # 6. 证据覆盖评估
+    coverage = outline.get("evidence_coverage", {})
+    if coverage:
+        parts.append("=== 证据覆盖评估 ===")
+        for standard_type, standards in coverage.items():
+            if isinstance(standards, dict):
+                parts.append(f"【{standard_type}】")
+                for key, value in standards.items():
+                    parts.append(f"  {key}: {value}")
+        parts.append("")
+    
+    # 7. 材料缺口
+    gaps = outline.get("material_gaps", [])
+    if gaps:
+        parts.append("=== 材料缺口 ===")
+        for gap in gaps:
+            parts.append(f"- {gap}")
+        parts.append("")
+    
+    # 8. 整体评估
+    assessment = outline.get("overall_assessment", "")
+    if assessment:
+        parts.append("=== 整体评估 ===")
+        parts.append(assessment)
+    
+    return "\n".join(parts)
 
 
 @app.route('/health', methods=['GET'])
@@ -616,9 +737,9 @@ def run_full_workflow(project_id):
     
     project_data = project["data"]
     
-    # 获取原始材料
+    # 获取项目材料
     materials_result = project_manager.get_raw_materials(project_id)
-    raw_materials = materials_result.get("data", {}) if materials_result.get("success") else {}
+    materials = materials_result.get("data", {}) if materials_result.get("success") else {}
     
     # 运行完整工作流（从分析开始）
     results = {
@@ -1948,6 +2069,1379 @@ def get_project_analysis(project_id):
             
     except Exception as e:
         logger.error(f"获取分析结果失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==================== 内容提取 API ====================
+
+@app.route('/api/projects/<project_id>/extract', methods=['POST'])
+def extract_project_content(project_id):
+    """提取项目所有文件内容"""
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        result = content_extraction_agent.extract_project_files(project_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"提取内容失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/extraction-logs', methods=['GET'])
+def get_extraction_logs(project_id):
+    """获取项目的提取日志，包含提示词和过程详情"""
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        logs = content_extraction_agent.get_extraction_logs(project_id)
+        return jsonify({
+            "success": True,
+            "data": logs,
+            "total": len(logs)
+        })
+        
+    except Exception as e:
+        logger.error(f"获取提取日志失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/framework-logs', methods=['GET'])
+def get_framework_logs(project_id):
+    """获取项目的框架构建日志"""
+    try:
+        if not framework_building_agent:
+            return jsonify({"success": False, "error": "框架构建Agent未初始化"}), 500
+        
+        # 尝试从 framework_building_agent 获取日志
+        if hasattr(framework_building_agent, 'get_framework_logs'):
+            logs = framework_building_agent.get_framework_logs(project_id)
+        else:
+            # 如果没有专门的日志方法，返回空数组
+            logs = []
+        
+        return jsonify({
+            "success": True,
+            "data": logs,
+            "total": len(logs)
+        })
+        
+    except Exception as e:
+        logger.error(f"获取框架日志失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/context', methods=['GET'])
+def get_project_context(project_id):
+    """获取项目完整上下文"""
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        with_sources = request.args.get('with_sources', 'false').lower() == 'true'
+        result = content_extraction_agent.get_project_context(project_id, with_sources=with_sources)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取上下文失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/outline', methods=['GET'])
+def get_content_outline(project_id):
+    """
+    获取项目的内容大纲
+    
+    内容大纲包含：
+    - 文件清单：每个文件的主要内容摘要
+    - 关键词云：所有材料的核心关键词
+    - 信息脉络：申请人的主要经历、成就、证据线索
+    - 材料评估：各类证据的覆盖情况
+    """
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        result = content_extraction_agent.get_content_outline(project_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取内容大纲失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/outline/generate', methods=['POST'])
+def generate_content_outline(project_id):
+    """
+    重新生成项目的内容大纲
+    
+    当需要刷新大纲或修改材料后调用
+    """
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        result = content_extraction_agent.generate_content_outline(project_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"生成内容大纲失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/deduplicate', methods=['POST'])
+def deduplicate_content(project_id):
+    """
+    清理项目中的重复内容
+    
+    检查并删除完全相同或高度相似的内容，减少上下文长度
+    """
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        result = content_extraction_agent.deduplicate_content(project_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"清理重复内容失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==================== 内容分类 API ====================
+
+@app.route('/api/projects/<project_id>/classify', methods=['POST'])
+def classify_content(project_id):
+    """
+    对项目提取的内容进行自动分类
+    
+    使用AI分析每个内容块，自动分类到MC/OC标准和推荐人信息类别
+    """
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        result = content_extraction_agent.classify_content(project_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"内容分类失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/classifications', methods=['GET'])
+def get_classifications(project_id):
+    """
+    获取项目的分类结果
+    
+    可选参数：
+    - category: 指定类别（MC/OC/RECOMMENDER）
+    """
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        category = request.args.get('category')
+        result = content_extraction_agent.get_classifications(project_id, category)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取分类结果失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/classification-summary', methods=['GET'])
+def get_classification_summary(project_id):
+    """
+    获取项目的分类统计摘要
+    """
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        result = content_extraction_agent.get_classification_summary(project_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取分类摘要失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/classification-progress', methods=['GET'])
+def get_classification_progress(project_id):
+    """
+    获取分类进度
+    """
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        result = content_extraction_agent.get_classification_progress(project_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取分类进度失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/classifications/<int:classification_id>', methods=['PUT'])
+def update_classification(project_id, classification_id):
+    """
+    更新单个分类项
+    """
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        data = request.get_json()
+        result = content_extraction_agent.update_classification(project_id, classification_id, data)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"更新分类失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/classifications/<int:classification_id>', methods=['DELETE'])
+def delete_classification(project_id, classification_id):
+    """
+    删除单个分类项
+    """
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        result = content_extraction_agent.delete_classification(project_id, classification_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"删除分类失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/classifications', methods=['POST'])
+def add_classification(project_id):
+    """
+    手动添加分类项
+    """
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        data = request.get_json()
+        result = content_extraction_agent.add_classification(project_id, data)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"添加分类失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/content-blocks', methods=['GET'])
+def get_content_blocks(project_id):
+    """获取项目内容块列表"""
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        file_id = request.args.get('file_id', type=int)
+        content_type = request.args.get('content_type')
+        
+        result = content_extraction_agent.get_content_blocks(project_id, file_id, content_type)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取内容块失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/content/search', methods=['GET'])
+def search_content(project_id):
+    """搜索项目内容"""
+    try:
+        if not content_extraction_agent:
+            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        
+        keyword = request.args.get('keyword', '')
+        if not keyword:
+            return jsonify({"success": False, "error": "缺少搜索关键词"}), 400
+        
+        result = content_extraction_agent.search_content(project_id, keyword)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"搜索内容失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==================== 客户信息脉络图 API ====================
+
+@app.route('/api/projects/<project_id>/analyze-profile', methods=['POST'])
+def analyze_client_profile(project_id):
+    """生成/更新客户信息脉络图"""
+    try:
+        if not framework_building_agent:
+            return jsonify({"success": False, "error": "框架构建Agent未初始化"}), 500
+        
+        # 获取项目上下文
+        context_result = content_extraction_agent.get_project_context(project_id, with_sources=True)
+        if not context_result.get("success") or not context_result.get("data", {}).get("context"):
+            # 如果没有上下文，先进行提取
+            extract_result = content_extraction_agent.extract_project_files(project_id)
+            if not extract_result.get("success"):
+                return jsonify({"success": False, "error": "请先上传并提取材料内容"}), 400
+            context_result = content_extraction_agent.get_project_context(project_id, with_sources=True)
+        
+        context = context_result.get("data", {}).get("context", "")
+        
+        # 使用框架构建Agent生成客户信息脉络图
+        result = framework_building_agent.analyze_client_profile(project_id, context)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"生成信息脉络图失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/profile-map', methods=['GET'])
+def get_profile_map(project_id):
+    """获取客户信息脉络图"""
+    try:
+        if not framework_building_agent:
+            return jsonify({"success": False, "error": "框架构建Agent未初始化"}), 500
+        
+        result = framework_building_agent.get_profile(project_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取信息脉络图失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==================== GTV框架 API ====================
+
+@app.route('/api/projects/<project_id>/build-framework', methods=['POST'])
+def build_gtv_framework(project_id):
+    """
+    生成GTV申请框架
+    
+    策略：
+    1. 优先使用完整上下文（包含详细材料内容，AI能准确分析MC/OC证据）
+    2. 如果完整上下文过长（>50000字符），则使用大纲+部分详细内容的混合模式
+    3. 大纲只作为概览，不能替代详细的材料内容
+    """
+    try:
+        if not framework_building_agent:
+            return jsonify({"success": False, "error": "框架构建Agent未初始化"}), 500
+        
+        context = ""
+        context_mode = "unknown"
+        MAX_CONTEXT_LENGTH = 100000  # 最大上下文长度阈值（约100K字符，适合大多数LLM）
+        
+        # 首先获取完整上下文（包含详细材料内容）
+        context_result = content_extraction_agent.get_project_context(project_id, with_sources=True)
+        context_data = context_result.get("data") if context_result else {}
+        full_context = context_data.get("context", "") if context_data else ""
+        
+        if full_context:
+            if len(full_context) <= MAX_CONTEXT_LENGTH:
+                # 完整上下文在合理范围内，直接使用
+                context = full_context
+                context_mode = "full"
+                logger.info(f"使用完整上下文生成框架，长度: {len(context)} 字符")
+            else:
+                # 上下文过长，使用混合模式：大纲概览 + 截断的详细内容
+                outline_result = content_extraction_agent.get_content_outline(project_id)
+                if outline_result and outline_result.get("success") and outline_result.get("data"):
+                    outline_data = outline_result.get("data", {}).get("outline", {})
+                    if outline_data:
+                        outline_context = _outline_to_context(outline_data)
+                        # 混合模式：大纲 + 部分详细内容
+                        remaining_length = MAX_CONTEXT_LENGTH - len(outline_context) - 500
+                        if remaining_length > 5000:
+                            context = f"""=== 材料概览（大纲）===
+{outline_context}
+
+=== 详细材料内容（部分）===
+{full_context[:remaining_length]}
+...[内容过长，已截断]..."""
+                            context_mode = "hybrid"
+                        else:
+                            context = full_context[:MAX_CONTEXT_LENGTH]
+                            context_mode = "truncated"
+                else:
+                    # 没有大纲，直接截断完整上下文
+                    context = full_context[:MAX_CONTEXT_LENGTH]
+                    context_mode = "truncated"
+                logger.info(f"使用{context_mode}模式生成框架，长度: {len(context)} 字符")
+        
+        if not context:
+            # 如果没有上下文，先进行提取
+            extract_result = content_extraction_agent.extract_project_files(project_id)
+            if extract_result and extract_result.get("success"):
+                # 提取后重新获取完整上下文
+                context_result = content_extraction_agent.get_project_context(project_id, with_sources=True)
+                context_data = context_result.get("data") if context_result else {}
+                context = context_data.get("context", "") if context_data else ""
+                context_mode = "extracted"
+                
+                # 如果仍然太长，截断
+                if len(context) > MAX_CONTEXT_LENGTH:
+                    context = context[:MAX_CONTEXT_LENGTH]
+                    context_mode = "extracted_truncated"
+        
+        # 获取信息脉络图
+        profile_result = framework_building_agent.get_profile(project_id)
+        profile_data = None
+        if profile_result and profile_result.get("success"):
+            profile_data_wrapper = profile_result.get("data")
+            if profile_data_wrapper:
+                profile_data = profile_data_wrapper.get("profile")
+        
+        # 生成框架
+        result = framework_building_agent.build_framework(project_id, context, profile_data)
+        
+        # 在结果中添加上下文模式信息
+        if result.get("success") and result.get("data"):
+            result["data"]["_metadata"] = result["data"].get("_metadata", {})
+            result["data"]["_metadata"]["context_mode"] = context_mode
+            result["data"]["_metadata"]["context_length"] = len(context)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"生成GTV框架失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/framework', methods=['GET'])
+def get_gtv_framework(project_id):
+    """获取GTV框架"""
+    try:
+        if not framework_building_agent:
+            return jsonify({"success": False, "error": "框架构建Agent未初始化"}), 500
+        
+        result = framework_building_agent.get_framework(project_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取GTV框架失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/framework', methods=['PUT'])
+def update_gtv_framework(project_id):
+    """更新GTV框架"""
+    try:
+        if not framework_building_agent:
+            return jsonify({"success": False, "error": "框架构建Agent未初始化"}), 500
+        
+        updates = request.get_json() or {}
+        result = framework_building_agent.update_framework(project_id, updates)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"更新GTV框架失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/framework/export', methods=['GET'])
+def export_gtv_framework(project_id):
+    """导出GTV框架"""
+    try:
+        if not framework_building_agent:
+            return jsonify({"success": False, "error": "框架构建Agent未初始化"}), 500
+        
+        export_format = request.args.get('format', 'markdown')
+        
+        framework_result = framework_building_agent.get_framework(project_id)
+        if not framework_result.get("success") or not framework_result.get("data"):
+            return jsonify({"success": False, "error": "未找到框架数据"}), 404
+        
+        framework_data = framework_result["data"]["framework_data"]
+        
+        if export_format == 'markdown':
+            markdown = framework_building_agent.export_markdown(framework_data)
+            return jsonify({
+                "success": True,
+                "data": {"format": "markdown", "content": markdown}
+            })
+        else:
+            return jsonify({"success": False, "error": f"不支持的导出格式: {export_format}"}), 400
+        
+    except Exception as e:
+        logger.error(f"导出框架失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==================== Agent配置 API ====================
+
+@app.route('/api/projects/<project_id>/packages/<package_type>/agent-config', methods=['GET'])
+def get_agent_config(project_id, package_type):
+    """获取Agent配置"""
+    try:
+        result = db.get_agent_prompt(project_id, package_type)
+        
+        if result.get("success") and not result.get("data"):
+            default_prompts = {
+                "personal_statement": "你是一位专业的GTV签证个人陈述撰写专家...",
+                "cv": "你是一位专业的简历优化专家...",
+                "rl_1": "你是一位专业的推荐信撰写专家...",
+            }
+            result["data"] = {
+                "project_id": project_id,
+                "package_type": package_type,
+                "system_prompt": default_prompts.get(package_type, "你是一位专业的文案撰写专家..."),
+                "user_prompt_template": None,
+                "custom_instructions": None
+            }
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取Agent配置失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/packages/<package_type>/agent-config', methods=['PUT'])
+def update_agent_config(project_id, package_type):
+    """更新Agent配置"""
+    try:
+        data = request.get_json() or {}
+        result = db.save_agent_prompt(
+            project_id, package_type,
+            system_prompt=data.get("system_prompt"),
+            user_prompt_template=data.get("user_prompt_template"),
+            custom_instructions=data.get("custom_instructions")
+        )
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"更新Agent配置失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ============ 系统提示词管理 ============
+
+def _ensure_system_prompts_table():
+    """确保系统提示词表存在并初始化默认数据"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS system_prompts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                type TEXT NOT NULL,
+                description TEXT,
+                content TEXT NOT NULL,
+                version INTEGER DEFAULT 1,
+                is_active INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # 检查是否需要添加 version 列（数据库迁移）
+        cursor.execute("PRAGMA table_info(system_prompts)")
+        columns = [row[1] for row in cursor.fetchall()]
+        if 'version' not in columns:
+            cursor.execute('ALTER TABLE system_prompts ADD COLUMN version INTEGER DEFAULT 1')
+            logger.info("已添加 system_prompts.version 列")
+        
+        # 默认提示词列表（放在条件外以便两个分支都能访问）
+        default_prompts = [
+                {
+                    "name": "英文翻译提示词",
+                    "type": "translation",
+                    "description": "将英文内容翻译为中文，同时保留英文原文",
+                    "content": """请将以下英文内容翻译成中文。
+
+来源文件: {source_file}
+
+英文原文:
+{content}
+
+请按以下JSON格式返回：
+{{
+    "chinese_translation": "翻译后的中文内容",
+    "key_info": {{
+        "summary": "一句话中文摘要",
+        "key_points": ["要点1", "要点2"],
+        "achievements": ["成就/奖项"],
+        "numbers": ["关键数据"]
+    }}
+}}
+
+翻译要求：
+1. 保持专业术语的准确性
+2. 人名保留英文，公司名/学校名可添加中文注释
+3. 保持原文的结构和层次
+4. 只返回JSON格式，不要其他文字"""
+                },
+                {
+                    "name": "内容增强提示词",
+                    "type": "enhancement",
+                    "description": "从提取的内容中识别关键信息和实体",
+                    "content": """请分析以下文档内容，提取关键信息。
+
+文档内容:
+{content}
+
+请按以下JSON格式返回：
+{{
+    "summary": "内容摘要（100字以内）",
+    "key_entities": {{
+        "persons": ["人名列表"],
+        "organizations": ["机构/公司列表"],
+        "achievements": ["成就/奖项列表"],
+        "numbers": ["关键数字和日期"]
+    }},
+    "document_type": "文档类型（简历/推荐信/证书/其他）",
+    "relevance_score": 0.8
+}}
+
+只返回JSON格式，不要其他文字。"""
+                },
+                {
+                    "name": "GTV框架生成提示词",
+                    "type": "framework",
+                    "description": "根据材料生成GTV申请框架（主提示词）",
+                    "content": """基于以下申请人材料，生成GTV签证申请框架。
+
+申请人资料:
+{profile}
+
+材料摘要:
+{materials_summary}
+
+请分析申请人是否符合以下标准：
+1. MC必选标准 - 杰出人才认可
+2. OC可选标准（需选择2项）
+   - OC1: 创新创业记录
+   - OC2: 行业贡献证明
+   - OC3: 专业成就认可
+   - OC4: 学术/研究贡献
+
+请返回详细的框架分析和建议。"""
+                },
+                # 框架构建 - 领域定位
+                {
+                    "name": "领域定位分析",
+                    "type": "framework_domain",
+                    "description": "分析申请人的专业领域和岗位定位",
+                    "content": """你是GTV签证专家。请根据以下申请人材料，分析其领域定位。
+
+申请人：{client_name}
+
+材料内容：
+{context}
+
+请严格根据材料内容分析，不要杜撰信息。按以下JSON格式返回：
+{{
+    "评估机构": "Tech Nation",
+    "细分领域": "根据材料确定的具体技术/商业领域（如AI、金融科技、数字健康等）",
+    "岗位定位": "根据材料确定的专业定位（如技术领导者、创业者、研究专家）",
+    "核心论点": "一句话概括申请人的独特价值，必须基于材料中的事实",
+    "申请路径": "Exceptional Talent（5年+经验）或 Exceptional Promise（早期职业）",
+    "source_files": ["用于判断的来源文件列表"]
+}}
+
+重要：所有结论必须基于材料中的实际内容，标注来源文件。"""
+                },
+                # 框架构建 - MC1
+                {
+                    "name": "MC1产品团队领导力分析",
+                    "type": "framework_mc1",
+                    "description": "分析MC1标准：领导产品导向的数字科技公司/产品/团队增长",
+                    "content": """你是GTV签证专家。请根据以下申请人材料，分析其是否符合MC1标准。
+
+标准描述：领导产品导向的数字科技公司/产品/团队增长的证据
+
+申请人：{client_name}
+
+材料内容：
+{context}
+
+请严格根据材料分析，按以下JSON格式返回：
+{{
+    "评分": "1-5分（5分最高）",
+    "适用性": "高/中/低",
+    "核心证据": [
+        {{
+            "证据描述": "具体证据内容，必须来自材料",
+            "来源": "来源文件名",
+            "强度": "强/中/弱"
+        }}
+    ],
+    "缺失点": ["需要补充的证据"],
+    "建议": "如何增强这个标准的建议",
+    "source_files": ["所有相关来源文件"]
+}}
+
+重要：不要杜撰任何信息，所有内容必须有材料依据。"""
+                },
+                # 框架构建 - MC2
+                {
+                    "name": "MC2商业发展分析",
+                    "type": "framework_mc2",
+                    "description": "分析MC2标准：领导营销或业务开发，实现收入/客户增长",
+                    "content": """你是GTV签证专家。请根据以下申请人材料，分析其是否符合MC2标准。
+
+标准描述：领导营销或业务开发，实现收入/客户增长的证据
+
+申请人：{client_name}
+
+材料内容：
+{context}
+
+请严格根据材料分析，按以下JSON格式返回：
+{{
+    "评分": "1-5分（5分最高）",
+    "适用性": "高/中/低",
+    "核心证据": [
+        {{
+            "证据描述": "具体证据内容，必须来自材料",
+            "来源": "来源文件名",
+            "强度": "强/中/弱"
+        }}
+    ],
+    "缺失点": ["需要补充的证据"],
+    "建议": "如何增强这个标准的建议",
+    "source_files": ["所有相关来源文件"]
+}}
+
+重要：不要杜撰任何信息，所有内容必须有材料依据。"""
+                },
+                # 框架构建 - MC3
+                {
+                    "name": "MC3非营利组织分析",
+                    "type": "framework_mc3",
+                    "description": "分析MC3标准：领导数字科技领域非营利组织或社会企业",
+                    "content": """你是GTV签证专家。请根据以下申请人材料，分析其是否符合MC3标准。
+
+标准描述：领导数字科技领域非营利组织或社会企业的证据
+
+申请人：{client_name}
+
+材料内容：
+{context}
+
+请严格根据材料分析，按以下JSON格式返回：
+{{
+    "评分": "1-5分（5分最高）",
+    "适用性": "高/中/低",
+    "核心证据": [
+        {{
+            "证据描述": "具体证据内容，必须来自材料",
+            "来源": "来源文件名",
+            "强度": "强/中/弱"
+        }}
+    ],
+    "缺失点": ["需要补充的证据"],
+    "建议": "如何增强这个标准的建议",
+    "source_files": ["所有相关来源文件"]
+}}
+
+重要：不要杜撰任何信息，所有内容必须有材料依据。"""
+                },
+                # 框架构建 - MC4
+                {
+                    "name": "MC4专家评审分析",
+                    "type": "framework_mc4",
+                    "description": "分析MC4标准：担任评审同行工作的重要专家角色",
+                    "content": """你是GTV签证专家。请根据以下申请人材料，分析其是否符合MC4标准。
+
+标准描述：担任评审同行工作的重要专家角色的证据
+
+申请人：{client_name}
+
+材料内容：
+{context}
+
+请严格根据材料分析，按以下JSON格式返回：
+{{
+    "评分": "1-5分（5分最高）",
+    "适用性": "高/中/低",
+    "核心证据": [
+        {{
+            "证据描述": "具体证据内容，必须来自材料",
+            "来源": "来源文件名",
+            "强度": "强/中/弱"
+        }}
+    ],
+    "缺失点": ["需要补充的证据"],
+    "建议": "如何增强这个标准的建议",
+    "source_files": ["所有相关来源文件"]
+}}
+
+重要：不要杜撰任何信息，所有内容必须有材料依据。"""
+                },
+                # 框架构建 - OC1
+                {
+                    "name": "OC1创新分析",
+                    "type": "framework_oc1",
+                    "description": "分析OC1标准：创新、创业或专利相关证据",
+                    "content": """你是GTV签证专家。请根据以下申请人材料，分析其是否符合OC1标准。
+
+标准描述：创新、创业记录，包括创办公司、专利发明、技术突破等
+
+申请人：{client_name}
+
+材料内容：
+{context}
+
+请严格根据材料分析，按以下JSON格式返回：
+{{
+    "评分": "1-5分（5分最高）",
+    "适用性": "高/中/低",
+    "核心证据": [
+        {{
+            "证据描述": "具体证据内容，必须来自材料",
+            "来源": "来源文件名",
+            "强度": "强/中/弱"
+        }}
+    ],
+    "缺失点": ["需要补充的证据"],
+    "建议": "如何增强这个标准的建议",
+    "source_files": ["所有相关来源文件"]
+}}
+
+重要：不要杜撰任何信息，所有内容必须有材料依据。"""
+                },
+                # 框架构建 - OC2
+                {
+                    "name": "OC2行业认可分析",
+                    "type": "framework_oc2",
+                    "description": "分析OC2标准：行业认可、奖项、媒体报道",
+                    "content": """你是GTV签证专家。请根据以下申请人材料，分析其是否符合OC2标准。
+
+标准描述：行业认可的证据，包括奖项、媒体报道、行业排名等
+
+申请人：{client_name}
+
+材料内容：
+{context}
+
+请严格根据材料分析，按以下JSON格式返回：
+{{
+    "评分": "1-5分（5分最高）",
+    "适用性": "高/中/低",
+    "核心证据": [
+        {{
+            "证据描述": "具体证据内容，必须来自材料",
+            "来源": "来源文件名",
+            "强度": "强/中/弱"
+        }}
+    ],
+    "缺失点": ["需要补充的证据"],
+    "建议": "如何增强这个标准的建议",
+    "source_files": ["所有相关来源文件"]
+}}
+
+重要：不要杜撰任何信息，所有内容必须有材料依据。"""
+                },
+                # 框架构建 - OC3
+                {
+                    "name": "OC3重大贡献分析",
+                    "type": "framework_oc3",
+                    "description": "分析OC3标准：对行业/公司/开源项目的重大贡献",
+                    "content": """你是GTV签证专家。请根据以下申请人材料，分析其是否符合OC3标准。
+
+标准描述：对行业、公司或开源项目的重大贡献
+
+申请人：{client_name}
+
+材料内容：
+{context}
+
+请严格根据材料分析，按以下JSON格式返回：
+{{
+    "评分": "1-5分（5分最高）",
+    "适用性": "高/中/低",
+    "核心证据": [
+        {{
+            "证据描述": "具体证据内容，必须来自材料",
+            "来源": "来源文件名",
+            "强度": "强/中/弱"
+        }}
+    ],
+    "缺失点": ["需要补充的证据"],
+    "建议": "如何增强这个标准的建议",
+    "source_files": ["所有相关来源文件"]
+}}
+
+重要：不要杜撰任何信息，所有内容必须有材料依据。"""
+                },
+                # 框架构建 - OC4
+                {
+                    "name": "OC4学术贡献分析",
+                    "type": "framework_oc4",
+                    "description": "分析OC4标准：学术论文、研究成果、技术演讲",
+                    "content": """你是GTV签证专家。请根据以下申请人材料，分析其是否符合OC4标准。
+
+标准描述：学术/研究贡献，包括论文发表、会议演讲、技术分享等
+
+申请人：{client_name}
+
+材料内容：
+{context}
+
+请严格根据材料分析，按以下JSON格式返回：
+{{
+    "评分": "1-5分（5分最高）",
+    "适用性": "高/中/低",
+    "核心证据": [
+        {{
+            "证据描述": "具体证据内容，必须来自材料",
+            "来源": "来源文件名",
+            "强度": "强/中/弱"
+        }}
+    ],
+    "缺失点": ["需要补充的证据"],
+    "建议": "如何增强这个标准的建议",
+    "source_files": ["所有相关来源文件"]
+}}
+
+重要：不要杜撰任何信息，所有内容必须有材料依据。"""
+                },
+                # 框架构建 - 推荐人分析
+                {
+                    "name": "推荐人分析",
+                    "type": "framework_recommenders",
+                    "description": "从材料中识别和分析潜在推荐人",
+                    "content": """你是GTV签证专家。请根据以下申请人材料，识别潜在的推荐人。
+
+申请人：{client_name}
+
+材料内容：
+{context}
+
+请在材料中寻找：
+1. 简历中提到的上级、合作者
+2. 推荐信的作者
+3. 材料中提到的行业专家、投资人
+
+按以下JSON格式返回：
+{{
+    "推荐人列表": [
+        {{
+            "姓名": "推荐人姓名",
+            "职位": "当前职位",
+            "机构": "所在机构",
+            "与申请人关系": "工作关系描述",
+            "推荐价值": "高/中/低",
+            "推荐角度": "可以从什么角度推荐申请人",
+            "source_file": "信息来源文件"
+        }}
+    ],
+    "推荐人缺口": ["还需要什么类型的推荐人"],
+    "建议": "推荐人策略建议"
+}}
+
+重要：只列出材料中明确提到的人物，不要杜撰。"""
+                },
+                # 框架构建 - 个人陈述
+                {
+                    "name": "个人陈述要点生成",
+                    "type": "framework_ps",
+                    "description": "生成个人陈述的核心要点和大纲",
+                    "content": """你是GTV签证专家。请根据以下申请人材料和框架分析，生成个人陈述要点。
+
+申请人：{client_name}
+
+材料内容：
+{context}
+
+框架分析：
+{framework_summary}
+
+请生成个人陈述大纲，按以下JSON格式返回：
+{{
+    "开篇引言": "用一句话概括申请人的核心价值主张",
+    "背景介绍": ["关键背景点1", "关键背景点2"],
+    "核心成就": [
+        {{
+            "成就": "具体成就描述",
+            "影响": "该成就的影响和意义"
+        }}
+    ],
+    "未来规划": "在英国的发展规划",
+    "结语": "总结性陈述",
+    "写作建议": ["写作建议1", "写作建议2"]
+}}
+
+重要：所有内容必须基于材料，突出与GTV标准的契合度。"""
+                },
+                # 框架构建 - 申请策略
+                {
+                    "name": "申请策略生成",
+                    "type": "framework_strategy",
+                    "description": "基于框架分析生成整体申请策略",
+                    "content": """你是GTV签证专家。请根据以下框架分析，生成整体申请策略。
+
+申请人：{client_name}
+
+框架分析：
+{framework_summary}
+
+请生成申请策略，按以下JSON格式返回：
+{{
+    "overall_strength": "强/中/弱",
+    "recommended_mc": "MC1/MC2/MC3/MC4 - 最佳MC选择",
+    "recommended_ocs": ["推荐的2个OC标准"],
+    "recommended_approach": "整体申请策略描述",
+    "key_risks": ["风险点1", "风险点2"],
+    "mitigation_strategies": ["风险应对策略1", "风险应对策略2"],
+    "priority_actions": ["优先行动1", "优先行动2"],
+    "timeline_suggestion": "建议时间规划"
+}}
+
+重要：策略必须基于框架中的实际证据和评分。"""
+                }
+        ]
+        
+        # 使用 INSERT OR IGNORE 同步所有提示词（已存在的不会重复插入）
+        inserted_count = 0
+        for p in default_prompts:
+            cursor.execute('''
+                INSERT OR IGNORE INTO system_prompts (name, type, description, content, version)
+                VALUES (?, ?, ?, ?, 1)
+            ''', (p['name'], p['type'], p['description'], p['content']))
+            if cursor.rowcount > 0:
+                inserted_count += 1
+        
+        conn.commit()
+        
+        # 统计总数
+        cursor.execute("SELECT COUNT(*) FROM system_prompts")
+        total_count = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        if inserted_count > 0:
+            logger.info(f"系统提示词表初始化完成，新增 {inserted_count} 个提示词，共 {total_count} 个")
+        else:
+            logger.info(f"系统提示词表已是最新，共 {total_count} 个提示词")
+    except Exception as e:
+        logger.error(f"初始化系统提示词表失败: {e}")
+
+# 在启动时初始化
+_ensure_system_prompts_table()
+
+
+@app.route('/api/agent-prompts', methods=['GET'])
+def get_system_prompts():
+    """获取所有系统提示词"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, name, type, description, content, version, is_active, created_at, updated_at
+            FROM system_prompts
+            ORDER BY type, name
+        ''')
+        
+        prompts = []
+        for row in cursor.fetchall():
+            prompts.append({
+                "id": row['id'],
+                "name": row['name'],
+                "type": row['type'],
+                "description": row['description'],
+                "content": row['content'],
+                "version": row['version'] or 1,
+                "is_active": bool(row['is_active']),
+                "created_at": row['created_at'],
+                "updated_at": row['updated_at']
+            })
+        
+        conn.close()
+        return jsonify({"success": True, "data": prompts})
+        
+    except Exception as e:
+        logger.error(f"获取系统提示词失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/agent-prompts/<int:prompt_id>', methods=['GET'])
+def get_system_prompt(prompt_id):
+    """获取单个系统提示词"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, name, type, description, content, version, is_active, created_at, updated_at
+            FROM system_prompts WHERE id = ?
+        ''', (prompt_id,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if not row:
+            return jsonify({"success": False, "error": "提示词不存在"}), 404
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "id": row['id'],
+                "name": row['name'],
+                "type": row['type'],
+                "description": row['description'],
+                "content": row['content'],
+                "version": row['version'] or 1,
+                "is_active": bool(row['is_active']),
+                "created_at": row['created_at'],
+                "updated_at": row['updated_at']
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"获取提示词失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/agent-prompts/<int:prompt_id>', methods=['PUT'])
+def update_system_prompt(prompt_id):
+    """更新系统提示词"""
+    try:
+        data = request.get_json()
+        
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # 获取当前版本号
+        cursor.execute('SELECT version FROM system_prompts WHERE id = ?', (prompt_id,))
+        row = cursor.fetchone()
+        current_version = (row['version'] or 1) if row else 1
+        new_version = current_version + 1
+        
+        cursor.execute('''
+            UPDATE system_prompts 
+            SET name = ?, description = ?, content = ?, is_active = ?, 
+                version = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (
+            data.get('name'),
+            data.get('description'),
+            data.get('content'),
+            1 if data.get('is_active', True) else 0,
+            new_version,
+            prompt_id
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"提示词 {prompt_id} 已更新至版本 {new_version}")
+        return jsonify({"success": True, "message": f"提示词已更新至版本 {new_version}", "version": new_version})
+        
+    except Exception as e:
+        logger.error(f"更新提示词失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/agent-prompts', methods=['POST'])
+def create_system_prompt():
+    """创建新的系统提示词"""
+    try:
+        data = request.get_json()
+        
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO system_prompts (name, type, description, content)
+            VALUES (?, ?, ?, ?)
+        ''', (
+            data.get('name'),
+            data.get('type', 'custom'),
+            data.get('description', ''),
+            data.get('content', '')
+        ))
+        
+        prompt_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"success": True, "data": {"id": prompt_id}})
+        
+    except Exception as e:
+        logger.error(f"创建提示词失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/projects/<project_id>/prompt-context', methods=['GET'])
+def get_prompt_context(project_id):
+    """获取提示词调试所需的上下文变量"""
+    try:
+        result = {
+            "success": True,
+            "data": {
+                "content": "",
+                "profile": "",
+                "context": "",
+                "client_name": "",
+                "materials_summary": "",
+                "framework_summary": ""
+            }
+        }
+        
+        # 获取项目信息
+        if db:
+            project = db.get_project(project_id)
+            if project:
+                result["data"]["client_name"] = project.get("client_name", "")
+        
+        # 获取提取的内容
+        if content_extraction_agent:
+            context_result = content_extraction_agent.get_project_context(project_id, with_sources=True)
+            if context_result and context_result.get("success"):
+                ctx_data = context_result.get("data", {})
+                result["data"]["context"] = ctx_data.get("context", "")
+                result["data"]["content"] = ctx_data.get("context", "")  # content 和 context 相同
+        
+        # 获取客户信息脉络图
+        if framework_building_agent:
+            try:
+                profile_result = framework_building_agent.get_profile(project_id)
+                if profile_result and profile_result.get("success"):
+                    profile_data_container = profile_result.get("data") or {}
+                    profile_data = profile_data_container.get("profile") if isinstance(profile_data_container, dict) else None
+                    if profile_data:
+                        import json
+                        result["data"]["profile"] = json.dumps(profile_data, ensure_ascii=False, indent=2)
+            except Exception as e:
+                logger.warning(f"获取客户信息脉络图失败: {e}")
+            
+            # 获取框架摘要
+            try:
+                framework_result = framework_building_agent.get_framework(project_id)
+                if framework_result and framework_result.get("success"):
+                    framework_data = framework_result.get("data") or {}
+                    # 简化框架为摘要
+                    summary_parts = []
+                    domain_analysis = framework_data.get("domain_analysis")
+                    if domain_analysis and isinstance(domain_analysis, dict):
+                        summary_parts.append(f"领域: {domain_analysis.get('primary_domain', '')}")
+                    if framework_data.get("recommended_mc"):
+                        summary_parts.append(f"推荐MC: {framework_data['recommended_mc']}")
+                    recommended_ocs = framework_data.get("recommended_ocs")
+                    if recommended_ocs and isinstance(recommended_ocs, list):
+                        summary_parts.append(f"推荐OC: {', '.join(recommended_ocs)}")
+                    result["data"]["framework_summary"] = "\n".join(summary_parts)
+            except Exception as e:
+                logger.warning(f"获取框架摘要失败: {e}")
+        
+        # 获取材料摘要
+        if raw_material_manager:
+            try:
+                collection_status = raw_material_manager.get_collection_status(project_id)
+                if collection_status and collection_status.get("success"):
+                    status_data = collection_status.get("data") or {}
+                    summary_parts = []
+                    summary_parts.append(f"总计: {status_data.get('total_items', 0)} 项")
+                    summary_parts.append(f"已收集: {status_data.get('collected_items', 0)} 项")
+                    result["data"]["materials_summary"] = ", ".join(summary_parts)
+            except Exception as e:
+                logger.warning(f"获取材料摘要失败: {e}")
+                result["data"]["materials_summary"] = "暂无材料信息"
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取提示词上下文失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/agent-prompts/debug', methods=['POST'])
+def debug_prompt():
+    """调试提示词 - 不保存结果"""
+    try:
+        data = request.get_json()
+        prompt_content = data.get('prompt_content', '')
+        variables = data.get('variables', {})
+        
+        if not prompt_content:
+            return jsonify({"success": False, "error": "提示词内容为空"}), 400
+        
+        # 替换变量
+        final_prompt = prompt_content
+        for key, value in variables.items():
+            final_prompt = final_prompt.replace(f"{{{key}}}", str(value))
+        
+        # 检查是否还有未替换的变量
+        import re
+        remaining_vars = re.findall(r'\{(\w+)\}', final_prompt)
+        if remaining_vars:
+            # 将未替换的变量替换为空或提示
+            for var in remaining_vars:
+                final_prompt = final_prompt.replace(f"{{{var}}}", f"[变量 {var} 未提供]")
+        
+        # 调用 LLM
+        if not framework_building_agent or not framework_building_agent.llm_client:
+            return jsonify({"success": False, "error": "LLM 客户端未初始化"}), 500
+        
+        response = framework_building_agent.llm_client.chat.completions.create(
+            model=framework_building_agent.model,
+            messages=[
+                {"role": "system", "content": "你是一个专业的GTV签证申请顾问助手。"},
+                {"role": "user", "content": final_prompt}
+            ],
+            temperature=0.7,
+            max_tokens=4000
+        )
+        
+        result_content = response.choices[0].message.content
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "input": final_prompt[:500] + "..." if len(final_prompt) > 500 else final_prompt,
+                "output": result_content,
+                "tokens_used": response.usage.total_tokens if response.usage else None
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"调试提示词失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/agent-prompts/sync', methods=['POST'])
+def sync_system_prompts():
+    """同步系统默认提示词（添加缺失的提示词）"""
+    try:
+        # 重新初始化以同步缺失的提示词
+        _ensure_system_prompts_table()
+        
+        # 返回更新后的提示词列表
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT COUNT(*) FROM system_prompts')
+        count = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return jsonify({
+            "success": True, 
+            "message": f"提示词同步完成，共 {count} 个提示词",
+            "count": count
+        })
+        
+    except Exception as e:
+        logger.error(f"同步提示词失败: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 

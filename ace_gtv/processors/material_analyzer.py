@@ -602,6 +602,471 @@ class MaterialAnalyzer:
             logger.error(f"获取分析结果失败: {e}")
             return None
     
+    def generate_client_profile_map(self, project_id: str, context: str) -> Dict[str, Any]:
+        """
+        基于提取的内容生成客户信息脉络图
+        
+        Args:
+            project_id: 项目ID
+            context: 带出处标注的上下文内容
+            
+        Returns:
+            客户信息脉络图数据
+        """
+        try:
+            if not context or len(context.strip()) < 100:
+                return {"success": False, "error": "上下文内容不足，请先上传并提取材料"}
+            
+            # 获取项目信息
+            project_info = self._get_project_info(project_id)
+            client_name = project_info.get("client_name", "申请人") if project_info else "申请人"
+            
+            # 使用AI分析生成信息脉络图
+            profile_data = self._ai_generate_profile_map(context, client_name)
+            
+            if profile_data:
+                # 生成思维导图可视化数据
+                mindmap_data = self._generate_profile_mindmap(profile_data, client_name)
+                profile_data["mindmap_data"] = mindmap_data
+                
+                return {
+                    "success": True,
+                    "data": profile_data
+                }
+            else:
+                # 回退到规则分析
+                profile_data = self._rule_based_profile_analysis(context, client_name)
+                mindmap_data = self._generate_profile_mindmap(profile_data, client_name)
+                profile_data["mindmap_data"] = mindmap_data
+                
+                return {
+                    "success": True,
+                    "data": profile_data
+                }
+                
+        except Exception as e:
+            logger.error(f"生成客户信息脉络图失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def _ai_generate_profile_map(self, context: str, client_name: str) -> Optional[Dict]:
+        """使用AI生成客户信息脉络图"""
+        if not self.llm_client:
+            return None
+        
+        try:
+            # 限制上下文长度
+            max_context = context[:20000] if len(context) > 20000 else context
+            
+            prompt = f"""
+请仔细分析以下申请人的材料内容，生成一份详细的客户信息脉络图。
+请保留每个信息点的出处标注（如[来源: xxx]）。
+
+申请人姓名：{client_name}
+
+材料内容：
+{max_context}
+
+请以JSON格式返回以下结构的信息脉络图：
+
+{{
+    "personal_info": {{
+        "name": "姓名",
+        "name_en": "英文名",
+        "nationality": "国籍",
+        "current_location": "当前所在地",
+        "contact": "联系方式",
+        "source": "[来源信息]"
+    }},
+    "education": [
+        {{
+            "degree": "学位",
+            "major": "专业",
+            "school": "学校名称",
+            "school_en": "学校英文名",
+            "period": "时间段",
+            "highlights": ["亮点1", "亮点2"],
+            "source": "[来源信息]"
+        }}
+    ],
+    "career_timeline": [
+        {{
+            "company": "公司名称",
+            "company_en": "公司英文名",
+            "role": "职位",
+            "role_en": "英文职位",
+            "period": "时间段",
+            "department": "部门",
+            "responsibilities": ["职责1", "职责2"],
+            "highlights": ["亮点1", "亮点2"],
+            "source": "[来源信息]"
+        }}
+    ],
+    "technical_expertise": [
+        {{
+            "domain": "技术领域",
+            "skills": ["技能1", "技能2"],
+            "proficiency": "熟练程度",
+            "evidence": ["证据1", "证据2"],
+            "source": "[来源信息]"
+        }}
+    ],
+    "achievements": [
+        {{
+            "type": "成就类型（专利/论文/奖项/项目/开源贡献等）",
+            "title": "成就标题",
+            "description": "详细描述",
+            "date": "日期",
+            "impact": "影响力/数据",
+            "source": "[来源信息]"
+        }}
+    ],
+    "connections": {{
+        "recommenders": [
+            {{
+                "name": "推荐人姓名",
+                "title": "职位",
+                "organization": "机构",
+                "relationship": "与申请人关系",
+                "source": "[来源信息]"
+            }}
+        ],
+        "industry_contacts": [
+            {{
+                "name": "联系人姓名",
+                "context": "认识背景",
+                "source": "[来源信息]"
+            }}
+        ]
+    }},
+    "raw_analysis": {{
+        "key_strengths": ["核心优势1", "核心优势2"],
+        "unique_selling_points": ["独特卖点1", "独特卖点2"],
+        "potential_gaps": ["潜在不足1"],
+        "gtv_pathway_suggestion": "建议的申请路径（Exceptional Talent/Promise）"
+    }}
+}}
+
+请确保：
+1. 尽可能完整地提取所有信息
+2. 保留原始出处标注
+3. 按时间顺序排列职业经历（最近的在前）
+4. 突出对GTV申请有价值的信息
+5. 如果某项信息不明确，可以标注"待确认"
+
+只返回JSON，不要其他文字。
+"""
+            
+            response = self.llm_client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=4000,
+                temperature=0.3
+            )
+            
+            result_text = response.choices[0].message.content
+            
+            # 解析JSON
+            import re
+            json_match = re.search(r'\{[\s\S]*\}', result_text)
+            if json_match:
+                profile_data = json.loads(json_match.group())
+                logger.info(f"AI成功生成客户信息脉络图")
+                return profile_data
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"AI生成信息脉络图失败: {e}")
+            return None
+    
+    def _rule_based_profile_analysis(self, context: str, client_name: str) -> Dict:
+        """基于规则的信息脉络图分析（回退方案）"""
+        profile = {
+            "personal_info": {
+                "name": client_name,
+                "source": "项目信息"
+            },
+            "education": [],
+            "career_timeline": [],
+            "technical_expertise": [],
+            "achievements": [],
+            "connections": {
+                "recommenders": [],
+                "industry_contacts": []
+            },
+            "raw_analysis": {
+                "key_strengths": [],
+                "unique_selling_points": [],
+                "potential_gaps": ["需要AI分析或手动补充详细信息"],
+                "gtv_pathway_suggestion": "待确定"
+            }
+        }
+        
+        # 简单的关键词提取
+        lines = context.split('\n')
+        current_source = ""
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # 提取来源标注
+            if "[来源:" in line:
+                import re
+                source_match = re.search(r'\[来源:[^\]]+\]', line)
+                if source_match:
+                    current_source = source_match.group()
+            
+            # 检测教育信息
+            edu_keywords = ["大学", "学院", "university", "college", "硕士", "博士", "学士", "Bachelor", "Master", "PhD"]
+            if any(kw in line.lower() for kw in [k.lower() for k in edu_keywords]):
+                profile["education"].append({
+                    "description": line[:200],
+                    "source": current_source
+                })
+            
+            # 检测工作经历
+            work_keywords = ["公司", "集团", "Corp", "Inc", "Ltd", "有限公司", "经理", "工程师", "总监", "CEO", "CTO"]
+            if any(kw in line for kw in work_keywords):
+                profile["career_timeline"].append({
+                    "description": line[:200],
+                    "source": current_source
+                })
+            
+            # 检测成就
+            achievement_keywords = ["专利", "论文", "奖", "发表", "发明", "Patent", "Paper", "Award", "Publication"]
+            if any(kw in line for kw in achievement_keywords):
+                profile["achievements"].append({
+                    "description": line[:200],
+                    "source": current_source
+                })
+        
+        return profile
+    
+    def _generate_profile_mindmap(self, profile_data: Dict, client_name: str) -> Dict:
+        """生成信息脉络图的思维导图可视化数据"""
+        mindmap = {
+            "id": "profile_root",
+            "label": f"📋 {client_name} - 信息脉络图",
+            "type": "root",
+            "children": []
+        }
+        
+        # 1. 个人信息
+        personal = profile_data.get("personal_info", {})
+        if personal:
+            personal_node = {
+                "id": "personal",
+                "label": "👤 个人信息",
+                "type": "category",
+                "status": "info",
+                "children": []
+            }
+            for key, value in personal.items():
+                if key != "source" and value:
+                    personal_node["children"].append({
+                        "id": f"personal_{key}",
+                        "label": f"{key}: {value}",
+                        "type": "item"
+                    })
+            if personal_node["children"]:
+                mindmap["children"].append(personal_node)
+        
+        # 2. 教育背景
+        education = profile_data.get("education", [])
+        if education:
+            edu_node = {
+                "id": "education",
+                "label": f"🎓 教育背景 ({len(education)})",
+                "type": "category",
+                "status": "info",
+                "children": []
+            }
+            for i, edu in enumerate(education[:5]):
+                if isinstance(edu, dict):
+                    label = f"{edu.get('degree', '')} - {edu.get('school', edu.get('description', '')[:30])}"
+                    details = f"{edu.get('period', '')} {edu.get('major', '')}"
+                else:
+                    label = str(edu)[:50]
+                    details = ""
+                
+                edu_node["children"].append({
+                    "id": f"edu_{i}",
+                    "label": label,
+                    "type": "item",
+                    "details": details
+                })
+            mindmap["children"].append(edu_node)
+        
+        # 3. 职业经历
+        career = profile_data.get("career_timeline", [])
+        if career:
+            career_node = {
+                "id": "career",
+                "label": f"💼 职业经历 ({len(career)})",
+                "type": "category",
+                "status": "info",
+                "children": []
+            }
+            for i, job in enumerate(career[:8]):
+                if isinstance(job, dict):
+                    label = f"{job.get('role', '')} @ {job.get('company', job.get('description', '')[:30])}"
+                    details = job.get('period', '')
+                    highlights = job.get('highlights', [])
+                else:
+                    label = str(job)[:50]
+                    details = ""
+                    highlights = []
+                
+                job_node = {
+                    "id": f"career_{i}",
+                    "label": label,
+                    "type": "item",
+                    "details": details,
+                    "children": []
+                }
+                
+                for j, h in enumerate(highlights[:3]):
+                    job_node["children"].append({
+                        "id": f"career_{i}_h{j}",
+                        "label": h[:50],
+                        "type": "highlight"
+                    })
+                
+                career_node["children"].append(job_node)
+            mindmap["children"].append(career_node)
+        
+        # 4. 技术专长
+        tech = profile_data.get("technical_expertise", [])
+        if tech:
+            tech_node = {
+                "id": "tech",
+                "label": f"🔧 技术专长 ({len(tech)})",
+                "type": "category",
+                "status": "info",
+                "children": []
+            }
+            for i, t in enumerate(tech[:6]):
+                if isinstance(t, dict):
+                    label = t.get('domain', str(t)[:30])
+                    skills = t.get('skills', [])
+                else:
+                    label = str(t)[:50]
+                    skills = []
+                
+                t_node = {
+                    "id": f"tech_{i}",
+                    "label": label,
+                    "type": "item",
+                    "children": []
+                }
+                
+                for j, skill in enumerate(skills[:5]):
+                    t_node["children"].append({
+                        "id": f"tech_{i}_s{j}",
+                        "label": skill,
+                        "type": "skill"
+                    })
+                
+                tech_node["children"].append(t_node)
+            mindmap["children"].append(tech_node)
+        
+        # 5. 成就
+        achievements = profile_data.get("achievements", [])
+        if achievements:
+            ach_node = {
+                "id": "achievements",
+                "label": f"🏆 成就 ({len(achievements)})",
+                "type": "category",
+                "status": "success",
+                "children": []
+            }
+            for i, ach in enumerate(achievements[:10]):
+                if isinstance(ach, dict):
+                    label = f"{ach.get('type', '')} - {ach.get('title', ach.get('description', '')[:30])}"
+                    details = ach.get('impact', ach.get('description', ''))
+                else:
+                    label = str(ach)[:50]
+                    details = ""
+                
+                ach_node["children"].append({
+                    "id": f"ach_{i}",
+                    "label": label,
+                    "type": "item",
+                    "details": details[:100] if details else ""
+                })
+            mindmap["children"].append(ach_node)
+        
+        # 6. 人脉关系
+        connections = profile_data.get("connections", {})
+        recommenders = connections.get("recommenders", [])
+        if recommenders:
+            conn_node = {
+                "id": "connections",
+                "label": f"🤝 推荐人/人脉 ({len(recommenders)})",
+                "type": "category",
+                "status": "info",
+                "children": []
+            }
+            for i, rec in enumerate(recommenders[:5]):
+                if isinstance(rec, dict):
+                    label = f"{rec.get('name', '推荐人')} - {rec.get('title', '')}"
+                    details = f"{rec.get('organization', '')} | {rec.get('relationship', '')}"
+                else:
+                    label = str(rec)[:50]
+                    details = ""
+                
+                conn_node["children"].append({
+                    "id": f"rec_{i}",
+                    "label": label,
+                    "type": "item",
+                    "details": details
+                })
+            mindmap["children"].append(conn_node)
+        
+        # 7. 分析总结
+        analysis = profile_data.get("raw_analysis", {})
+        if analysis:
+            analysis_node = {
+                "id": "analysis",
+                "label": "📊 分析总结",
+                "type": "category",
+                "status": "warning",
+                "children": []
+            }
+            
+            strengths = analysis.get("key_strengths", [])
+            if strengths:
+                analysis_node["children"].append({
+                    "id": "strengths",
+                    "label": "核心优势",
+                    "type": "item",
+                    "children": [{"id": f"s_{i}", "label": s, "type": "point"} for i, s in enumerate(strengths[:5])]
+                })
+            
+            gaps = analysis.get("potential_gaps", [])
+            if gaps:
+                analysis_node["children"].append({
+                    "id": "gaps",
+                    "label": "待改进",
+                    "type": "item",
+                    "children": [{"id": f"g_{i}", "label": g, "type": "point"} for i, g in enumerate(gaps[:3])]
+                })
+            
+            pathway = analysis.get("gtv_pathway_suggestion", "")
+            if pathway:
+                analysis_node["children"].append({
+                    "id": "pathway",
+                    "label": f"建议路径: {pathway}",
+                    "type": "item"
+                })
+            
+            if analysis_node["children"]:
+                mindmap["children"].append(analysis_node)
+        
+        return mindmap
+
     def generate_mindmap_data(self, framework: Dict, project_name: str = "", materials: List[Dict] = None) -> Dict:
         """生成完整的思维导图数据结构"""
         
