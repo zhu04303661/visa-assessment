@@ -1504,3 +1504,149 @@ def debug_prompt():
     except Exception as e:
         logger.error(f"调试提示词失败: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/material-collection/download-all', methods=['GET'])
+def download_all_materials(project_id):
+    """
+    打包下载项目所有材料
+    按分类建立文件夹，将文件放入对应分类，打包成ZIP下载
+    """
+    import zipfile
+    import tempfile
+    import shutil
+    import re
+    from datetime import datetime
+    
+    logger = _get_logger()
+    _init_services()
+    raw_material_manager = _services.get('raw_material_manager')
+    db = _services.get('db')
+    
+    if not raw_material_manager:
+        return jsonify({"success": False, "error": "服务未初始化"}), 500
+    
+    try:
+        # 获取项目信息
+        project_result = db.get_project(project_id=project_id) if db else None
+        client_name = "unknown"
+        if project_result and project_result.get("success"):
+            client_name = project_result.get("data", {}).get("client_name", project_id)
+        
+        # 安全处理客户名称（保留中文、字母、数字、空格、连字符、下划线）
+        safe_client_name = re.sub(r'[^\w\s\-]', '', client_name, flags=re.UNICODE).strip()
+        safe_client_name = safe_client_name.replace('/', '_').replace('\\', '_')
+        if not safe_client_name:
+            safe_client_name = project_id
+        
+        # 获取材料分类结构
+        from services.raw_material_manager import MATERIAL_CATEGORIES
+        
+        # 从数据库获取项目的所有材料文件
+        conn = sqlite3.connect(raw_material_manager.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT mf.*, mc.item_id as mc_item_id
+            FROM material_files mf
+            LEFT JOIN material_collection mc 
+            ON mf.project_id = mc.project_id 
+            AND mf.category_id = mc.category_id 
+            AND mf.item_id = mc.item_id
+            WHERE mf.project_id = ?
+        ''', (project_id,))
+        
+        files = cursor.fetchall()
+        conn.close()
+        
+        if not files:
+            return jsonify({"success": False, "error": "该项目暂无材料文件"}), 404
+        
+        # 创建临时目录
+        temp_dir = tempfile.mkdtemp()
+        zip_base_dir = os.path.join(temp_dir, f"{safe_client_name}_材料")
+        os.makedirs(zip_base_dir, exist_ok=True)
+        
+        files_copied = 0
+        errors = []
+        
+        # 遍历文件并按分类组织
+        for file_row in files:
+            category_id = file_row['category_id']
+            item_id = file_row['item_id']
+            file_path = file_row['file_path']
+            file_name = file_row['file_name']
+            
+            # 获取标签名称
+            folder_name = "其他材料"
+            
+            if category_id in MATERIAL_CATEGORIES:
+                cat = MATERIAL_CATEGORIES[category_id]
+                category_name = cat.get('name', category_id)
+                for item in cat.get('items', []):
+                    if item.get('item_id') == item_id:
+                        folder_name = item.get('name', category_name)
+                        break
+                else:
+                    folder_name = category_name
+            
+            # 创建文件夹
+            folder_path = os.path.join(zip_base_dir, folder_name)
+            os.makedirs(folder_path, exist_ok=True)
+            
+            # 复制文件
+            if os.path.exists(file_path):
+                dest_path = os.path.join(folder_path, file_name)
+                if os.path.exists(dest_path):
+                    base, ext = os.path.splitext(file_name)
+                    counter = 1
+                    while os.path.exists(dest_path):
+                        dest_path = os.path.join(folder_path, f"{base}_{counter}{ext}")
+                        counter += 1
+                
+                shutil.copy2(file_path, dest_path)
+                files_copied += 1
+            else:
+                errors.append(f"文件不存在: {file_name}")
+        
+        if files_copied == 0:
+            shutil.rmtree(temp_dir)
+            return jsonify({"success": False, "error": "没有可下载的文件"}), 404
+        
+        # 创建ZIP文件
+        zip_filename = f"{safe_client_name}_材料_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+        zip_path = os.path.join(temp_dir, zip_filename)
+        
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files_in_dir in os.walk(zip_base_dir):
+                for file in files_in_dir:
+                    file_full_path = os.path.join(root, file)
+                    arcname = os.path.relpath(file_full_path, zip_base_dir)
+                    zipf.write(file_full_path, arcname)
+        
+        logger.info(f"材料打包完成: {zip_path}, 共 {files_copied} 个文件")
+        
+        # 发送文件
+        response = send_file(
+            zip_path,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name=zip_filename
+        )
+        
+        # 注册清理回调
+        @response.call_on_close
+        def cleanup():
+            try:
+                shutil.rmtree(temp_dir)
+            except Exception as e:
+                logger.warning(f"清理临时目录失败: {e}")
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"打包下载材料失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
