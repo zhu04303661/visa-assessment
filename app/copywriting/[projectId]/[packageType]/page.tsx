@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -116,6 +116,12 @@ export default function PackageDetailPage() {
   const router = useRouter()
   const projectId = params.projectId as string
   const packageType = params.packageType as string
+  
+  // 验证 packageType 是否有效（必须在 PACKAGE_TYPES 中定义）
+  // extraction 和 framework 应该由专门的静态路由处理，不应被此动态路由捕获
+  if (!PACKAGE_TYPES[packageType]) {
+    notFound()
+  }
   
   // 状态
   const [project, setProject] = useState<Project | null>(null)
