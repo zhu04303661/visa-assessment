@@ -17,27 +17,98 @@ from utils.logger_config import setup_module_logger
 logger = setup_module_logger("framework_building_agent", os.getenv("LOG_LEVEL", "INFO"))
 
 
-# GTV申请框架模板
+# Tech Nation 官方MC/OC标准描述（英文原文）
+MC_CRITERIA_OFFICIAL = {
+    "MC1": {
+        "name": "产品团队领导力",
+        "name_en": "Product Leadership",
+        "description": "You led the growth of a product-led digital technology company, product or team inside a digital technology company, as evidenced by reference letter(s) from leading industry expert(s) describing your work, or as evidenced by news clippings, lines of code from public repos or similar evidence.",
+        "description_cn": "您领导了一家以产品为主导的数字科技公司、数字科技公司内部的产品或团队的成长，这可以从领先行业专家描述您工作的推荐信中得到证明，或者从新闻剪报、公共存储库中的代码行或类似证据中得到证明。"
+    },
+    "MC2": {
+        "name": "商业发展",
+        "name_en": "Business Development",
+        "description": "You led the marketing or business development at a product-led digital technology company, demonstrably enabling substantial revenue and/or customer growth or major commercial success, as evidenced by reference letter(s) from leading industry expert(s) describing your work, senior global commercial executives inside the company and/or at company partners/customers, or similar evidence.",
+        "description_cn": "您在一家以产品为导向的数字科技公司领导营销或业务开发，明显实现了可观的收入和/或客户增长或重大商业成功。"
+    },
+    "MC3": {
+        "name": "非营利组织",
+        "name_en": "Non-profit Leadership",
+        "description": "You led the growth of a non-profit organisation or social enterprise with a specific focus on the digital technology sector, as evidenced by reference letter(s) from leading industry expert(s) describing your work, or as evidenced by news clippings or similar evidence.",
+        "description_cn": "您领导了一家特别关注数字科技领域的非营利组织或社会企业的发展。"
+    },
+    "MC4": {
+        "name": "专家评审",
+        "name_en": "Expert Review",
+        "description": "You have held or hold a significant expert role participating on panels, or individually, assessing the work of others in the same field or a field of specialisation related to the digital technology sector.",
+        "description_cn": "您担任或担任过重要的专家角色，参与小组讨论或单独评估同一领域或与数字科技领域相关的专业领域的其他人的工作。"
+    }
+}
+
+OC_CRITERIA_OFFICIAL = {
+    "OC1": {
+        "name": "创新",
+        "name_en": "Innovation",
+        "description": "Evidence of innovation/product development, proof of product in market and associated traction through revenue.",
+        "description_cn": "创新/产品开发的证据，市场上产品的证明以及通过收入反映的市场影响力的证明。"
+    },
+    "OC2": {
+        "name": "行业认可",
+        "name_en": "Industry Recognition",
+        "description": "Evidence that the applicant is recognised as a leading talent in the digital technology sector.",
+        "description_cn": "证明申请人被认可为数字科技领域的领军人才的证据。"
+    },
+    "OC3": {
+        "name": "重大贡献",
+        "name_en": "Significant Contribution",
+        "description": "Having led or played a key role in the growth of a product-led digital technology company, such as influencing investment and strategy or delivering major products or releases.",
+        "description_cn": "在以产品为主导的数字科技公司的发展中领导或发挥关键作用，例如影响投资和战略或交付主要产品或版本。"
+    },
+    "OC4": {
+        "name": "学术贡献",
+        "name_en": "Academic Contribution",
+        "description": "Evidence of exceptional ability in the field demonstrated by academic contributions.",
+        "description_cn": "通过学术贡献证明在该领域具有杰出能力的证据。"
+    }
+}
+
+# 工作岗位选项（Tech Nation官方分类）
+WORK_ROLE_OPTIONS = [
+    "Product management",
+    "Technical engineering", 
+    "Software engineering",
+    "Business development (inc. sales, partnerships, growth hacking etc.)",
+    "Data science",
+    "UI/UX design",
+    "Experience investing in digital businesses",
+    "Founder of a tech company",
+    "Academic research in digital technology"
+]
+
+# GTV申请框架模板（优化版 - 参考人工专业框架）
 GTV_FRAMEWORK_TEMPLATE = {
     "领域定位": {
         "评估机构": "Tech Nation",
-        "细分领域": "",
-        "岗位定位": "",
-        "核心论点": "",
-        "申请路径": ""  # Exceptional Talent / Exceptional Promise
+        "细分领域": "",  # 如：Hardware & Devices, AI, FinTech等
+        "岗位定位": "",  # 如：创业者/创始人、技术专家、投资人
+        "工作岗位选择": [],  # 可多选，来自WORK_ROLE_OPTIONS
+        "核心论点": "",  # 一句话核心价值主张
+        "申请路径": "",  # Exceptional Talent / Exceptional Promise
+        "论证重点": "",  # 需要特别论证的关键点（如：投资经历和科技公司关联性）
+        "背书论证要点": []  # 需要向背书机构论证的核心要点列表
     },
     "MC_必选标准": {
-        "选择的MC": "",
+        "选择的MC": "",  # 如 "MC1" 或 "MC1+MC3"
         "MC1_产品团队领导力": {
-            "description": "领导产品导向的数字科技公司/产品/团队增长的证据",
+            "official_description": MC_CRITERIA_OFFICIAL["MC1"]["description"],
             "applicable": False,
-            "evidence_list": [],
+            "evidence_list": [],  # 每项：{id, title, description, source_file, evidence_type}
             "summary": "",
-            "strength_score": 0,
+            "strength_score": 0,  # 1-5分
             "gaps": []
         },
         "MC2_商业发展": {
-            "description": "领导营销或业务开发，实现收入/客户增长的证据",
+            "official_description": MC_CRITERIA_OFFICIAL["MC2"]["description"],
             "applicable": False,
             "evidence_list": [],
             "summary": "",
@@ -45,7 +116,7 @@ GTV_FRAMEWORK_TEMPLATE = {
             "gaps": []
         },
         "MC3_非营利组织": {
-            "description": "领导数字科技领域非营利组织或社会企业的证据",
+            "official_description": MC_CRITERIA_OFFICIAL["MC3"]["description"],
             "applicable": False,
             "evidence_list": [],
             "summary": "",
@@ -53,7 +124,7 @@ GTV_FRAMEWORK_TEMPLATE = {
             "gaps": []
         },
         "MC4_专家评审": {
-            "description": "担任评审同行工作的重要专家角色的证据",
+            "official_description": MC_CRITERIA_OFFICIAL["MC4"]["description"],
             "applicable": False,
             "evidence_list": [],
             "summary": "",
@@ -62,9 +133,9 @@ GTV_FRAMEWORK_TEMPLATE = {
         }
     },
     "OC_可选标准": {
-        "选择的OC": [],
+        "选择的OC": [],  # 如 ["OC1", "OC3"]，需选择2项
         "OC1_创新": {
-            "description": "创新/产品开发及市场验证证据",
+            "official_description": OC_CRITERIA_OFFICIAL["OC1"]["description"],
             "applicable": False,
             "evidence_list": [],
             "summary": "",
@@ -72,7 +143,7 @@ GTV_FRAMEWORK_TEMPLATE = {
             "gaps": []
         },
         "OC2_行业认可": {
-            "description": "作为领域专家获得的认可证据",
+            "official_description": OC_CRITERIA_OFFICIAL["OC2"]["description"],
             "applicable": False,
             "evidence_list": [],
             "summary": "",
@@ -80,7 +151,7 @@ GTV_FRAMEWORK_TEMPLATE = {
             "gaps": []
         },
         "OC3_重大贡献": {
-            "description": "对数字技术产品的重大技术/商业贡献",
+            "official_description": OC_CRITERIA_OFFICIAL["OC3"]["description"],
             "applicable": False,
             "evidence_list": [],
             "summary": "",
@@ -88,7 +159,7 @@ GTV_FRAMEWORK_TEMPLATE = {
             "gaps": []
         },
         "OC4_学术贡献": {
-            "description": "在数字技术领域的学术贡献",
+            "official_description": OC_CRITERIA_OFFICIAL["OC4"]["description"],
             "applicable": False,
             "evidence_list": [],
             "summary": "",
@@ -98,32 +169,38 @@ GTV_FRAMEWORK_TEMPLATE = {
     },
     "推荐信": {
         "推荐人1": {
-            "suggested_profile": "行业资深人士",
             "name": "",
             "title": "",
             "organization": "",
+            "field": "",  # 推荐人的专业领域
             "relationship": "",
-            "focus_points": [],
+            "recommendation_angle": "",  # 推荐角度/论点
+            "focus_points": [],  # 重点论证要点
+            "supports_criteria": [],  # 支持哪些MC/OC标准
             "status": "待确定",
             "source_file": ""
         },
         "推荐人2": {
-            "suggested_profile": "技术/学术专家",
             "name": "",
             "title": "",
             "organization": "",
+            "field": "",
             "relationship": "",
+            "recommendation_angle": "",
             "focus_points": [],
+            "supports_criteria": [],
             "status": "待确定",
             "source_file": ""
         },
         "推荐人3": {
-            "suggested_profile": "商业合作伙伴",
             "name": "",
             "title": "",
             "organization": "",
+            "field": "",
             "relationship": "",
+            "recommendation_angle": "",
             "focus_points": [],
+            "supports_criteria": [],
             "status": "待确定",
             "source_file": ""
         }
@@ -131,16 +208,22 @@ GTV_FRAMEWORK_TEMPLATE = {
     "个人陈述要点": {
         "opening_hook": "",
         "technical_journey": "",
-        "key_achievements": [],
+        "key_achievements": [],  # 每项：{achievement, evidence, source_file}
         "uk_vision": "",
         "conclusion": ""
     },
-    "证据清单": [],
+    "证据清单": [],  # 每项：{id, criteria, evidence_id, title, description, source_file, type}
     "申请策略": {
-        "overall_strength": "",
+        "overall_strength": "",  # 强/中/弱
         "recommended_approach": "",
         "key_risks": [],
-        "preparation_priorities": []
+        "preparation_priorities": [],
+        "timeline": {
+            "materials_completion": "",
+            "endorsement_submission": "",
+            "visa_submission": "",
+            "expected_result": ""
+        }
     }
 }
 
@@ -348,6 +431,51 @@ class FrameworkBuildingAgent:
         except Exception as e:
             logger.error(f"获取框架日志失败: {e}")
             return []
+    
+    def clear_all_framework_data(self, project_id: str) -> Dict[str, Any]:
+        """
+        清除项目的所有框架数据，包括：
+        - GTV框架 (gtv_frameworks)
+        - 框架构建日志 (framework_logs)
+        - 客户画像 (client_profile_maps)
+        """
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            
+            stats = {}
+            
+            # 清除GTV框架
+            cursor.execute('DELETE FROM gtv_frameworks WHERE project_id = ?', (project_id,))
+            stats['deleted_frameworks'] = cursor.rowcount
+            
+            # 清除框架构建日志
+            cursor.execute('DELETE FROM framework_logs WHERE project_id = ?', (project_id,))
+            stats['deleted_logs'] = cursor.rowcount
+            
+            # 清除客户画像
+            try:
+                cursor.execute('DELETE FROM client_profile_maps WHERE project_id = ?', (project_id,))
+                stats['deleted_profiles'] = cursor.rowcount
+            except Exception:
+                stats['deleted_profiles'] = 0
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info(f"项目 {project_id} 框架数据已清理: {stats}")
+            
+            return {
+                "success": True,
+                "data": {
+                    "message": "框架数据已清理完成，可以重新构建",
+                    "stats": stats
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"清除项目框架数据失败: {e}")
+            return {"success": False, "error": str(e)}
     
     def _call_llm(self, prompt: str, project_id: str, action: str, 
                   log_type: str = "framework", 
@@ -666,14 +794,17 @@ class FrameworkBuildingAgent:
     
     def _analyze_domain_positioning_v2(self, project_id: str, evidence_list: List[Dict],
                                        context: str, client_name: str) -> Optional[Dict]:
-        """基于分类证据分析领域定位"""
+        """基于分类证据分析领域定位（优化版 - 参考专业人工框架）"""
         # 格式化证据
         evidence_text = self._format_evidence_for_prompt(evidence_list, max_items=15)
         
         # 尝试从数据库获取提示词
         db_prompt, version, prompt_name = self._get_prompt_from_db("framework_domain")
         
-        prompt = f"""你是GTV签证专家。请根据以下已分类的申请人证据，分析其领域定位。
+        # 工作岗位选项
+        role_options = "\n".join([f"  - {role}" for role in WORK_ROLE_OPTIONS])
+        
+        prompt = f"""你是资深GTV签证顾问。请根据以下已分类的申请人证据，深度分析其领域定位。
 
 ## 申请人: {client_name}
 
@@ -683,20 +814,31 @@ class FrameworkBuildingAgent:
 ## 补充背景信息
 {context[:3000] if context else "无补充信息"}
 
+## Tech Nation 工作岗位选项（可多选）
+{role_options}
+
 ## 输出要求
-严格根据以上证据材料分析，返回JSON格式：
+基于证据材料进行专业分析，返回JSON格式：
 {{
     "评估机构": "Tech Nation",
-    "细分领域": "具体技术/行业领域（如：人工智能、金融科技、医疗科技等）",
-    "岗位定位": "申请人的核心职业角色（如：技术专家、产品负责人、创业者等）",
-    "核心论点": "一句话总结申请人的核心优势和价值主张",
-    "申请路径": "Exceptional Talent 或 Exceptional Promise（根据经验年限和成就判断）"
+    "细分领域": "根据Tech Nation官方分类选择（如：AI & Machine Learning, FinTech, Hardware & Devices, Digital Health, Cyber Security, Gaming, Creative Industries等）",
+    "岗位定位": "申请人的核心职业定位（如：创业者/创始人、技术领导者、投资人、产品专家等）",
+    "工作岗位选择": ["从上面的选项中选择1-3个最匹配的岗位"],
+    "核心论点": "一句话精炼概括申请人的独特价值主张，必须具体、有数据支撑、有说服力（如：拥有10年AI领域研发经验的技术领导者，主导开发了服务百万用户的智能系统）",
+    "申请路径": "Exceptional Talent（5年+资深经验、行业领导者）或 Exceptional Promise（早期职业、有突出潜力）",
+    "论证重点": "申请中需要特别论证的关键点（如：如何将投资经历与科技公司运营关联起来）",
+    "背书论证要点": [
+        "需要向Tech Nation论证的核心要点1（如：产品是数字科技导向的产品）",
+        "需要向Tech Nation论证的核心要点2（如：申请人在行业里的先进性和领先地位）"
+    ],
+    "source_files": ["用于判断的主要来源文件"]
 }}
 
-要求：
-1. 必须基于证据材料中的真实信息，不要杜撰
-2. 如果证据不足以判断某项，写"待补充"
-3. 核心论点必须具体、有说服力"""
+## 重要要求
+1. 所有结论必须基于证据材料中的真实信息，不要杜撰
+2. 核心论点必须具体、量化、有说服力，避免空泛表述
+3. 论证重点要识别申请材料中的"割裂点"或需要解释的地方
+4. 背书论证要点要明确列出需要重点向Tech Nation证明的内容"""
 
         result_text = self._call_llm(prompt, project_id, "领域定位分析v2", "domain_analysis",
                                      prompt_version=version, prompt_name=prompt_name)
@@ -867,19 +1009,26 @@ class FrameworkBuildingAgent:
     
     def _analyze_recommenders_v2(self, project_id: str, evidence_list: List[Dict],
                                  context: str, client_name: str) -> Optional[Dict]:
-        """基于分类证据分析推荐人"""
+        """基于分类证据分析推荐人（优化版 - 参考专业人工框架）"""
         # 格式化推荐人相关证据
         formatted_evidence = []
         for e in evidence_list[:20]:
             source = e.get('source_file', '未知来源')
-            formatted_evidence.append(f"""【推荐人信息】
-{e.get('content', '')}
+            name = e.get('recommender_name', '')
+            title = e.get('recommender_title', '')
+            org = e.get('recommender_org', '')
+            relationship = e.get('relationship', '')
+            
+            formatted_evidence.append(f"""【推荐人】{name or '未知'}
+职位: {title or '未知'} @ {org or '未知'}
+与申请人关系: {relationship or '未知'}
+详细信息: {e.get('content', '')}
 （来源: {source}）
 """)
         
         evidence_text = "\n".join(formatted_evidence) if formatted_evidence else "暂无推荐人相关证据"
         
-        prompt = f"""你是GTV签证专家。请根据以下推荐人相关证据，分析并组织推荐人信息。
+        prompt = f"""你是资深GTV签证顾问。请根据以下推荐人相关证据，专业分析并组织推荐人策略。
 
 ## 申请人: {client_name}
 
@@ -890,32 +1039,61 @@ class FrameworkBuildingAgent:
 {context[:2000] if context else "无补充材料"}
 
 ## GTV推荐信要求
-- 需要3封推荐信
-- 推荐人应来自不同背景：行业专家、技术专家、商业合作伙伴等
-- 推荐人需要有足够的资历和认可度
-- 每封推荐信应聚焦不同的能力维度
+- 需要3封推荐信，每封应聚焦不同能力维度
+- 推荐人应是"领先行业专家"(leading industry expert)
+- 推荐人背景应多元化：学术专家、行业领袖、商业合作伙伴等
+- 每位推荐人需要有明确的推荐角度和论点
 
 ## 输出要求
-返回JSON格式：
+返回JSON格式（每位推荐人都要有明确的推荐角度）：
 {{
     "推荐人1": {{
         "name": "推荐人姓名",
-        "title": "职位",
+        "title": "职位/职称",
         "organization": "机构/公司",
-        "relationship": "与申请人的关系",
-        "focus_points": ["推荐信应聚焦的要点1", "要点2"],
+        "field": "推荐人的专业领域（如：人工智能、光学工程、投资等）",
+        "relationship": "与申请人的具体关系（如：博士导师、投资合作伙伴、技术顾问）",
+        "recommendation_angle": "推荐角度/论点（如：从AI技术研发创新能力角度推荐申请人）",
+        "focus_points": [
+            "推荐信中应重点阐述的论点1（具体到可操作）",
+            "推荐信中应重点阐述的论点2"
+        ],
+        "supports_criteria": ["支持的MC/OC标准，如MC1, OC1"],
         "status": "已确认/待确认",
         "source_file": "信息来源文件"
     }},
-    "推荐人2": {{...}},
-    "推荐人3": {{...}}
+    "推荐人2": {{
+        "name": "",
+        "title": "",
+        "organization": "",
+        "field": "",
+        "relationship": "",
+        "recommendation_angle": "",
+        "focus_points": [],
+        "supports_criteria": [],
+        "status": "",
+        "source_file": ""
+    }},
+    "推荐人3": {{
+        "name": "",
+        "title": "",
+        "organization": "",
+        "field": "",
+        "relationship": "",
+        "recommendation_angle": "",
+        "focus_points": [],
+        "supports_criteria": [],
+        "status": "",
+        "source_file": ""
+    }}
 }}
 
 ## 重要要求
-1. 信息必须来自上述证据材料
-2. 如果推荐人信息不完整，在status中标注"待补充"
-3. focus_points应根据推荐人背景和申请策略来建议
-4. 必须标注source_file来源"""
+1. 信息必须来自上述证据材料，不要杜撰推荐人
+2. recommendation_angle必须具体明确，如"从被投资企业角度论证申请人对数字科技企业的商业敏感度"
+3. focus_points要具体到推荐信撰写可以直接参考
+4. supports_criteria要明确每位推荐人的推荐信可以支持哪些MC/OC标准
+5. 三位推荐人的角度应互补，覆盖不同维度"""
 
         result_text = self._call_llm(prompt, project_id, "推荐人分析v2", "recommender_analysis")
         return self._parse_json_response(result_text)
@@ -1246,12 +1424,15 @@ class FrameworkBuildingAgent:
     
     def _generate_strategy(self, project_id: str, framework: Dict, 
                           client_name: str) -> Optional[Dict]:
-        """生成申请策略"""
+        """生成申请策略（优化版 - 包含时间线规划）"""
         # 计算MC和OC分数
         mc_scores = {k: framework["MC_必选标准"].get(k, {}).get("strength_score", 0) 
                     for k in ["MC1_产品团队领导力", "MC2_商业发展", "MC3_非营利组织", "MC4_专家评审"]}
         oc_scores = {k: framework["OC_可选标准"].get(k, {}).get("strength_score", 0) 
                     for k in ["OC1_创新", "OC2_行业认可", "OC3_重大贡献", "OC4_学术贡献"]}
+        
+        # 获取推荐人信息
+        recommenders_info = json.dumps(framework.get("推荐信", {}), ensure_ascii=False, indent=2)
         
         framework_summary = json.dumps({
             "领域定位": framework.get("领域定位", {}),
@@ -1269,26 +1450,62 @@ class FrameworkBuildingAgent:
         else:
             version = None
             prompt_name = None
-            # 回退到默认提示词
-            prompt = f"""你是GTV签证专家。请根据以下分析结果，生成申请策略。
+            # 回退到默认提示词（优化版）
+            prompt = f"""你是资深GTV签证顾问。请根据以下分析结果，生成专业的申请策略和时间规划。
 
-申请人：{client_name}
+## 申请人：{client_name}
 
-MC标准评分：
+## 框架分析概览：
+{framework_summary}
+
+## 推荐人情况：
+{recommenders_info}
+
+## MC标准评分（1-5分）：
 {json.dumps(mc_scores, ensure_ascii=False, indent=2)}
 
-OC标准评分：
+## OC标准评分（1-5分）：
 {json.dumps(oc_scores, ensure_ascii=False, indent=2)}
 
-请按以下JSON格式返回申请策略：
+## 输出要求
+请按以下JSON格式返回完整的申请策略：
 {{
-    "overall_strength": "强/中/需改进（基于评分综合判断）",
-    "recommended_mc": "推荐选择的MC标准（评分最高的一个）",
-    "recommended_ocs": ["推荐选择的OC标准（评分最高的两个）"],
-    "recommended_approach": "具体的申请策略建议",
-    "key_risks": ["主要风险点"],
-    "preparation_priorities": ["优先准备事项1", "优先准备事项2", "优先准备事项3"]
-}}"""
+    "overall_strength": "强/中/需改进（基于整体材料情况判断）",
+    "recommended_mc": "推荐选择的MC标准（如MC1_产品团队领导力）",
+    "recommended_ocs": ["推荐选择的OC标准1", "推荐选择的OC标准2"],
+    "recommended_approach": "具体的申请策略建议（2-3句话概括核心策略）",
+    "key_risks": [
+        "主要风险点1及应对建议",
+        "主要风险点2及应对建议"
+    ],
+    "preparation_priorities": [
+        "优先准备事项1（如：完善产品描述文档，突出数字科技特性）",
+        "优先准备事项2（如：获取行业专家推荐信）",
+        "优先准备事项3（如：准备财务数据和销售证明）"
+    ],
+    "evidence_todo": [
+        "需要补充的证据1",
+        "需要补充的证据2"
+    ],
+    "timeline": {{
+        "materials_completion": "材料准备完成时间（如：递交前2周）",
+        "endorsement_submission": "背书申请递交时间",
+        "endorsement_result": "预计背书结果时间（通常8周）",
+        "visa_submission": "签证递交时间",
+        "expected_result": "预计签证结果时间（英国境内8周，可加急）",
+        "key_milestones": [
+            "关键节点1：推荐信确认完成",
+            "关键节点2：材料翻译定稿",
+            "关键节点3：所有证据文件整理完毕"
+        ]
+    }}
+}}
+
+## 重要要求
+1. recommended_mc选择评分最高且证据最充分的MC标准
+2. recommended_ocs选择评分最高的2个OC标准
+3. preparation_priorities要具体、可操作
+4. timeline要合理估算，考虑推荐人配合度"""
 
         result_text = self._call_llm(prompt, project_id, "申请策略生成", "strategy_generation",
                                      prompt_version=version, prompt_name=prompt_name)

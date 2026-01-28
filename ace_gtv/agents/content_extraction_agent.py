@@ -198,6 +198,19 @@ class ContentExtractionAgent:
             except:
                 pass  # 列已存在
             
+            # 添加推荐人相关列（如果不存在）
+            recommender_columns = [
+                ('recommender_name', 'TEXT'),
+                ('recommender_title', 'TEXT'),
+                ('recommender_org', 'TEXT'),
+                ('relationship', 'TEXT')
+            ]
+            for col_name, col_type in recommender_columns:
+                try:
+                    cursor.execute(f'ALTER TABLE content_classifications ADD COLUMN {col_name} {col_type}')
+                except:
+                    pass  # 列已存在
+            
             cursor.execute('''
                 CREATE INDEX IF NOT EXISTS idx_classifications_project 
                 ON content_classifications(project_id, category, subcategory)
@@ -1024,7 +1037,7 @@ class ContentExtractionAgent:
                 context_parts.append(block['content'])
                 total_words += block['word_count'] or 0
             
-            # 获取统计信息
+            # 获取已提取内容的统计信息
             cursor.execute('''
                 SELECT COUNT(DISTINCT source_file) as file_count,
                        COUNT(*) as block_count,
@@ -1034,13 +1047,25 @@ class ContentExtractionAgent:
             ''', (project_id,))
             
             stats = cursor.fetchone()
+            
+            # 获取material_files表中的可用文件数量
+            cursor.execute('''
+                SELECT COUNT(*) as available_files
+                FROM material_files
+                WHERE project_id = ?
+            ''', (project_id,))
+            
+            material_stats = cursor.fetchone()
+            available_files = material_stats['available_files'] if material_stats else 0
+            
             conn.close()
             
             return {
                 "success": True,
                 "data": {
                     "context": "\n".join(context_parts),
-                    "total_files": stats['file_count'] or 0,
+                    "total_files": available_files,  # 使用material_files表的文件数量
+                    "extracted_files": stats['file_count'] or 0,  # 已提取的文件数量
                     "total_blocks": stats['block_count'] or 0,
                     "total_words": total_words,
                     "last_updated": stats['last_updated']
@@ -1602,6 +1627,65 @@ class ContentExtractionAgent:
             logger.error(f"清除项目内容失败: {e}")
             return {"success": False, "error": str(e)}
 
+    def clear_all_extraction_data(self, project_id: str) -> Dict[str, Any]:
+        """
+        清除项目的所有提取数据，包括：
+        - 提取的内容块 (extracted_contents)
+        - 内容大纲 (content_outlines)
+        - 内容分类 (content_classifications)
+        - 分类进度 (classification_progress)
+        - 提取日志 (extraction_logs)
+        """
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            
+            stats = {}
+            
+            # 清除提取的内容块
+            cursor.execute('DELETE FROM extracted_contents WHERE project_id = ?', (project_id,))
+            stats['deleted_contents'] = cursor.rowcount
+            
+            # 清除内容大纲
+            cursor.execute('DELETE FROM content_outlines WHERE project_id = ?', (project_id,))
+            stats['deleted_outlines'] = cursor.rowcount
+            
+            # 清除内容分类
+            cursor.execute('DELETE FROM content_classifications WHERE project_id = ?', (project_id,))
+            stats['deleted_classifications'] = cursor.rowcount
+            
+            # 清除分类进度
+            try:
+                cursor.execute('DELETE FROM classification_progress WHERE project_id = ?', (project_id,))
+                stats['deleted_progress'] = cursor.rowcount
+            except Exception:
+                # 表可能不存在
+                stats['deleted_progress'] = 0
+            
+            # 清除提取日志
+            try:
+                cursor.execute('DELETE FROM extraction_logs WHERE project_id = ?', (project_id,))
+                stats['deleted_logs'] = cursor.rowcount
+            except Exception:
+                stats['deleted_logs'] = 0
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info(f"项目 {project_id} 提取数据已清理: {stats}")
+            
+            return {
+                "success": True,
+                "data": {
+                    "message": "提取数据已清理完成，可以重新提取",
+                    "stats": stats
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"清除项目提取数据失败: {e}")
+            return {"success": False, "error": str(e)}
+
     # ==================== 内容分类功能 ====================
     
     # 分类标准定义
@@ -1658,13 +1742,13 @@ class ContentExtractionAgent:
         },
         "RECOMMENDER": {
             "name": "推荐信息",
+            "dynamic": True,  # 标记为动态类别，每个推荐人独立分组
             "subcategories": {
-                "recommender_info": {
-                    "name": "推荐人信息",
-                    "description": "推荐人的背景、职位、资质、与申请人的关系、合作经历等",
-                    "keywords": ["推荐人", "推荐信", "教授", "博士", "总监", "CEO", "专家", "背景", "关系", "合作", "共事", "指导", "认识", "了解", "评价", "推荐理由"]
-                }
-            }
+                # 动态生成：recommender_1, recommender_2, ... 每个推荐人一个独立分组
+                # 格式: recommender_{序号}_{推荐人姓名}
+            },
+            "description": "每个推荐人的信息独立分组，包括：推荐人姓名、职位/头衔、所在机构、与申请人的关系、推荐理由、对申请人的评价等",
+            "keywords": ["推荐人", "推荐信", "教授", "博士", "总监", "CEO", "专家", "背景", "关系", "合作", "共事", "指导", "认识", "了解", "评价", "推荐理由", "Professor", "Dr.", "Director"]
         }
     }
     
@@ -1744,19 +1828,30 @@ class ContentExtractionAgent:
                     evidence_type = cls.get('evidence_type', '')
                     key_points = json.dumps(cls.get('key_points', []), ensure_ascii=False)
                     
+                    # 推荐人相关字段
+                    recommender_name = cls.get('recommender_name', '')
+                    recommender_title = cls.get('recommender_title', '')
+                    recommender_org = cls.get('recommender_org', '')
+                    relationship = cls.get('relationship', '')
+                    
                     if content and category and subcategory:
                         cursor.execute('''
                             INSERT INTO content_classifications 
                             (project_id, category, subcategory, content_id, content, 
-                             source_file, source_page, relevance_score, evidence_type, key_points, subject_person)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                             source_file, source_page, relevance_score, evidence_type, key_points, subject_person,
+                             recommender_name, recommender_title, recommender_org, relationship)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ''', (project_id, category, subcategory, None, content,
-                              filename, cls.get('source_page'), relevance, evidence_type, key_points, subject_person))
+                              filename, cls.get('source_page'), relevance, evidence_type, key_points, subject_person,
+                              recommender_name, recommender_title, recommender_org, relationship))
                         
                         total_classified += 1
                         
-                        # 统计
-                        key = f"{category}_{subcategory}"
+                        # 统计（推荐人按姓名分组统计）
+                        if category == 'RECOMMENDER' and recommender_name:
+                            key = f"RECOMMENDER_{recommender_name}"
+                        else:
+                            key = f"{category}_{subcategory}"
                         classification_stats[key] = classification_stats.get(key, 0) + 1
                 
                 conn.commit()
@@ -1892,27 +1987,32 @@ class ContentExtractionAgent:
         """
         使用AI从原始材料直接提取并分类证据
         
-        关键改进：在提取时就识别信息的主体人物（申请人/推荐人）
+        关键改进：
+        1. 在提取时识别信息的主体人物（申请人/推荐人）
+        2. 每个推荐人独立分组，使用推荐人姓名作为标识
         """
         if not self.llm_client or not file_content:
             return []
         
         try:
-            # 构建分类说明
+            # 构建分类说明（不包含动态的RECOMMENDER类别）
             categories_desc = []
             for cat_key, cat_info in self.CLASSIFICATION_CATEGORIES.items():
+                if cat_key == 'RECOMMENDER':
+                    continue  # 推荐人类别单独处理
                 for sub_key, sub_info in cat_info['subcategories'].items():
                     categories_desc.append(f"- {cat_key}/{sub_key}: {sub_info['name']} - {sub_info['description']}")
             
             # 根据文件名和类别提供上下文提示
             file_context = ""
-            if '推荐' in filename or 'recommender' in filename.lower():
-                file_context = "【注意】这是推荐人相关文件，其中描述的个人经历和背景很可能是推荐人的，而非申请人的。"
+            is_recommender_file = '推荐' in filename or 'recommender' in filename.lower() or 'rl' in filename.lower()
+            if is_recommender_file:
+                file_context = "【注意】这是推荐人相关文件，其中描述的个人经历和背景是推荐人的，不是申请人的。请识别出推荐人的姓名。"
             elif 'CV' in filename or '简历' in filename:
                 file_context = "【注意】这是申请人的简历，其中的经历和成就属于申请人本人。"
             
             # 限制内容长度
-            content_preview = file_content[:8000] if len(file_content) > 8000 else file_content
+            content_preview = file_content[:10000] if len(file_content) > 10000 else file_content
             
             prompt = f"""请从以下材料中提取GTV签证申请的相关证据，并进行分类。
 
@@ -1924,28 +2024,50 @@ class ContentExtractionAgent:
 ## 重要：识别信息主体
 每条证据必须准确识别其描述的是谁：
 - "applicant": 申请人本人的经历、成就、工作、教育等
-- "recommender": 推荐人的背景、职位、学历、成就（用于说明推荐人资质）
+- "recommender": 推荐人的背景、职位、学历、成就、与申请人的关系等
 - "other": 公司、组织或其他人物的信息
 
-⚠️ 特别注意：
-- 推荐人信息文件中的个人经历通常是推荐人的，不是申请人的
-- 申请人的CV中的经历才是申请人的
-- 仔细区分文档中描述的是申请人还是推荐人
+⚠️ 特别注意推荐人信息处理：
+- 每个推荐人必须独立识别，记录其姓名
+- 不同推荐人的信息绝对不能混淆
+- 从材料中提取有多少个推荐人就记录多少个，不要限制数量
+- 推荐人信息包括：姓名、职位、所在机构、与申请人的关系、对申请人的评价、推荐理由等
 
-## 可选分类
+## 可选分类（申请人相关）
 {chr(10).join(categories_desc)}
+
+## 推荐人分类（每个推荐人独立分组）
+对于推荐人相关信息，使用以下格式：
+- category: "RECOMMENDER"
+- subcategory: "recommender_{{推荐人姓名}}" （例如：recommender_张三、recommender_Dr_John_Smith）
+- recommender_name: 推荐人的完整姓名（必填，用于分组）
 
 ## 材料内容
 {content_preview}
 
 ## 输出要求
-提取所有与GTV申请相关的证据，返回JSON数组。每个证据包含：
-- category: 主类别（MC/OC/RECOMMENDER）
+提取所有与GTV申请相关的证据，返回JSON数组。
+
+对于申请人相关证据：
+- category: MC/OC
 - subcategory: 子类别代码
-- subject: 信息主体（applicant/recommender/other）
-- content: 提取的具体证据内容（保留原文，100-500字）
+- subject: "applicant"
+- content: 证据内容（100-500字）
 - relevance_score: 相关度（0.6-1.0）
 - evidence_type: 证据类型
+- key_points: 2-3个关键词
+
+对于推荐人相关证据（每个推荐人独立记录）：
+- category: "RECOMMENDER"
+- subcategory: "recommender_{{推荐人姓名}}"
+- subject: "recommender"
+- recommender_name: 推荐人完整姓名（必填）
+- recommender_title: 推荐人职位/头衔
+- recommender_org: 推荐人所在机构
+- relationship: 与申请人的关系
+- content: 推荐人信息或评价内容（100-500字）
+- relevance_score: 相关度（0.6-1.0）
+- evidence_type: 证据类型（如"推荐人背景"、"推荐评价"、"合作关系"等）
 - key_points: 2-3个关键词
 
 如果材料中没有相关证据，返回空数组[]。
@@ -1954,7 +2076,8 @@ class ContentExtractionAgent:
 ```json
 [
   {{"category": "MC", "subcategory": "mc1_product_leadership", "subject": "applicant", "content": "申请人作为创始人兼CEO...", "relevance_score": 0.9, "evidence_type": "工作经历", "key_points": ["创始人", "CEO"]}},
-  {{"category": "RECOMMENDER", "subcategory": "recommender_info", "subject": "recommender", "content": "Dr. John Smith是利兹大学教授...", "relevance_score": 0.85, "evidence_type": "推荐人背景", "key_points": ["教授", "利兹大学"]}}
+  {{"category": "RECOMMENDER", "subcategory": "recommender_张三", "subject": "recommender", "recommender_name": "张三", "recommender_title": "教授", "recommender_org": "北京大学", "relationship": "博士导师", "content": "张三教授是北京大学计算机系教授，曾指导申请人完成博士论文...", "relevance_score": 0.9, "evidence_type": "推荐人背景", "key_points": ["教授", "北京大学", "博士导师"]}},
+  {{"category": "RECOMMENDER", "subcategory": "recommender_Dr_John_Smith", "subject": "recommender", "recommender_name": "Dr. John Smith", "recommender_title": "CEO", "recommender_org": "Tech Corp", "relationship": "前雇主", "content": "Dr. John Smith是Tech Corp的CEO，申请人在其公司工作期间...", "relevance_score": 0.85, "evidence_type": "推荐评价", "key_points": ["CEO", "Tech Corp", "前雇主"]}}
 ]
 ```"""
 
@@ -2038,7 +2161,7 @@ class ContentExtractionAgent:
 ## 重要：识别信息主体
 每条信息必须识别其描述的主体人物：
 - "applicant": 申请人本人的经历、成就、背景
-- "recommender": 推荐人的背景、资质、职位
+- "recommender": 推荐人的背景、资质、职位、与申请人的关系等
 - "other": 其他人物或组织的信息
 
 注意区分：
@@ -2046,30 +2169,49 @@ class ContentExtractionAgent:
 - 推荐人的介绍、推荐人的学历职位属于 recommender
 - 推荐人信息文件中描述的推荐人背景属于 recommender，不要与申请人混淆
 
-## 可选类别
+⚠️ 推荐人信息特别处理：
+- 每个推荐人必须独立识别，使用推荐人姓名作为标识
+- 不同推荐人的信息不能混淆
+- subcategory格式为: recommender_{{推荐人姓名}}
+
+## 可选类别（申请人相关）
 {chr(10).join(categories_desc)}
+
+## 推荐人分类
+对于推荐人，subcategory使用格式: recommender_{{推荐人姓名}}
+例如: recommender_张三, recommender_Dr_John_Smith
 
 ## 待分类内容
 {chr(10).join(contents_text)}
 
 ## 输出要求
 返回一个JSON对象，key是内容ID，value是该内容的分类数组。
-每个分类必须包含:
-- category: MC/OC/RECOMMENDER
+
+对于申请人相关分类:
+- category: MC/OC
 - subcategory: 子类别代码
-- subject: 信息主体（applicant/recommender/other）
+- subject: "applicant"
 - relevance_score: 相关度0.5-1.0
 - evidence_type: 证据类型
 - key_points: 2-3个关键词
 
-如果某内容不属于任何类别或是推荐人的个人经历（不是推荐信息类别），对应的value为空数组[]。
+对于推荐人相关分类:
+- category: "RECOMMENDER"
+- subcategory: "recommender_{{推荐人姓名}}"
+- subject: "recommender"
+- recommender_name: 推荐人完整姓名
+- relevance_score: 相关度0.5-1.0
+- evidence_type: 证据类型
+- key_points: 2-3个关键词
+
+如果某内容不属于任何类别，对应的value为空数组[]。
 
 ## 输出格式（严格按此格式，只返回JSON）
 ```json
 {{
   "123": [{{"category": "MC", "subcategory": "mc1_product_leadership", "subject": "applicant", "relevance_score": 0.9, "evidence_type": "工作经历", "key_points": ["创始人", "CEO"]}}],
   "124": [],
-  "125": [{{"category": "RECOMMENDER", "subcategory": "recommender_info", "subject": "recommender", "relevance_score": 0.8, "evidence_type": "推荐人背景", "key_points": ["教授", "利兹大学"]}}]
+  "125": [{{"category": "RECOMMENDER", "subcategory": "recommender_张三", "subject": "recommender", "recommender_name": "张三", "relevance_score": 0.8, "evidence_type": "推荐人背景", "key_points": ["教授", "北京大学"]}}]
 }}
 ```"""
 
@@ -2160,10 +2302,12 @@ class ContentExtractionAgent:
             conn = self._get_connection()
             cursor = conn.cursor()
             
+            # 包含推荐人相关字段
             if category:
                 cursor.execute('''
                     SELECT id, category, subcategory, content, source_file, source_page, 
-                           relevance_score, evidence_type, key_points, subject_person, created_at
+                           relevance_score, evidence_type, key_points, subject_person, created_at,
+                           recommender_name, recommender_title, recommender_org, relationship
                     FROM content_classifications 
                     WHERE project_id = ? AND category = ?
                     ORDER BY subcategory, relevance_score DESC
@@ -2171,7 +2315,8 @@ class ContentExtractionAgent:
             else:
                 cursor.execute('''
                     SELECT id, category, subcategory, content, source_file, source_page, 
-                           relevance_score, evidence_type, key_points, subject_person, created_at
+                           relevance_score, evidence_type, key_points, subject_person, created_at,
+                           recommender_name, recommender_title, recommender_org, relationship
                     FROM content_classifications 
                     WHERE project_id = ?
                     ORDER BY category, subcategory, relevance_score DESC
@@ -2189,16 +2334,29 @@ class ContentExtractionAgent:
                     cat_info = self.CLASSIFICATION_CATEGORIES.get(cat, {})
                     result[cat] = {
                         "name": cat_info.get('name', cat),
+                        "dynamic": cat_info.get('dynamic', False),
                         "subcategories": {}
                     }
                 
                 if subcat not in result[cat]['subcategories']:
-                    subcat_info = self.CLASSIFICATION_CATEGORIES.get(cat, {}).get('subcategories', {}).get(subcat, {})
-                    result[cat]['subcategories'][subcat] = {
-                        "name": subcat_info.get('name', subcat),
-                        "description": subcat_info.get('description', ''),
-                        "items": []
-                    }
+                    # 推荐人类别：从 subcategory 或字段获取推荐人信息
+                    if cat == 'RECOMMENDER':
+                        recommender_name = row['recommender_name'] or subcat.replace('recommender_', '').replace('_', ' ')
+                        result[cat]['subcategories'][subcat] = {
+                            "name": f"推荐人：{recommender_name}",
+                            "description": f"{row['recommender_title'] or ''} - {row['recommender_org'] or ''}".strip(' - '),
+                            "recommender_name": recommender_name,
+                            "recommender_title": row['recommender_title'] or '',
+                            "recommender_org": row['recommender_org'] or '',
+                            "items": []
+                        }
+                    else:
+                        subcat_info = self.CLASSIFICATION_CATEGORIES.get(cat, {}).get('subcategories', {}).get(subcat, {})
+                        result[cat]['subcategories'][subcat] = {
+                            "name": subcat_info.get('name', subcat),
+                            "description": subcat_info.get('description', ''),
+                            "items": []
+                        }
                 
                 # 解析 key_points
                 key_points = []
@@ -2207,7 +2365,7 @@ class ContentExtractionAgent:
                 except:
                     pass
                 
-                result[cat]['subcategories'][subcat]['items'].append({
+                item_data = {
                     "id": row['id'],
                     "content": row['content'],
                     "source_file": row['source_file'],
@@ -2216,7 +2374,16 @@ class ContentExtractionAgent:
                     "evidence_type": row['evidence_type'],
                     "key_points": key_points,
                     "subject_person": row['subject_person'] or 'applicant'
-                })
+                }
+                
+                # 添加推荐人相关字段
+                if cat == 'RECOMMENDER':
+                    item_data["recommender_name"] = row['recommender_name'] or ''
+                    item_data["recommender_title"] = row['recommender_title'] or ''
+                    item_data["recommender_org"] = row['recommender_org'] or ''
+                    item_data["relationship"] = row['relationship'] or ''
+                
+                result[cat]['subcategories'][subcat]['items'].append(item_data)
             
             conn.close()
             
@@ -2235,13 +2402,19 @@ class ContentExtractionAgent:
     def get_classification_summary(self, project_id: str) -> Dict[str, Any]:
         """
         获取分类统计摘要
+        
+        改进：推荐人类别按推荐人姓名分组显示
         """
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
             
+            # 获取基础统计，包含推荐人相关字段
             cursor.execute('''
-                SELECT category, subcategory, COUNT(*) as count, AVG(relevance_score) as avg_score
+                SELECT category, subcategory, COUNT(*) as count, AVG(relevance_score) as avg_score,
+                       MAX(recommender_name) as recommender_name, 
+                       MAX(recommender_title) as recommender_title, 
+                       MAX(recommender_org) as recommender_org
                 FROM content_classifications 
                 WHERE project_id = ?
                 GROUP BY category, subcategory
@@ -2252,6 +2425,8 @@ class ContentExtractionAgent:
             conn.close()
             
             summary = {}
+            recommender_list = []  # 收集所有推荐人
+            
             for row in rows:
                 cat = row['category']
                 subcat = row['subcategory']
@@ -2261,20 +2436,50 @@ class ContentExtractionAgent:
                     summary[cat] = {
                         "name": cat_info.get('name', cat),
                         "total": 0,
-                        "subcategories": {}
+                        "subcategories": {},
+                        "dynamic": cat_info.get('dynamic', False)  # 标记是否为动态类别
                     }
                 
-                subcat_info = self.CLASSIFICATION_CATEGORIES.get(cat, {}).get('subcategories', {}).get(subcat, {})
-                summary[cat]['subcategories'][subcat] = {
-                    "name": subcat_info.get('name', subcat),
-                    "count": row['count'],
-                    "avg_score": round(row['avg_score'], 2) if row['avg_score'] else 0
-                }
+                # 推荐人类别：从 subcategory 提取推荐人姓名
+                if cat == 'RECOMMENDER':
+                    # 从 recommender_张三 格式提取姓名
+                    recommender_name = row['recommender_name'] or subcat.replace('recommender_', '').replace('_', ' ')
+                    subcat_display_name = f"推荐人：{recommender_name}"
+                    
+                    summary[cat]['subcategories'][subcat] = {
+                        "name": subcat_display_name,
+                        "recommender_name": recommender_name,
+                        "recommender_title": row['recommender_title'] or '',
+                        "recommender_org": row['recommender_org'] or '',
+                        "count": row['count'],
+                        "avg_score": round(row['avg_score'], 2) if row['avg_score'] else 0
+                    }
+                    
+                    # 添加到推荐人列表
+                    recommender_list.append({
+                        "name": recommender_name,
+                        "title": row['recommender_title'] or '',
+                        "org": row['recommender_org'] or '',
+                        "evidence_count": row['count']
+                    })
+                else:
+                    subcat_info = self.CLASSIFICATION_CATEGORIES.get(cat, {}).get('subcategories', {}).get(subcat, {})
+                    summary[cat]['subcategories'][subcat] = {
+                        "name": subcat_info.get('name', subcat),
+                        "count": row['count'],
+                        "avg_score": round(row['avg_score'], 2) if row['avg_score'] else 0
+                    }
+                
                 summary[cat]['total'] += row['count']
             
+            # 添加推荐人列表到返回数据
             return {
                 "success": True,
-                "data": {"summary": summary}
+                "data": {
+                    "summary": summary,
+                    "recommenders": recommender_list,
+                    "recommender_count": len(recommender_list)
+                }
             }
             
         except Exception as e:
@@ -2463,7 +2668,12 @@ class ContentExtractionAgent:
             # 验证类别有效性
             if category not in self.CLASSIFICATION_CATEGORIES:
                 return {"success": False, "error": f"无效的类别: {category}"}
-            if subcategory not in self.CLASSIFICATION_CATEGORIES[category]['subcategories']:
+            
+            # 推荐人类别是动态的，允许 recommender_xxx 格式的子类别
+            if category == 'RECOMMENDER':
+                if not subcategory.startswith('recommender_'):
+                    return {"success": False, "error": f"推荐人子类别格式应为: recommender_{{推荐人姓名}}"}
+            elif subcategory not in self.CLASSIFICATION_CATEGORIES[category]['subcategories']:
                 return {"success": False, "error": f"无效的子类别: {subcategory}"}
             
             key_points = data.get('key_points', [])
@@ -2473,11 +2683,18 @@ class ContentExtractionAgent:
             # 信息主体：申请人/推荐人/其他
             subject_person = data.get('subject_person', 'applicant')
             
+            # 推荐人相关字段
+            recommender_name = data.get('recommender_name', '')
+            recommender_title = data.get('recommender_title', '')
+            recommender_org = data.get('recommender_org', '')
+            relationship = data.get('relationship', '')
+            
             cursor.execute('''
                 INSERT INTO content_classifications 
                 (project_id, category, subcategory, content, source_file, source_page, 
-                 relevance_score, evidence_type, key_points, subject_person)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 relevance_score, evidence_type, key_points, subject_person,
+                 recommender_name, recommender_title, recommender_org, relationship)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 project_id,
                 category,
@@ -2488,7 +2705,11 @@ class ContentExtractionAgent:
                 data.get('relevance_score', 1.0),  # 手动添加默认相关度为1
                 data.get('evidence_type', '用户添加'),
                 key_points,
-                subject_person
+                subject_person,
+                recommender_name,
+                recommender_title,
+                recommender_org,
+                relationship
             ))
             
             new_id = cursor.lastrowid

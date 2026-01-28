@@ -64,7 +64,7 @@ const FlowCanvas = dynamic(() => import('@/components/flow-canvas'), {
   )
 })
 
-const API_BASE = process.env.NEXT_PUBLIC_COPYWRITING_API || 'http://localhost:5004'
+const API_BASE = process.env.NEXT_PUBLIC_COPYWRITING_API || 'http://localhost:5005'
 
 // 项目接口
 interface Project {

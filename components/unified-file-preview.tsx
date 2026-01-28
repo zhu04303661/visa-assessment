@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Eye, Download, Loader2, AlertCircle, FileText } from "lucide-react"
 
-// API 基础 URL
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5004'
+// API 基础 URL - 使用代理路由避免CORS问题
+const API_BASE = '/api/copywriting'
 
 export interface PreviewFile {
   id: number

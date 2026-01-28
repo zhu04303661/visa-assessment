@@ -981,8 +981,11 @@ class RawMaterialManager:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 
-                # 检查是否支持多文件
+                # 检查分类是否存在
                 item_info = None
+                original_category_id = category_id
+                original_item_id = item_id
+                
                 for cat_id, cat in MATERIAL_CATEGORIES.items():
                     if cat_id == category_id:
                         for item in cat["items"]:
@@ -990,8 +993,24 @@ class RawMaterialManager:
                                 item_info = item
                                 break
                 
+                # 如果找不到分类，使用默认的"其他文档"分类
                 if not item_info:
-                    return {"success": False, "error": "未知的材料项"}
+                    logger.warning(f"未找到分类 {category_id}/{item_id}，使用默认分类 folder_1/other_docs")
+                    category_id = "folder_1"
+                    item_id = "other_docs"
+                    # 更新描述，标记为未识别
+                    if description:
+                        description = f"[未识别分类: {original_category_id}/{original_item_id}] {description}"
+                    else:
+                        description = f"未识别分类: {original_category_id}/{original_item_id}"
+                    
+                    # 尝试获取默认分类的item_info
+                    for cat_id, cat in MATERIAL_CATEGORIES.items():
+                        if cat_id == "folder_1":
+                            for item in cat["items"]:
+                                if item["item_id"] == "other_docs":
+                                    item_info = item
+                                    break
                 
                 # 记录文件
                 cursor.execute('''

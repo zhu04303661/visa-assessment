@@ -80,8 +80,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-// API 基础URL
-const API_BASE = process.env.NEXT_PUBLIC_COPYWRITING_API_URL || 'http://localhost:5004'
+// API 基础URL - 使用代理路由避免 CORS 问题
+const API_BASE = '/api/copywriting'
 
 // 类型定义
 interface Project {

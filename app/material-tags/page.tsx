@@ -53,7 +53,8 @@ import {
   Upload as UploadIcon
 } from 'lucide-react'
 
-const API_BASE = process.env.NEXT_PUBLIC_COPYWRITING_API_URL || 'http://localhost:5004'
+// 使用代理路由避免 CORS 问题
+const API_BASE = '/api/copywriting'
 
 // 材料项类型
 interface MaterialItem {
@@ -144,7 +145,12 @@ export default function MaterialTagsPage() {
 
   // 保存所有分类（支持传入新数据直接保存）
   const saveCategories = async (newCategories?: Categories) => {
-    const dataToSave = newCategories || categories
+    // 检查参数是否为有效的 categories 对象（排除事件对象等）
+    const isValidCategories = newCategories && 
+      typeof newCategories === 'object' && 
+      !('nativeEvent' in newCategories) && 
+      !('target' in newCategories)
+    const dataToSave = isValidCategories ? newCategories : categories
     try {
       setSaving(true)
       const data = await apiCall('/api/material-collection/categories', {

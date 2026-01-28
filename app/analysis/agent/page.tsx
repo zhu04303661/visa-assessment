@@ -48,7 +48,7 @@ import { Navbar } from "@/components/navbar"
 import { cn } from "@/lib/utils"
 import ReactMarkdown from 'react-markdown'
 
-const API_BASE = process.env.NEXT_PUBLIC_COPYWRITING_API || 'http://localhost:5004'
+const API_BASE = process.env.NEXT_PUBLIC_COPYWRITING_API || 'http://localhost:5005'
 
 // 默认分析提示词
 const DEFAULT_SYSTEM_PROMPT = `你是一位专业的英国 Global Talent Visa (GTV) 申请顾问，专注于帮助申请人整理和分析申请材料。
