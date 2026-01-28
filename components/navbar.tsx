@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Menu, X, MessageCircle, FileCheck, Home, Info, LogIn, User, LogOut, Wand2, ClipboardList, Tags, Activity } from "lucide-react"
+import { Menu, X, MessageCircle, FileCheck, Home, Info, LogIn, User, LogOut, Wand2, ClipboardList, Tags, Activity, ChevronDown, Briefcase, Bot, MoreHorizontal } from "lucide-react"
 import { useLanguage } from "@/lib/i18n"
 import { useAuth } from "@/lib/supabase/auth-context"
 import { LanguageSwitcher } from "@/components/language-switcher"
@@ -31,15 +31,44 @@ export function Navbar() {
     setMounted(true)
   }, [])
 
-  const navItems = [
+  // 导航菜单分组
+  const navGroups = {
+    // GTV 签证服务
+    gtvServices: {
+      label: language === "en" ? "GTV Services" : "GTV服务",
+      icon: Briefcase,
+      items: [
+        { href: "/assessment", label: language === "en" ? "Eligibility Assessment" : "资格评估", icon: FileCheck },
+        { href: "/material-collection", label: language === "en" ? "Material Collection" : "材料收集", icon: ClipboardList },
+        { href: "/material-tags", label: language === "en" ? "Tag Settings" : "标签设置", icon: Tags },
+        { href: "/copywriting", label: language === "en" ? "AI Copywriting" : "AI文案", icon: Wand2 },
+      ]
+    },
+    // AI 服务
+    aiServices: {
+      label: language === "en" ? "AI Assistant" : "AI助手",
+      icon: Bot,
+      items: [
+        { href: "/chat", label: language === "en" ? "AI Consultation" : "智能咨询", icon: MessageCircle },
+      ]
+    },
+    // 更多
+    more: {
+      label: language === "en" ? "More" : "更多",
+      icon: MoreHorizontal,
+      items: [
+        { href: "/about", label: language === "en" ? "About Us" : "关于我们", icon: Info },
+        { href: "/health", label: language === "en" ? "Service Status" : "服务状态", icon: Activity },
+      ]
+    }
+  }
+
+  // 移动端扁平化所有菜单项
+  const allNavItems = [
     { href: "/", label: language === "en" ? "Home" : "首页", icon: Home },
-    { href: "/assessment", label: language === "en" ? "GTV Assessment" : "GTV资格评估", icon: FileCheck },
-    { href: "/material-collection", label: language === "en" ? "Materials" : "材料收集", icon: ClipboardList },
-    { href: "/material-tags", label: language === "en" ? "Tag Settings" : "标签设置", icon: Tags },
-    { href: "/copywriting", label: language === "en" ? "AI Copywriting" : "AI文案", icon: Wand2 },
-    { href: "/chat", label: language === "en" ? "AI Consultation" : "AI咨询", icon: MessageCircle },
-    { href: "/about", label: language === "en" ? "About Us" : "关于我们", icon: Info },
-    { href: "/health", label: language === "en" ? "Service Status" : "服务状态", icon: Activity },
+    ...navGroups.gtvServices.items,
+    ...navGroups.aiServices.items,
+    ...navGroups.more.items,
   ]
 
   return (
@@ -66,20 +95,89 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              )
-            })}
+          <div className="hidden md:flex items-center gap-1">
+            {/* 首页 */}
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted rounded-md"
+            >
+              <Home className="h-4 w-4" />
+              {language === "en" ? "Home" : "首页"}
+            </Link>
+
+            {/* GTV 服务下拉菜单 */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <Briefcase className="h-4 w-4" />
+                  {navGroups.gtvServices.label}
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                {navGroups.gtvServices.items.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link href={item.href} className="flex items-center gap-2 cursor-pointer">
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* AI 助手下拉菜单 */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <Bot className="h-4 w-4" />
+                  {navGroups.aiServices.label}
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                {navGroups.aiServices.items.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link href={item.href} className="flex items-center gap-2 cursor-pointer">
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* 更多下拉菜单 */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <MoreHorizontal className="h-4 w-4" />
+                  {navGroups.more.label}
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                {navGroups.more.items.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link href={item.href} className="flex items-center gap-2 cursor-pointer">
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <div className="w-px h-5 bg-border mx-2" />
             <LanguageSwitcher />
             
             {/* Auth Section - 仅在客户端挂载后渲染以避免hydration不匹配 */}
@@ -209,15 +307,67 @@ export function Navbar() {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden border-t border-border py-4">
-            <div className="flex flex-col gap-4">
-              {navItems.map((item) => {
+            <div className="flex flex-col gap-1">
+              {/* 首页 */}
+              <Link
+                href="/"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted rounded-md"
+              >
+                <Home className="h-4 w-4" />
+                {language === "en" ? "Home" : "首页"}
+              </Link>
+              
+              {/* GTV 服务分组 */}
+              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {navGroups.gtvServices.label}
+              </div>
+              {navGroups.gtvServices.items.map((item) => {
                 const Icon = item.icon
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted rounded-md"
+                    className="flex items-center gap-2 px-3 py-2.5 ml-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted rounded-md"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                )
+              })}
+              
+              {/* AI 服务分组 */}
+              <div className="px-3 py-2 mt-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {navGroups.aiServices.label}
+              </div>
+              {navGroups.aiServices.items.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2.5 ml-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted rounded-md"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                )
+              })}
+              
+              {/* 更多分组 */}
+              <div className="px-3 py-2 mt-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {navGroups.more.label}
+              </div>
+              {navGroups.more.items.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2.5 ml-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted rounded-md"
                   >
                     <Icon className="h-4 w-4" />
                     {item.label}
