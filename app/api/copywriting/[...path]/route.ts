@@ -31,28 +31,34 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
       body,
     })
 
-    // 检查响应类型，如果是文件下载则直接返回二进制流
+    // 检查响应类型，如果是文件下载或预览则直接返回二进制流
     const responseContentType = response.headers.get('content-type') || ''
     if (responseContentType.includes('application/zip') || 
         responseContentType.includes('application/octet-stream') ||
         responseContentType.includes('application/pdf') ||
         responseContentType.includes('application/msword') ||
-        responseContentType.includes('application/vnd.openxmlformats')) {
-      // 文件下载：直接返回二进制流
-      const blob = await response.blob()
-      const headers = new Headers()
+        responseContentType.includes('application/vnd.openxmlformats') ||
+        responseContentType.includes('image/')) {
+      // 文件下载/预览：直接返回二进制流
+      const arrayBuffer = await response.arrayBuffer()
+      const uint8Array = new Uint8Array(arrayBuffer)
       
-      // 复制必要的响应头
+      const responseHeaders: Record<string, string> = {
+        'Content-Type': responseContentType,
+        'Content-Length': uint8Array.length.toString(),
+        'X-Frame-Options': 'SAMEORIGIN',
+        'Access-Control-Allow-Origin': '*',
+      }
+      
+      // 复制 content-disposition
       const contentDisposition = response.headers.get('content-disposition')
       if (contentDisposition) {
-        headers.set('content-disposition', contentDisposition)
+        responseHeaders['Content-Disposition'] = contentDisposition
       }
-      headers.set('content-type', responseContentType)
-      headers.set('content-length', blob.size.toString())
       
-      return new NextResponse(blob, { 
+      return new Response(uint8Array, { 
         status: response.status,
-        headers 
+        headers: responseHeaders 
       })
     }
 

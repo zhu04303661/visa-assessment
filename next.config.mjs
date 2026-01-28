@@ -13,7 +13,7 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // 静态资源配置
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : undefined,
-  // 添加安全头部，但确保不阻止样式加载
+  // 添加安全头部，但确保不阻止样式加载和文件预览
   async headers() {
     return [
       {
@@ -25,8 +25,27 @@ const nextConfig = {
           },
         ],
       },
+      // 文件预览 API 路由 - 允许 iframe 嵌入
       {
-        source: '/:path*',
+        source: '/api/copywriting/api/files/:path*',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+        ],
+      },
+      // 其他路径的安全头部
+      {
+        source: '/:path((?!api/copywriting/api/files).*)',
         headers: [
           {
             key: 'X-Content-Type-Options',

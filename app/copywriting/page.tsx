@@ -156,7 +156,7 @@ function CopywritingContent() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   
-  const [activeTab, setActiveTab] = useState("overview")
+  const [activeTab, setActiveTab] = useState("packages")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
   const [isDocumentViewerOpen, setIsDocumentViewerOpen] = useState(false)
@@ -224,6 +224,13 @@ function CopywritingContent() {
       
       // 更新 URL，添加项目 ID 参数
       router.push(`/copywriting?project=${project.project_id}`, { scroll: false })
+      
+      // 保存到 localStorage，以便下次自动恢复
+      try {
+        localStorage.setItem('copywriting_last_project', project.project_id)
+      } catch (e) {
+        console.warn('无法保存项目ID到localStorage')
+      }
       
       // 然后加载完整的项目数据（包含material_packages）
       const data = await apiCall(`/api/projects/${project.project_id}`)
@@ -641,12 +648,29 @@ function CopywritingContent() {
     loadProjects()
   }, [loadProjects])
   
-  // 当项目列表加载完成且 URL 中有项目 ID 时，自动选择该项目
+  // 当项目列表加载完成时，自动选择项目（优先URL参数，其次localStorage缓存）
   useEffect(() => {
-    if (projectIdFromUrl && projects.length > 0 && !selectedProject) {
-      const targetProject = projects.find(p => p.project_id === projectIdFromUrl)
-      if (targetProject) {
-        selectProject(targetProject)
+    if (projects.length > 0 && !selectedProject) {
+      // 优先使用 URL 中的项目 ID
+      if (projectIdFromUrl) {
+        const targetProject = projects.find(p => p.project_id === projectIdFromUrl)
+        if (targetProject) {
+          selectProject(targetProject)
+          return
+        }
+      }
+      
+      // 如果URL中没有，则尝试从 localStorage 恢复上次的项目
+      try {
+        const lastProjectId = localStorage.getItem('copywriting_last_project')
+        if (lastProjectId) {
+          const lastProject = projects.find(p => p.project_id === lastProjectId)
+          if (lastProject) {
+            selectProject(lastProject)
+          }
+        }
+      } catch (e) {
+        console.warn('无法从localStorage读取项目ID')
       }
     }
   }, [projectIdFromUrl, projects, selectedProject])
@@ -1297,11 +1321,78 @@ function CopywritingContent() {
                 </Tabs>
               </>
             ) : (
-              <Card className="h-[600px] flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <FolderOpen className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                  <p className="text-lg">选择一个项目开始</p>
-                  <p className="text-sm">或创建新项目</p>
+              <Card className="h-[600px] flex items-center justify-center bg-gradient-to-br from-violet-50/50 via-white to-purple-50/50 dark:from-violet-950/20 dark:via-slate-900 dark:to-purple-950/20 border-dashed border-2">
+                <div className="text-center max-w-md px-6">
+                  {/* 欢迎图标 */}
+                  <div className="relative mb-6">
+                    <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                      <Wand2 className="h-10 w-10 text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center">
+                      <Sparkles className="h-3.5 w-3.5 text-white" />
+                    </div>
+                  </div>
+                  
+                  {/* 欢迎文案 */}
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                    欢迎使用 AI 文案工作台 
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    智能 GTV 签证申请文案制作系统，帮助您高效完成申请材料准备
+                  </p>
+                  
+                  {/* 功能提示 */}
+                  <div className="grid grid-cols-2 gap-3 mb-6 text-left">
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-white/60 dark:bg-slate-800/60 border">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center shrink-0">
+                        <Upload className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">材料收集</p>
+                        <p className="text-xs text-muted-foreground">智能分类整理申请材料</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-white/60 dark:bg-slate-800/60 border">
+                      <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center shrink-0">
+                        <Brain className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">AI 分析</p>
+                        <p className="text-xs text-muted-foreground">自动分析材料匹配度</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-white/60 dark:bg-slate-800/60 border">
+                      <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0">
+                        <Sparkles className="h-4 w-4 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">文案生成</p>
+                        <p className="text-xs text-muted-foreground">一键生成专业申请文案</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-white/60 dark:bg-slate-800/60 border">
+                      <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center shrink-0">
+                        <Target className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">框架构建</p>
+                        <p className="text-xs text-muted-foreground">符合 Tech Nation 标准</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 操作指引 */}
+                  <div className="p-4 rounded-xl bg-gradient-to-r from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 border border-violet-200 dark:border-violet-800">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ChevronRight className="h-4 w-4 text-violet-600" />
+                      <p className="font-medium text-violet-700 dark:text-violet-300">开始使用</p>
+                    </div>
+                    <p className="text-sm text-violet-600 dark:text-violet-400">
+                      {projects.length > 0 
+                        ? '请从左侧项目列表中选择一个项目开始工作' 
+                        : '点击右上角「新建项目」创建您的第一个文案项目'}
+                    </p>
+                  </div>
                 </div>
               </Card>
             )}

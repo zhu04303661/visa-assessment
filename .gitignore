@@ -3,6 +3,9 @@
 # dependencies
 /node_modules
 
+
+
+
 # next.js
 /.next/
 /out/
@@ -33,6 +36,7 @@ ace_gtv/data/
 ace_gtv/resumes/
 ace_gtv/personal_kb/
 ace_gtv/*.log
+ace_gtv/copywriting.db
 *.log
 *.json
 *.docx
