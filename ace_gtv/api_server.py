@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 """
 GTV评估统一API服务
-聚合所有后端服务（评估、评分、文档分析）到单一Flask应用
+聚合所有后端服务到单一Flask应用:
+- 评分分析 (/api/scoring/*)
+- 文档分析 (/api/documents/*)
+- 材料收集 (/api/material-collection/*, /api/projects/*/material-collection/*)
+- 内容提取 (/api/projects/*/extraction/*)
+- 框架构建 (/api/projects/*/framework/*)
+- 文案生成 (/api/copywriting/*)
+
 运行在单一端口上（默认5005）
 """
 
 import os
+import sys
 import json
 import logging
 import tempfile
@@ -13,15 +21,31 @@ from typing import Optional
 from pathlib import Path
 from datetime import datetime
 
+# 确保可以导入本地模块
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
-import dotenv
+
+# 加载环境变量
+try:
+    from dotenv import load_dotenv
+    env_path = Path(__file__).parent.parent / '.env.local'
+    if env_path.exists():
+        load_dotenv(env_path)
+        print(f"已加载环境变量: {env_path}")
+    else:
+        load_dotenv()
+except ImportError:
+    pass
 
 # 导入统一日志系统
-from logger_config import setup_module_logger
-
-# 初始化日志
-logger = setup_module_logger("api_server", os.getenv("LOG_LEVEL", "INFO"))
+try:
+    from utils.logger_config import setup_module_logger
+    logger = setup_module_logger("api_server", os.getenv("LOG_LEVEL", "INFO"))
+except ImportError:
+    logging.basicConfig(level=getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO))
+    logger = logging.getLogger("api_server")
 
 # 导入 Supabase 路由
 try:
@@ -97,9 +121,6 @@ except Exception as e:
     logging.error(f"❌ LangGraph OC评估Agent导入异常: {e}", exc_info=True)
     LANGGRAPH_OC_AVAILABLE = False
 
-# 加载环境变量
-dotenv.load_dotenv()
-
 # 创建Flask应用
 app = Flask(__name__)
 CORS(app)
@@ -108,7 +129,7 @@ CORS(app)
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB (支持大型zip文件)
 
 # 注册 Supabase 路由（如果可用）
 if SUPABASE_ROUTES_AVAILABLE:
@@ -120,14 +141,22 @@ if SUPABASE_ROUTES_AVAILABLE:
 else:
     logger.warning("⚠️ Supabase 路由不可用，相关功能将被禁用")
 
-# 全局Agent实例
-scoring_agent: Optional[ScoringAgent] = None
-knowledge_extractor: Optional[KnowledgeExtractor] = None
-langgraph_scoring_agent: Optional[LangGraphScoringAgent] = None
-langgraph_oc_agent: Optional[LangGraphOCAgent] = None
-kb_manager: Optional[KnowledgeBaseManager] = None
-LANGGRAPH_SCORING_AVAILABLE = False # Initialize LANGGRAPH_SCORING_AVAILABLE
-# LANGGRAPH_OC_AVAILABLE 已在导入时设置（第70-80行）
+# 注册文案系统路由
+COPYWRITING_ROUTES_AVAILABLE = False
+try:
+    from api.copywriting_routes import copywriting_bp
+    app.register_blueprint(copywriting_bp, url_prefix='/api')
+    COPYWRITING_ROUTES_AVAILABLE = True
+    logger.info("✅ 文案系统路由注册成功 (/api/*)")
+except ImportError as e:
+    logger.warning(f"⚠️ 文案系统路由导入失败: {e}")
+
+# 全局Agent实例（不使用类型提示以避免导入失败时的NameError）
+scoring_agent = None
+knowledge_extractor = None
+langgraph_scoring_agent = None
+langgraph_oc_agent = None
+kb_manager = None
 
 # ============================================================================
 # 初始化和配置
@@ -231,9 +260,21 @@ def health():
     return jsonify({
         'status': 'healthy',
         'message': 'GTV统一API服务运行中',
+        'timestamp': datetime.now().isoformat(),
         'services': {
             'scoring_agent': 'enabled' if scoring_agent else 'disabled',
             'document_analyzer': 'enabled' if knowledge_extractor else 'disabled',
+            'copywriting': 'enabled' if COPYWRITING_ROUTES_AVAILABLE else 'disabled',
+            'supabase': 'enabled' if SUPABASE_ROUTES_AVAILABLE else 'disabled',
+        },
+        'endpoints': {
+            'scoring': '/api/scoring/*',
+            'documents': '/api/documents/*',
+            'projects': '/api/projects/*',
+            'material_collection': '/api/material-collection/*',
+            'extraction': '/api/projects/*/extraction/*',
+            'framework': '/api/projects/*/framework/*',
+            'files': '/api/files/*',
         }
     }), 200
 
@@ -847,18 +888,34 @@ def internal_error(error):
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5005))
-    debug = os.getenv('DEBUG', 'False') == 'True'
+    debug = os.getenv('DEBUG', 'true').lower() == 'true'
     
+    print("")
+    print("=" * 60)
+    print("  GTV签证评估系统 - 统一API服务")
+    print("=" * 60)
+    print("")
     logger.info(f"🚀 启动GTV统一API服务")
     logger.info(f"   端口: {port}")
     logger.info(f"   调试模式: {debug}")
     logger.info(f"   包含服务:")
     logger.info(f"     - 评分分析 (/api/scoring/*)")
     logger.info(f"     - 文档分析 (/api/documents/*)")
+    if COPYWRITING_ROUTES_AVAILABLE:
+        logger.info(f"     - 项目管理 (/api/projects/*)")
+        logger.info(f"     - 材料收集 (/api/material-collection/*)")
+        logger.info(f"     - 内容提取 (/api/projects/*/extraction/*)")
+        logger.info(f"     - 框架构建 (/api/projects/*/framework/*)")
+        logger.info(f"     - 文件服务 (/api/files/*)")
+    print("")
+    print(f"  服务地址: http://localhost:{port}")
+    print(f"  健康检查: http://localhost:{port}/health")
+    print("")
+    print("=" * 60)
     
     app.run(
         host='0.0.0.0',
         port=port,
         debug=debug,
-        use_reloader=False,
+        use_reloader=debug,
     )

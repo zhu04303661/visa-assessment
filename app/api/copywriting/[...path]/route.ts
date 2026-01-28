@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const COPYWRITING_API_URL = process.env.COPYWRITING_API_URL || 'http://localhost:5004'
+const COPYWRITING_API_URL = process.env.COPYWRITING_API_URL || 'http://localhost:5005'
 
 async function proxyRequest(request: NextRequest, pathSegments: string[]) {
   const method = request.method
