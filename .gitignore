@@ -3,9 +3,6 @@
 # dependencies
 /node_modules
 
-
-
-
 # next.js
 /.next/
 /out/
@@ -21,29 +18,92 @@ yarn-error.log*
 
 # env files
 .env*
+!.env.example
 
 # vercel
 .vercel
 
+# Python
 *.pyc
+__pycache__/
+.venv/
+venv/
+*.egg-info/
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
-# data files and resumes
+# PID files
+*.pid
+.api_server.pid
+.copywriting_api.pid
+.gtv_api.pid
+.backend.pid
+.frontend.pid
+
+# Database files
+*.db
+*.db-journal
+*.db.bak*
+assessments.db
+copywriting.db
+copywriting.db.bak*
+copywriting.db.empty.bak
+ace_gtv/assessments.db*
+ace_gtv/test.db
+ace_gtv/copywriting.db
+
+# Logs
+*.log
+ace_gtv/logs/
+
+# Data and upload directories
 ace_gtv/data/
 ace_gtv/resumes/
 ace_gtv/personal_kb/
-ace_gtv/*.log
-ace_gtv/copywriting.db
-*.log
-*.json
+ace_gtv/uploads/
+ace_gtv/copywriting_projects/
+ace_gtv/success_cases/
+
+# Backup directories
+bak/
+
+# Playwright test screenshots
+.playwright-mcp/
+
+# Office documents (client files)
+*.xlsx
+*.xls
+*.xmind
 *.docx
 *.doc
 *.pdf
-*.txt
-*.md
+*.ppt
+*.pptx
+
+# Test files
 test-*.html
 test-*.js
-*.log
+
+# Misc
+*.txt
+!requirements.txt
+!README.txt
+
+# Runtime data directories
+personal_kb/
+success_cases/
+ace_gtv/assessments/
+
+# IDE configurations (keep .claude/skills)
+.cursor/worktrees.json
+
+# JSON files (except public knowledge base)
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!tailwind.config.json
+!public/*.json
+!components.json

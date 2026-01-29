@@ -1,0 +1,243 @@
+[
+  {
+    "title": "评分维度总览",
+    "category": "系统配置",
+    "dimension": "scoring_system",
+    "content": "GTV签证评估系统包含以下5个主要评分维度，每个维度都对应申请人的不同方面。",
+    "scoringRules": [
+      "教育背景 (Education)",
+      "工作经验 (Experience)",
+      "技术专长 (Technical)",
+      "领导力 (Leadership)",
+      "行业影响力 (Impact)"
+    ]
+  },
+  {
+    "title": "教育背景维度 - 详细评分项",
+    "category": "评分维度",
+    "dimension": "education",
+    "content": "教育背景维度评估申请人的学历背景和教育水平。该维度包含硬编码的评分项'最高学历'，评分项值来自assessmentData.educationBackground.degrees，默认分数为85/100（85%符合度）。",
+    "scoringRules": [
+      "评分项: 最高学历",
+      "数据来源: assessmentData.educationBackground.degrees",
+      "默认分数: 85/100",
+      "符合度: 85%",
+      "官方要求: 学位等级、大学排名、专业相关性、学术成就等"
+    ]
+  },
+  {
+    "title": "工作经验维度 - 详细评分项",
+    "category": "评分维度",
+    "dimension": "experience",
+    "content": "工作经验维度评估申请人的职业历程和工作年限。该维度包含硬编码的评分项'工作年限'，评分项值来自applicantInfo.yearsOfExperience，默认分数为80/100（80%符合度）。",
+    "scoringRules": [
+      "评分项: 工作年限",
+      "数据来源: assessmentData.applicantInfo.yearsOfExperience",
+      "默认分数: 80/100",
+      "符合度: 80%",
+      "官方要求: 工作年限、公司级别、职位等级、行业经验等"
+    ]
+  },
+  {
+    "title": "技术专长维度 - 详细评分项",
+    "category": "评分维度",
+    "dimension": "technical",
+    "content": "技术专长维度评估申请人的技术能力和专业技能。该维度包含硬编码的评分项'核心技能'，评分项值来自assessmentData.technicalExpertise.coreSkills，默认分数为90/100（90%符合度）。",
+    "scoringRules": [
+      "评分项: 核心技能",
+      "数据来源: assessmentData.technicalExpertise.coreSkills",
+      "默认分数: 90/100",
+      "符合度: 90%",
+      "官方要求: 技术专长、行业认证、创新能力等"
+    ]
+  },
+  {
+    "title": "领导力维度 - 详细评分项",
+    "category": "评分维度",
+    "dimension": "leadership",
+    "content": "领导力维度评估申请人的领导能力和团队管理经验。该维度包含硬编码的评分项'团队管理'，采用固定值'领导能力'，默认分数为75/100（75%符合度）。",
+    "scoringRules": [
+      "评分项: 团队管理",
+      "评分项值: '领导能力' (固定值)",
+      "默认分数: 75/100",
+      "符合度: 75%",
+      "官方要求: 团队规模、管理范围、领导成就等"
+    ]
+  },
+  {
+    "title": "行业影响力维度 - 详细评分项",
+    "category": "评分维度",
+    "dimension": "impact",
+    "content": "行业影响力维度评估申请人在行业内的影响力和贡献。该维度包含硬编码的评分项'行业认可'，采用固定值'行业认可度'，默认分数为82/100（82%符合度）。",
+    "scoringRules": [
+      "评分项: 行业认可",
+      "评分项值: '行业认可度' (固定值)",
+      "默认分数: 82/100",
+      "符合度: 82%",
+      "官方要求: 行业声誉、媒体报道、社区影响力等"
+    ]
+  },
+  {
+    "title": "评估标准项 - 完整列表",
+    "category": "系统配置",
+    "dimension": "assessment_criteria",
+    "content": "系统在assessment-results组件中评估的标准项列表，这些标准项从AI生成的criteriaAssessment中获取，每项包含名称、状态、分数、证据和推荐。",
+    "scoringRules": [
+      "criteriaAssessment.name - 标准项名称",
+      "criteriaAssessment.status - 状态 (met/partial/notmet)",
+      "criteriaAssessment.score - 分数 (0-100)",
+      "criteriaAssessment.evidence - 证据说明",
+      "criteriaAssessment.recommendations - 改进建议",
+      "criteriaAssessment.officialRequirement - 官方要求说明"
+    ]
+  },
+  {
+    "title": "申请人强项评估",
+    "category": "系统配置",
+    "dimension": "applicant_strengths",
+    "content": "系统评估申请人的强项，包括area(领域)、description(描述)、evidence(证据)、gtvRelevance(GTV相关性)等信息。",
+    "scoringRules": [
+      "strengths.area - 优势领域",
+      "strengths.description - 优势描述",
+      "strengths.evidence - 证据支持",
+      "strengths.gtvRelevance - 与GTV相关性说明"
+    ]
+  },
+  {
+    "title": "申请人弱项评估",
+    "category": "系统配置",
+    "dimension": "applicant_weaknesses",
+    "content": "系统识别申请人的弱项和需要改进的地方，包括area(领域)、description(描述)、improvement(改进建议)、priority(优先级)、timeframe(时间框架)。",
+    "scoringRules": [
+      "weaknesses.area - 改进领域",
+      "weaknesses.description - 弱点描述",
+      "weaknesses.improvement - 具体改进建议",
+      "weaknesses.priority - 改进优先级",
+      "weaknesses.timeframe - 改进时间框架"
+    ]
+  },
+  {
+    "title": "GTV申请路径推荐",
+    "category": "系统配置",
+    "dimension": "gtv_pathway",
+    "content": "系统根据申请人背景推荐适合的GTV申请路径，包括recommendedRoute(推荐路径)、eligibilityLevel(资格等级)、yearsOfExperience(经验年限)、analysis(详细分析)。",
+    "scoringRules": [
+      "gtvPathway.recommendedRoute - 推荐申请路径",
+      "gtvPathway.eligibilityLevel - 资格等级评估",
+      "gtvPathway.yearsOfExperience - 需要的工作年限",
+      "gtvPathway.analysis - 路径选择分析"
+    ]
+  },
+  {
+    "title": "教育背景详细信息",
+    "category": "系统配置",
+    "dimension": "education_details",
+    "content": "系统收集和评估的教育背景详细信息，包括degrees(学位)、institutions(学校)、specializations(专业方向)、analysis(分析)。",
+    "scoringRules": [
+      "educationBackground.degrees - 获得的学位列表",
+      "educationBackground.institutions - 毕业院校",
+      "educationBackground.specializations - 专业方向和特长",
+      "educationBackground.analysis - 教育背景分析"
+    ]
+  },
+  {
+    "title": "工作经验详细信息",
+    "category": "系统配置",
+    "dimension": "work_experience_details",
+    "content": "系统收集的工作经验详细信息，包括positions(职位)、keyAchievements(关键成就)、leadershipRoles(领导角色)、projectImpact(项目影响)、analysis(分析)。",
+    "scoringRules": [
+      "workExperience.positions - 历任职位列表",
+      "workExperience.keyAchievements - 关键工作成就",
+      "workExperience.leadershipRoles - 领导力体现角色",
+      "workExperience.projectImpact - 项目影响力描述",
+      "workExperience.analysis - 工作经验分析"
+    ]
+  },
+  {
+    "title": "技术专长详细信息",
+    "category": "系统配置",
+    "dimension": "technical_expertise_details",
+    "content": "系统评估的技术专长详细信息，包括coreSkills(核心技能)、specializations(专业方向)、innovations(创新项目)、industryRecognition(行业认可)、analysis(分析)。",
+    "scoringRules": [
+      "technicalExpertise.coreSkills - 核心技术和编程语言",
+      "technicalExpertise.specializations - 技术专业方向",
+      "technicalExpertise.innovations - 创新项目和产品",
+      "technicalExpertise.industryRecognition - 行业认可",
+      "technicalExpertise.analysis - 技术能力分析"
+    ]
+  },
+  {
+    "title": "行业背景详细信息",
+    "category": "系统配置",
+    "dimension": "industry_background_details",
+    "content": "系统评估的行业背景详细信息，包括sector(行业)、yearsInIndustry(行业经验年限)、keyCompanies(主要企业)、industryImpact(行业影响力)、analysis(分析)。",
+    "scoringRules": [
+      "industryBackground.sector - 所在行业领域",
+      "industryBackground.yearsInIndustry - 行业从业年限",
+      "industryBackground.keyCompanies - 在名企工作的记录",
+      "industryBackground.industryImpact - 行业影响力评分 (0-100)",
+      "industryBackground.analysis - 行业背景分析"
+    ]
+  },
+  {
+    "title": "公司贡献度详细信息",
+    "category": "系统配置",
+    "dimension": "company_contribution_details",
+    "content": "系统评估申请人在公司中的贡献度，包括impact(影响力)、achievements(成就)、innovations(创新)、analysis(分析)。",
+    "scoringRules": [
+      "companyContribution.impact - 公司内的影响力评分 (0-100)",
+      "companyContribution.achievements - 主要工作成就列表",
+      "companyContribution.innovations - 项目创新和改进",
+      "companyContribution.analysis - 贡献度分析"
+    ]
+  },
+  {
+    "title": "行业地位详细信息",
+    "category": "系统配置",
+    "dimension": "industry_status_details",
+    "content": "系统评估申请人的行业地位，包括status(地位评分)、awards(获奖记录)、analysis(分析)。",
+    "scoringRules": [
+      "industryStatus.status - 行业地位评分 (0-100)",
+      "industryStatus.awards - 获得的奖项和认可",
+      "industryStatus.analysis - 行业地位分析"
+    ]
+  },
+  {
+    "title": "整体评估汇总",
+    "category": "系统配置",
+    "dimension": "overall_assessment",
+    "content": "系统对申请人的整体评估汇总，包括overallScore(总分)、recommendation(推荐)、timeline(时间线)、requiredDocuments(所需文件)、estimatedBudget(预计预算)。",
+    "scoringRules": [
+      "overallScore - 整体评分 (0-100)",
+      "recommendation - 最终推荐意见",
+      "timeline - 申请时间线和步骤",
+      "requiredDocuments - 需要准备的文件清单",
+      "estimatedBudget - 申请预计成本 (含min/max/currency/breakdown)"
+    ]
+  },
+  {
+    "title": "专业建议和行动计划",
+    "category": "系统配置",
+    "dimension": "professional_advice",
+    "content": "系统生成的专业建议和行动计划，包括action(具体行动)、description(描述)、priority(优先级)。",
+    "scoringRules": [
+      "professionalAdvice.action - 建议的具体行动",
+      "professionalAdvice.description - 行动描述和理由",
+      "professionalAdvice.priority - 执行优先级"
+    ]
+  },
+  {
+    "title": "评分分析API维度对应",
+    "category": "系统配置",
+    "dimension": "scoring_api_mapping",
+    "content": "描述了通过/api/scoring/analyze-all端点调用时，各个维度与其对应的Python API分析过程。",
+    "scoringRules": [
+      "education -> 教育背景维度分析",
+      "experience -> 工作经验维度分析",
+      "technical -> 技术专长维度分析",
+      "leadership -> 领导力维度分析",
+      "impact -> 行业影响力维度分析",
+      "每个维度包含 official_requirement 和 deviation_analysis"
+    ]
+  }
+]

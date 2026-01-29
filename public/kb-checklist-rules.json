@@ -1,0 +1,65 @@
+[
+  {
+    "title": "MC - 过去五年内被认可为数字技术领域的领先人才",
+    "category": "Mandatory",
+    "dimension": "leadership",
+    "content": "**类型**: 强制要求\n\n**标准**: 您如何证明自己在过去五年中被认可为（或被认可为有潜力成为）数字技术领域的领先人才？\n\n一名具有杰出才能（或潜力）的领导者必须通过持续（或新兴）的国家或国际认可展示出非凡的能力。个人需要展示出其在数字技术领域中具有将其置于其所在领域前沿的专业水平（或新兴专业水平）。\n\n**证据要求**:\n1. 领导了产品驱动的数字技术公司、产品或团队的增长\n2. 领导了营销或业务发展，显著推动收入和/或客户增长\n3. 领导了专注于数字技术领域的非营利组织或社会企业的增长\n4. 领导或显著贡献了大型开源项目\n5. 建立、领导或作为高级贡献者参与了大型技术驱动的行业倡议\n6. 获得了国家或国际认可的奖项\n7. 在高端数字技术领域活动或专业活动中演讲\n8. 在专业或主要贸易刊物或主要媒体上发表材料\n9. 获得高薪或其他报酬，或在评审他人工作中担任重要专家角色",
+    "scoring_rules": ["MC_leading_talent_recognition"],
+    "source": "Checklist-Zark.xlsx",
+    "isActive": true
+  },
+  {
+    "title": "OC 1 - 创新的可靠记录",
+    "category": "Optional",
+    "dimension": "impact",
+    "content": "**类型**: 可选要求\n\n**标准**: 您如何证明自己在数字技术领域有可靠的创新记录或示例？（作为创始人或高级管理人员）\n\n**证据要求**:\n1. 创新/产品开发的证据，市场上产品的证明以及通过收入反映的市场影响力\n2. 最近一套经过审计的账目、本财年的财务预测以及公司章程\n3. 国内和/或国际销售证据，显示公司在每个运营国家的客户数量\n4. 包含薪资信息的雇佣合同，包括奖金和股权期权以及收入历史\n\n**关键要求**: 作为证据提供的任何公司应展示其收入水平超出仅仅覆盖申请人的薪酬，并且必须在商业上取得成功。",
+    "scoring_rules": ["OC1_innovation_track_record"],
+    "source": "Checklist-Zark.xlsx",
+    "isActive": true
+  },
+  {
+    "title": "OC 2 - 超越日常工作的行业贡献认可",
+    "category": "Optional",
+    "dimension": "impact",
+    "content": "**类型**: 可选要求\n\n**标准**: 您如何证明自己因超越日常工作而被认可，且该工作贡献了行业的发展？\n\n**证据要求**:\n1. 参与开源项目的贡献\n2. GitHub账户显示在协作项目中的积极参与\n3. Stack Overflow个人资料显示在代码讨论中的重要贡献\n4. 所有贡献必须展示在该领域持续和持续的贡献记录\n\n**关键要求**: 仅为配合申请时间而做出的贡献是不被接受的。必须展示持续的、有意义的参与历史。",
+    "scoring_rules": ["OC2_outside_occupation_recognition"],
+    "source": "Checklist-Zark.xlsx",
+    "isActive": true
+  },
+  {
+    "title": "OC 3 - 重大技术贡献",
+    "category": "Optional",
+    "dimension": "technical",
+    "content": "**类型**: 可选要求\n\n**标准**: 您如何证明自己在新数字领域或新概念中做出了重大技术贡献？\n\n**证据要求**:\n1. 展示在新领域做出重大技术贡献的专利\n2. 如果从事新数字领域或新概念工作，必须明确展示\n3. 专利应包括在Google专利上可验证的ID\n4. 专利证明信说明技术贡献和创新价值\n\n**关键要求**: 必须证明这是原创性的、有验证可追踪的创新，而不是现有技术的应用。",
+    "scoring_rules": ["OC3_technical_contribution"],
+    "source": "Checklist-Zark.xlsx",
+    "isActive": true
+  },
+  {
+    "title": "OC 4 - 学术研究中的卓越能力",
+    "category": "Optional",
+    "dimension": "education",
+    "content": "**类型**: 可选要求\n\n**标准**: 您如何证明自己在学术研究中具有卓越的能力？\n\n**证据要求**:\n1. 在顶级学术期刊或会议上发表的研究论文\n2. 引用次数和学术影响力指标\n3. 研究项目的资助证明\n4. 学术同行的推荐信和认可\n\n**关键要求**: 必须通过学术界的认可来证明卓越能力，包括发表论文、引用次数和同行评审。",
+    "scoring_rules": ["OC4_academic_excellence"],
+    "source": "Checklist-Zark.xlsx",
+    "isActive": true
+  },
+  {
+    "title": "GTV评估 - 强制证据的通用要求",
+    "category": "评估标准",
+    "dimension": "leadership",
+    "content": "**申请人必须提供的证据类型**:\n\n1. **推荐信（Reference Letters）**\n   - 来自行业领先专家描述申请人的工作\n   - 来自公司高级商业执行官\n   - 来自公司合作伙伴或客户\n\n2. **新闻报道和媒体证据**\n   - 新闻剪报或文章\n   - 社交媒体证明\n   - 行业出版物的报道\n\n3. **代码和技术证据**\n   - 公共代码库中的代码行\n   - GitHub或Stack Overflow的个人资料\n   - 开源项目的贡献证明\n\n4. **商业证据**\n   - 商业或雇佣合同\n   - 薪资和收入历史\n   - 审计过的账目\n   - 财务预测\n\n5. **成就证明**\n   - 奖项和奖杯\n   - 专利证书\n   - 荣誉和认证\n\n**重要提示**: 仅推荐信不足以证明资格，必须由其他证据支持。",
+    "scoring_rules": ["evidence_requirements"],
+    "source": "Checklist-Zark.xlsx",
+    "isActive": true
+  },
+  {
+    "title": "GTV评估 - 评分标准",
+    "category": "打分标准",
+    "dimension": "impact",
+    "content": "**强制要求（MC）**:\n- 强制所有申请人必须提供的证据\n- 至少需要满足一个强制标准才能继续\n- 通过提供相关证据来证明\n- 评分: 基于证据的质量和数量\n\n**可选要求（OC）**:\n- OC1: 创新的可靠记录\n- OC2: 超越日常工作的行业贡献\n- OC3: 重大技术贡献\n- OC4: 学术研究中的卓越能力\n\n**评分逻辑**:\n1. 每个标准最多评分：\n   - 强制标准：100分\n   - 可选标准：50分\n2. 证据质量权重：\n   - 优秀（国际级）：100%\n   - 良好（国家级）：80%\n   - 标准（行业级）：60%\n   - 基础（地区级）：40%\n3. 总分计算：(强制得分 + 可选得分) / 总可能分数 × 100",
+    "scoring_rules": ["scoring_criteria_mc_oc"],
+    "source": "Checklist-Zark.xlsx",
+    "isActive": true
+  }
+]
