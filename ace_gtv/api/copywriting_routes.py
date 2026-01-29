@@ -13,6 +13,15 @@ from flask import Blueprint, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 from pathlib import Path
 
+# 加载环境变量（确保 MinIO 配置可用）
+try:
+    from dotenv import load_dotenv
+    env_path = Path(__file__).parent.parent.parent / '.env.local'
+    if env_path.exists():
+        load_dotenv(env_path)
+except ImportError:
+    pass
+
 # 创建 Blueprint
 copywriting_bp = Blueprint('copywriting', __name__)
 
@@ -186,6 +195,156 @@ def delete_project(project_id):
     return jsonify(result)
 
 
+@copywriting_bp.route('/projects/<project_id>/workflow', methods=['GET'])
+def get_workflow_status(project_id):
+    """获取项目工作流状态（基于实际数据判断各步骤完成情况）"""
+    import sqlite3
+    logger = _get_logger()
+    db_path = _get_db_path()
+    
+    try:
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        stages = {}
+        
+        # 1. 材料收集 - 检查 material_files 表
+        cursor.execute('''
+            SELECT COUNT(*) as count FROM material_files WHERE project_id = ?
+        ''', (project_id,))
+        material_count = cursor.fetchone()['count']
+        
+        if material_count > 0:
+            stages['1_collect'] = {
+                'status': 'completed',
+                'message': f'已收集 {material_count} 个材料文件',
+                'count': material_count
+            }
+        else:
+            stages['1_collect'] = {
+                'status': 'pending',
+                'message': '待收集材料',
+                'count': 0
+            }
+        
+        # 2. 材料分析 - 检查 extracted_contents 和 content_classifications
+        cursor.execute('''
+            SELECT COUNT(*) as count FROM extracted_contents WHERE project_id = ?
+        ''', (project_id,))
+        extracted_count = cursor.fetchone()['count']
+        
+        cursor.execute('''
+            SELECT COUNT(*) as count FROM content_classifications WHERE project_id = ?
+        ''', (project_id,))
+        classified_count = cursor.fetchone()['count']
+        
+        if classified_count > 0:
+            stages['2_analyze'] = {
+                'status': 'completed',
+                'message': f'已提取 {extracted_count} 条内容，已分类 {classified_count} 条证据',
+                'extracted': extracted_count,
+                'classified': classified_count
+            }
+        elif extracted_count > 0:
+            stages['2_analyze'] = {
+                'status': 'in_progress',
+                'message': f'已提取 {extracted_count} 条内容，待分类',
+                'extracted': extracted_count,
+                'classified': 0
+            }
+        else:
+            stages['2_analyze'] = {
+                'status': 'pending',
+                'message': '待分析材料',
+                'extracted': 0,
+                'classified': 0
+            }
+        
+        # 3. GTV框架 - 检查 gtv_frameworks 表
+        cursor.execute('''
+            SELECT COUNT(*) as count FROM gtv_frameworks WHERE project_id = ?
+        ''', (project_id,))
+        framework_count = cursor.fetchone()['count']
+        
+        if framework_count > 0:
+            stages['3_framework'] = {
+                'status': 'completed',
+                'message': 'GTV框架已构建',
+                'count': framework_count
+            }
+        else:
+            stages['3_framework'] = {
+                'status': 'pending',
+                'message': '待构建GTV框架',
+                'count': 0
+            }
+        
+        # 4. 案例匹配 - 检查 case_matches 表
+        cursor.execute('''
+            SELECT COUNT(*) as count FROM case_matches WHERE project_id = ?
+        ''', (project_id,))
+        match_count = cursor.fetchone()['count']
+        
+        if match_count > 0:
+            stages['4_match'] = {
+                'status': 'completed',
+                'message': f'已匹配 {match_count} 个案例',
+                'count': match_count
+            }
+        else:
+            stages['4_match'] = {
+                'status': 'pending',
+                'message': '待匹配案例',
+                'count': 0
+            }
+        
+        # 5. 文案生成 - 检查 generated_documents 表
+        cursor.execute('''
+            SELECT COUNT(*) as count FROM generated_documents WHERE project_id = ?
+        ''', (project_id,))
+        doc_count = cursor.fetchone()['count']
+        
+        if doc_count > 0:
+            stages['5_generate'] = {
+                'status': 'completed',
+                'message': f'已生成 {doc_count} 份文档',
+                'count': doc_count
+            }
+        else:
+            stages['5_generate'] = {
+                'status': 'pending',
+                'message': '待生成文案',
+                'count': 0
+            }
+        
+        # 6. 内容优化 & 7. 最终审核 - 暂时都设为 pending
+        stages['6_optimize'] = {
+            'status': 'pending',
+            'message': '待优化内容'
+        }
+        stages['7_review'] = {
+            'status': 'pending',
+            'message': '待最终审核'
+        }
+        
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "project_id": project_id,
+                "stages": stages
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"获取工作流状态失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @copywriting_bp.route('/projects/<project_id>/materials', methods=['GET'])
 def get_project_materials(project_id):
     """获取项目材料"""
@@ -205,6 +364,48 @@ def get_project_materials(project_id):
 
 # ==================== 材料收集 API ====================
 
+@copywriting_bp.route('/material-collection/debug', methods=['GET'])
+def debug_minio_status():
+    """调试：检查 MinIO 状态"""
+    import os
+    from services import raw_material_manager as rmm_module
+    
+    # 强制重新初始化（用于调试）
+    force_reinit = request.args.get('reinit', 'false').lower() == 'true'
+    if force_reinit:
+        _services['initialized'] = False
+        if 'raw_material_manager' in _services:
+            del _services['raw_material_manager']
+    
+    raw_material_manager = get_service('raw_material_manager')
+    
+    if not raw_material_manager:
+        return jsonify({
+            "success": False, 
+            "error": "服务未初始化",
+            "MINIO_IMPORT_OK": getattr(rmm_module, 'MINIO_IMPORT_OK', 'undefined'),
+            "env": {
+                "MINIO_ENDPOINT": os.getenv("MINIO_ENDPOINT"),
+                "MINIO_ACCESS_KEY": os.getenv("MINIO_ACCESS_KEY"),
+            }
+        }), 500
+    
+    minio_manager = raw_material_manager.minio_manager
+    return jsonify({
+        "success": True,
+        "MINIO_IMPORT_OK": getattr(rmm_module, 'MINIO_IMPORT_OK', 'undefined'),
+        "use_minio": raw_material_manager.use_minio,
+        "minio_enabled": minio_manager.is_enabled() if minio_manager else False,
+        "minio_manager_exists": minio_manager is not None,
+        "minio_endpoint": minio_manager.endpoint if minio_manager else None,
+        "env": {
+            "MINIO_ENDPOINT": os.getenv("MINIO_ENDPOINT"),
+            "MINIO_ACCESS_KEY": os.getenv("MINIO_ACCESS_KEY"),
+            "MINIO_SECRET_KEY": os.getenv("MINIO_SECRET_KEY", "")[:5] + "..." if os.getenv("MINIO_SECRET_KEY") else None,
+        }
+    })
+
+
 @copywriting_bp.route('/material-collection/categories', methods=['GET'])
 def get_material_categories():
     """获取材料分类结构"""
@@ -218,8 +419,7 @@ def get_material_categories():
 
 @copywriting_bp.route('/material-collection/categories', methods=['PUT'])
 def update_material_categories():
-    """更新材料分类配置"""
-    import json
+    """更新材料分类配置（保存到数据库）"""
     logger = _get_logger()
     
     data = request.get_json()
@@ -229,17 +429,15 @@ def update_material_categories():
         return jsonify({"success": False, "error": "缺少分类数据"}), 400
     
     try:
-        # 更新内存中的分类配置（更新全局变量）
-        from services import raw_material_manager as rmm
-        rmm.MATERIAL_CATEGORIES = categories
+        # 保存到数据库
+        from services.raw_material_manager import save_material_categories_to_db
+        success = save_material_categories_to_db(categories)
         
-        # 保存到配置文件
-        config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'material_categories.json')
-        with open(config_path, 'w', encoding='utf-8') as f:
-            json.dump(categories, f, ensure_ascii=False, indent=2)
-        
-        logger.info(f"材料分类配置已更新并保存到: {config_path}")
-        return jsonify({"success": True, "message": "分类配置已保存"})
+        if success:
+            logger.info(f"材料分类配置已保存到数据库")
+            return jsonify({"success": True, "message": "分类配置已保存"})
+        else:
+            return jsonify({"success": False, "error": "保存失败"}), 500
     except Exception as e:
         logger.error(f"保存分类配置失败: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
@@ -308,7 +506,7 @@ def init_project_materials(project_id):
 
 @copywriting_bp.route('/projects/<project_id>/material-collection/upload', methods=['POST'])
 def upload_raw_material(project_id):
-    """上传原始材料文件"""
+    """上传原始材料文件（支持 MinIO 存储）"""
     logger = _get_logger()
     raw_material_manager = get_service('raw_material_manager')
     
@@ -329,31 +527,28 @@ def upload_raw_material(project_id):
     if file.filename == '':
         return jsonify({"success": False, "error": "文件名为空"}), 400
     
-    # 保存文件
-    filename = secure_filename(file.filename)
+    # 使用中文原始文件名
     original_filename = file.filename
-    
-    project_upload_dir = os.path.join(UPLOAD_FOLDER, project_id, "raw_materials", category_id)
-    Path(project_upload_dir).mkdir(parents=True, exist_ok=True)
-    
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    unique_filename = f"{timestamp}_{filename}"
-    file_path = os.path.join(project_upload_dir, unique_filename)
-    
-    file.save(file_path)
-    file_size = os.path.getsize(file_path)
+    filename = secure_filename(file.filename)
     file_type = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
     
-    result = raw_material_manager.upload_material(
+    # 读取文件数据
+    file_data = file.read()
+    file_size = len(file_data)
+    
+    # 使用 upload_material_bytes 直接上传到 MinIO（如果可用）
+    result = raw_material_manager.upload_material_bytes(
         project_id=project_id,
         category_id=category_id,
         item_id=item_id,
-        file_path=file_path,
+        file_data=file_data,
         file_name=original_filename,
         file_size=file_size,
         file_type=file_type,
         description=description
     )
+    
+    logger.info(f"文件上传结果: {result.get('storage_type', 'unknown')}, minio_url={result.get('object_url', 'N/A')[:50] if result.get('object_url') else 'N/A'}")
     
     return jsonify(result)
 
@@ -466,40 +661,64 @@ def update_framework(project_id):
 
 @copywriting_bp.route('/files/preview/<int:file_id>', methods=['GET'])
 def preview_file_by_id(file_id):
-    """通过文件ID预览文件"""
+    """
+    通过文件ID预览文件
+    
+    使用统一文件存储接口，自动支持任何存储后端
+    """
     import sqlite3
+    from flask import Response
+    from urllib.parse import quote
+    from database.file_storage import get_file_from_db_record, get_file_storage
+    
     logger = _get_logger()
-    db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'copywriting.db')
+    db_path = DB_PATH
     
     try:
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        cursor.execute('SELECT file_path, file_name FROM material_files WHERE id = ?', (file_id,))
+        # 查询文件信息
+        cursor.execute('''
+            SELECT file_path, file_name, file_type, storage_type, object_bucket, object_key 
+            FROM material_files WHERE id = ?
+        ''', (file_id,))
         row = cursor.fetchone()
         conn.close()
         
         if not row:
             return jsonify({"success": False, "error": "文件不存在"}), 404
         
-        file_path = row['file_path']
         file_name = row['file_name']
         
-        # 检查文件是否存在
-        if not os.path.exists(file_path):
-            # 尝试在 uploads 目录下查找
-            alt_path = os.path.join(UPLOAD_FOLDER, file_path.lstrip('./'))
-            if os.path.exists(alt_path):
-                file_path = alt_path
-            else:
-                return jsonify({"success": False, "error": f"文件不存在: {file_path}"}), 404
+        # 使用统一存储接口获取文件内容
+        record = dict(row)
+        content = get_file_from_db_record(record)
         
-        # 返回文件
-        return send_file(file_path, as_attachment=False, download_name=file_name)
+        if content is None:
+            return jsonify({"success": False, "error": "文件内容不可用"}), 404
+        
+        # 获取 MIME 类型
+        storage = get_file_storage()
+        content_type = storage.get_content_type(file_name)
+        
+        # 对文件名进行 URL 编码
+        encoded_filename = quote(file_name, safe='')
+        
+        return Response(
+            content,
+            mimetype=content_type,
+            headers={
+                'Content-Disposition': f"inline; filename*=UTF-8''{encoded_filename}",
+                'Access-Control-Allow-Origin': '*'
+            }
+        )
         
     except Exception as e:
         logger.error(f"文件预览失败: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -627,7 +846,8 @@ def extract_project_content(project_id):
         if not content_extraction_agent:
             return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
         
-        result = content_extraction_agent.extract_content(project_id)
+        # 使用正确的方法名
+        result = content_extraction_agent.extract_project_files(project_id)
         return jsonify(result)
         
     except Exception as e:
@@ -982,18 +1202,148 @@ def get_framework_logs(project_id):
 
 @copywriting_bp.route('/projects/<project_id>/prompt-context', methods=['GET'])
 def get_prompt_context(project_id):
-    """获取提示词上下文"""
+    """获取提示词调试用的上下文变量"""
     logger = _get_logger()
     try:
-        content_extraction_agent = get_service('content_extraction_agent')
-        if not content_extraction_agent:
-            return jsonify({"success": False, "error": "内容提取器未初始化"}), 500
+        import sqlite3
+        import sys
+        import os
+        # 确保模块路径正确
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        if project_root not in sys.path:
+            sys.path.insert(0, project_root)
         
-        result = content_extraction_agent.get_prompt_context(project_id)
-        return jsonify(result)
+        from ace_gtv.prompts.framework_prompts import (
+            MC_DESCRIPTIONS, MC_REQUIREMENTS, OC_DESCRIPTIONS, OC_REQUIREMENTS
+        )
+        
+        db_path = _get_db_path()
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # 1. 获取客户名称（从 projects 表）
+        cursor.execute('''
+            SELECT client_name FROM projects WHERE project_id = ? LIMIT 1
+        ''', (project_id,))
+        project_row = cursor.fetchone()
+        client_name = project_row['client_name'] if project_row else "申请人"
+        
+        # 2. 获取分类后的证据摘要（从 content_classifications 表）
+        cursor.execute('''
+            SELECT category, subcategory, evidence_type, content, source_file, 
+                   recommender_name, recommender_title, recommender_org, relationship
+            FROM content_classifications 
+            WHERE project_id = ? 
+            ORDER BY category, created_at DESC
+        ''', (project_id,))
+        
+        evidence_rows = cursor.fetchall()
+        
+        # 格式化证据文本
+        evidence_items = []
+        for row in evidence_rows[:20]:  # 限制数量
+            content_preview = (row['content'] or '')[:300]
+            if len(row['content'] or '') > 300:
+                content_preview += '...'
+            
+            evidence_items.append(f"""【{row['category']}/{row['subcategory']}】
+类型: {row['evidence_type'] or '未分类'}
+内容: {content_preview}
+来源: {row['source_file'] or '未知'}
+""")
+        
+        evidence_text = "\n".join(evidence_items) if evidence_items else "暂无已分类的证据材料"
+        
+        # 3. 获取补充背景信息（从已提取的内容中获取）
+        cursor.execute('''
+            SELECT content, source_file FROM extracted_contents 
+            WHERE project_id = ? 
+            ORDER BY extracted_at DESC
+            LIMIT 5
+        ''', (project_id,))
+        
+        context_rows = cursor.fetchall()
+        context_items = []
+        for row in context_rows:
+            content = row['content'] or ''
+            if len(content) > 500:
+                content = content[:500] + '...'
+            context_items.append(f"【{row['source_file']}】\n{content}")
+        
+        context = "\n\n".join(context_items) if context_items else "无补充背景信息"
+        
+        # 4. 工作岗位选项
+        work_role_options = [
+            "Founder/CEO",
+            "CTO/Technical Director",
+            "VP/Director of Engineering",
+            "Lead Engineer/Architect",
+            "Product Manager/Director",
+            "Research Scientist",
+            "AI/ML Specialist",
+            "Data Scientist/Engineer",
+            "Security Specialist",
+            "Investment/VC Professional",
+            "Other Digital Technology Role"
+        ]
+        role_options = "\n".join([f"  - {role}" for role in work_role_options])
+        
+        # 5. 获取领域定位信息（如果已有框架）
+        cursor.execute('''
+            SELECT framework_data FROM gtv_frameworks 
+            WHERE project_id = ? 
+            ORDER BY updated_at DESC LIMIT 1
+        ''', (project_id,))
+        
+        framework_row = cursor.fetchone()
+        domain_info = ""
+        framework_summary = ""
+        if framework_row and framework_row['framework_data']:
+            import json
+            try:
+                framework_data = json.loads(framework_row['framework_data'])
+                domain = framework_data.get('领域定位', {})
+                domain_info = f"""- 细分领域: {domain.get('细分领域', '待定')}
+- 岗位定位: {domain.get('岗位定位', '待定')}
+- 核心论点: {domain.get('核心论点', '待定')}
+- 申请路径: {domain.get('申请路径', '待定')}"""
+                
+                # 框架摘要
+                framework_summary = f"""领域定位: {domain.get('细分领域', '待定')}
+申请路径: {domain.get('申请路径', '待定')}
+核心论点: {domain.get('核心论点', '待定')}"""
+            except:
+                pass
+        
+        conn.close()
+        
+        # 返回所有可用变量
+        variables = {
+            "client_name": client_name,
+            "evidence_text": evidence_text,
+            "context": context[:3000] if context else "无补充信息",
+            "role_options": role_options,
+            "domain_info": domain_info or "待分析",
+            "framework_summary": framework_summary or "待构建框架",
+            # MC/OC 相关变量（默认值）
+            "mc_key": "MC1_产品团队领导力",
+            "mc_description": MC_DESCRIPTIONS.get("MC1_产品团队领导力", ""),
+            "mc_requirement": MC_REQUIREMENTS.get("MC1_产品团队领导力", ""),
+            "oc_key": "OC1_创新",
+            "oc_description": OC_DESCRIPTIONS.get("OC1_创新", ""),
+            "oc_requirement": OC_REQUIREMENTS.get("OC1_创新", ""),
+        }
+        
+        return jsonify({
+            "success": True,
+            "data": variables
+        })
         
     except Exception as e:
         logger.error(f"获取提示词上下文失败: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -1168,7 +1518,7 @@ def update_document_content(project_id, doc_path):
 
 def _get_db_path():
     """获取数据库路径"""
-    return os.path.join(os.path.dirname(os.path.dirname(__file__)), 'copywriting.db')
+    return DB_PATH  # 使用全局配置的数据库路径
 
 def _ensure_system_prompts_table():
     """确保系统提示词表存在并初始化默认数据"""
@@ -1347,7 +1697,7 @@ def get_system_prompt(prompt_id):
 
 @copywriting_bp.route('/agent-prompts/<int:prompt_id>', methods=['PUT'])
 def update_system_prompt(prompt_id):
-    """更新系统提示词"""
+    """更新系统提示词（自动增加版本号并保存历史）"""
     import sqlite3
     logger = _get_logger()
     db_path = _get_db_path()
@@ -1359,34 +1709,137 @@ def update_system_prompt(prompt_id):
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        # 获取当前版本号
-        cursor.execute('SELECT version FROM system_prompts WHERE id = ?', (prompt_id,))
+        # 获取当前提示词信息
+        cursor.execute('SELECT name, version, content FROM system_prompts WHERE id = ?', (prompt_id,))
         row = cursor.fetchone()
-        current_version = (row['version'] or 1) if row else 1
-        new_version = current_version + 1
+        if not row:
+            return jsonify({"success": False, "error": "提示词不存在"}), 404
         
+        current_name = row['name']
+        current_version = (row['version'] or 1) if row else 1
+        current_content = row['content']
+        new_content = data.get('content', current_content)
+        
+        # 只有内容有变化才增加版本号
+        if new_content != current_content:
+            new_version = current_version + 1
+        else:
+            new_version = current_version
+        
+        # 更新主表
         cursor.execute('''
             UPDATE system_prompts 
             SET name = ?, description = ?, content = ?, is_active = ?, 
                 version = ?, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         ''', (
-            data.get('name'),
+            data.get('name', current_name),
             data.get('description'),
-            data.get('content'),
+            new_content,
             1 if data.get('is_active', True) else 0,
             new_version,
             prompt_id
         ))
         
+        # 如果内容有变化，保存到历史表
+        if new_content != current_content:
+            # 确保历史表存在
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS system_prompts_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    prompt_name TEXT NOT NULL,
+                    version INTEGER NOT NULL,
+                    content TEXT NOT NULL,
+                    description TEXT,
+                    changed_by TEXT,
+                    change_reason TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(prompt_name, version)
+                )
+            ''')
+            
+            cursor.execute('''
+                INSERT OR REPLACE INTO system_prompts_history 
+                (prompt_name, version, content, description, changed_by, change_reason)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (
+                data.get('name', current_name), 
+                new_version, 
+                new_content, 
+                data.get('description'),
+                "用户",
+                "手动编辑"
+            ))
+            
+            logger.info(f"提示词 {prompt_id} ({current_name}) 已更新至版本 v{new_version}")
+        
         conn.commit()
         conn.close()
         
-        logger.info(f"提示词 {prompt_id} 已更新至版本 {new_version}")
-        return jsonify({"success": True, "message": f"提示词已更新至版本 {new_version}", "version": new_version})
+        return jsonify({
+            "success": True, 
+            "message": f"提示词已更新至版本 v{new_version}" if new_content != current_content else "提示词已保存",
+            "version": new_version
+        })
         
     except Exception as e:
         logger.error(f"更新提示词失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/agent-prompts/<int:prompt_id>/history', methods=['GET'])
+def get_prompt_history(prompt_id):
+    """获取提示词的版本历史"""
+    import sqlite3
+    logger = _get_logger()
+    db_path = _get_db_path()
+    
+    try:
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # 首先获取提示词名称
+        cursor.execute('SELECT name FROM system_prompts WHERE id = ?', (prompt_id,))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({"success": False, "error": "提示词不存在"}), 404
+        
+        prompt_name = row['name']
+        
+        # 获取版本历史
+        cursor.execute('''
+            SELECT version, content, description, changed_by, change_reason, created_at
+            FROM system_prompts_history 
+            WHERE prompt_name = ?
+            ORDER BY version DESC
+        ''', (prompt_name,))
+        
+        history = []
+        for row in cursor.fetchall():
+            history.append({
+                "version": row['version'],
+                "content": row['content'],
+                "description": row['description'],
+                "changed_by": row['changed_by'],
+                "change_reason": row['change_reason'],
+                "created_at": row['created_at']
+            })
+        
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "prompt_name": prompt_name,
+                "history": history
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"获取提示词历史失败: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -1426,31 +1879,116 @@ def create_system_prompt():
 
 @copywriting_bp.route('/agent-prompts/sync', methods=['POST'])
 def sync_system_prompts():
-    """同步系统默认提示词"""
+    """同步系统默认提示词（从代码模板同步到数据库）"""
     logger = _get_logger()
     
     try:
         _ensure_system_prompts_table()
         
         import sqlite3
-        db_path = _get_db_path()
+        import sys
+        import os
+        # 确保模块路径正确
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        if project_root not in sys.path:
+            sys.path.insert(0, project_root)
         
+        from ace_gtv.prompts import FRAMEWORK_PROMPTS_CONFIG
+        
+        db_path = _get_db_path()
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
+        # 确保版本历史表存在
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS system_prompts_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                prompt_name TEXT NOT NULL,
+                version INTEGER NOT NULL,
+                content TEXT NOT NULL,
+                description TEXT,
+                changed_by TEXT,
+                change_reason TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(prompt_name, version)
+            )
+        ''')
+        
+        updated_count = 0
+        inserted_count = 0
+        
+        for prompt_config in FRAMEWORK_PROMPTS_CONFIG:
+            prompt_type = prompt_config['type']
+            prompt_name = prompt_config['name']
+            prompt_content = prompt_config['content']
+            prompt_description = prompt_config['description']
+            prompt_category = prompt_config.get('category', 'framework')
+            
+            # 检查是否已存在
+            cursor.execute(
+                'SELECT id, version, content FROM system_prompts WHERE type = ?',
+                (prompt_type,)
+            )
+            existing = cursor.fetchone()
+            
+            if existing:
+                existing_id, existing_version, existing_content = existing
+                # 只有内容有变化才更新
+                if existing_content != prompt_content:
+                    new_version = (existing_version or 0) + 1
+                    cursor.execute('''
+                        UPDATE system_prompts 
+                        SET content = ?, description = ?, version = ?, updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    ''', (prompt_content, prompt_description, new_version, existing_id))
+                    
+                    # 保存到历史表
+                    cursor.execute('''
+                        INSERT OR REPLACE INTO system_prompts_history 
+                        (prompt_name, version, content, description, changed_by, change_reason)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ''', (prompt_name, new_version, prompt_content, prompt_description, 
+                          "系统同步", "从代码模板同步"))
+                    
+                    updated_count += 1
+                    logger.info(f"更新提示词: {prompt_name} -> v{new_version}")
+            else:
+                # 插入新提示词
+                cursor.execute('''
+                    INSERT INTO system_prompts (name, type, description, content, category, version)
+                    VALUES (?, ?, ?, ?, ?, 1)
+                ''', (prompt_name, prompt_type, prompt_description, prompt_content, prompt_category))
+                
+                # 保存到历史表
+                cursor.execute('''
+                    INSERT OR REPLACE INTO system_prompts_history 
+                    (prompt_name, version, content, description, changed_by, change_reason)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (prompt_name, 1, prompt_content, prompt_description, "系统同步", "初始版本"))
+                
+                inserted_count += 1
+                logger.info(f"插入提示词: {prompt_name} v1")
+        
+        conn.commit()
+        
+        # 获取总数
         cursor.execute('SELECT COUNT(*) FROM system_prompts')
-        count = cursor.fetchone()[0]
+        total_count = cursor.fetchone()[0]
         
         conn.close()
         
         return jsonify({
             "success": True, 
-            "message": f"提示词同步完成，共 {count} 个提示词",
-            "count": count
+            "message": f"提示词同步完成：新增 {inserted_count} 个，更新 {updated_count} 个，共 {total_count} 个",
+            "count": total_count,
+            "inserted": inserted_count,
+            "updated": updated_count
         })
         
     except Exception as e:
         logger.error(f"同步提示词失败: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -1458,6 +1996,8 @@ def sync_system_prompts():
 def debug_prompt():
     """调试提示词"""
     import re
+    import os
+    import requests
     logger = _get_logger()
     
     try:
@@ -1479,18 +2019,61 @@ def debug_prompt():
             for var in remaining_vars:
                 final_prompt = final_prompt.replace(f"{{{var}}}", f"[未提供: {var}]")
         
-        # 调用LLM
-        from anthropic import Anthropic
-        client = Anthropic()
+        # 根据 LLM_PROVIDER 配置选择调用方式
+        llm_provider = os.getenv("LLM_PROVIDER", "ENNCLOUD").upper()
         
-        response = client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=4000,
-            messages=[{"role": "user", "content": final_prompt}]
-        )
-        
-        output = response.content[0].text if response.content else ""
-        tokens_used = response.usage.input_tokens + response.usage.output_tokens
+        if llm_provider == "ENNCLOUD":
+            # 使用 EnnCloud API
+            api_key = os.getenv("ENNCLOUD_API_KEY")
+            base_url = os.getenv("ENNCLOUD_BASE_URL", "https://ai.enncloud.cn/v1")
+            model = os.getenv("ENNCLOUD_MODEL", "GLM-4.5-Air")
+            
+            if not api_key:
+                return jsonify({"success": False, "error": "ENNCLOUD_API_KEY 未配置"}), 500
+            
+            url = f"{base_url}/chat/completions"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}"
+            }
+            payload = {
+                "model": model,
+                "messages": [{"role": "user", "content": final_prompt}],
+                "temperature": 0.7,
+                "max_tokens": 4000,
+                "stream": False
+            }
+            response = requests.post(url, headers=headers, json=payload, timeout=120)
+            response.raise_for_status()
+            resp_data = response.json()
+            output = resp_data["choices"][0]["message"]["content"]
+            tokens_used = resp_data.get("usage", {}).get("total_tokens", 0)
+            
+        elif llm_provider == "ANTHROPIC":
+            # 使用 Anthropic API
+            from anthropic import Anthropic
+            api_key = os.getenv("ANTHROPIC_API_KEY")
+            base_url = os.getenv("ANTHROPIC_BASE_URL")
+            
+            if not api_key:
+                return jsonify({"success": False, "error": "ANTHROPIC_API_KEY 未配置"}), 500
+            
+            if base_url:
+                client = Anthropic(api_key=api_key, base_url=base_url)
+            else:
+                client = Anthropic(api_key=api_key)
+            
+            model = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
+            response = client.messages.create(
+                model=model,
+                max_tokens=4000,
+                messages=[{"role": "user", "content": final_prompt}]
+            )
+            output = response.content[0].text if response.content else ""
+            tokens_used = response.usage.input_tokens + response.usage.output_tokens
+            
+        else:
+            return jsonify({"success": False, "error": f"不支持的 LLM 提供商: {llm_provider}"}), 500
         
         return jsonify({
             "success": True,
@@ -1501,6 +2084,9 @@ def debug_prompt():
             }
         })
         
+    except requests.exceptions.RequestException as e:
+        logger.error(f"调试提示词失败 (网络错误): {e}")
+        return jsonify({"success": False, "error": f"网络请求失败: {str(e)}"}), 500
     except Exception as e:
         logger.error(f"调试提示词失败: {e}")
         return jsonify({"success": False, "error": str(e)}), 500

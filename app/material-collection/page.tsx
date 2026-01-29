@@ -246,6 +246,15 @@ function MaterialCollectionContent() {
   const [uploadResults, setUploadResults] = useState<{filename: string; status: string; category?: string; message?: string}[]>([])
   const [showResults, setShowResults] = useState(false)
   
+  // 上传进度跟踪
+  const [uploadProgress, setUploadProgress] = useState<{
+    current: number;           // 当前文件索引
+    total: number;             // 总文件数
+    currentFileName: string;   // 当前文件名
+    completedFiles: string[];  // 已完成的文件
+    failedFiles: string[];     // 失败的文件
+  }>({ current: 0, total: 0, currentFileName: '', completedFiles: [], failedFiles: [] })
+  
   // 已上传文件列表（用于手动打标签）
   const [uploadedFiles, setUploadedFiles] = useState<MaterialFile[]>([])
   const [showFileManager, setShowFileManager] = useState(false)
@@ -873,114 +882,164 @@ function MaterialCollectionContent() {
     return null
   }
 
-  // 批量上传文件
+  // 上传单个文件的辅助函数
+  const uploadSingleFile = async (
+    file: File, 
+    projectId: string
+  ): Promise<{filename: string; status: string; category?: string; categoryName?: string; message?: string}[]> => {
+    const results: {filename: string; status: string; category?: string; categoryName?: string; message?: string}[] = []
+    
+    // 检查是否是zip文件
+    if (file.name.toLowerCase().endsWith('.zip')) {
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+        
+        const response = await fetch(`${API_BASE}/api/projects/${projectId}/material-collection/upload-zip`, {
+          method: 'POST',
+          body: formData
+        })
+        
+        const data = await response.json()
+        if (data.success && data.data) {
+          const zipData = data.data
+          results.push({
+            filename: `📦 ${file.name}`,
+            status: 'success',
+            category: `解压出 ${zipData.total_files} 个文件`,
+            message: `成功: ${zipData.success_count}, 未识别: ${zipData.unrecognized_count}`
+          })
+          
+          if (zipData.files) {
+            for (const f of zipData.files) {
+              results.push({
+                filename: `  └ ${f.filename}`,
+                status: f.status === 'success' ? 'success' : f.status === 'unrecognized' ? 'unrecognized' : 'error',
+                category: f.category_id ? `${f.category_id}/${f.item_id}` : undefined,
+                categoryName: f.category_name,
+                message: f.message
+              })
+            }
+          }
+        } else {
+          results.push({ filename: file.name, status: 'error', message: data.error || '解压失败' })
+        }
+      } catch {
+        results.push({ filename: file.name, status: 'error', message: '网络错误' })
+      }
+    } else {
+      const guess = guessFileCategory(file.name)
+      
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+        
+        if (guess) {
+          formData.append('category_id', guess.categoryId)
+          formData.append('item_id', guess.itemId)
+          formData.append('description', '批量上传')
+        } else {
+          formData.append('category_id', 'folder_1')
+          formData.append('item_id', 'other_docs')
+          formData.append('description', '待手动分类 - 系统未能自动识别')
+        }
+        
+        const response = await fetch(`${API_BASE}/api/projects/${projectId}/material-collection/upload`, {
+          method: 'POST',
+          body: formData
+        })
+        
+        const data = await response.json()
+        if (data.success) {
+          results.push({ 
+            filename: file.name, 
+            status: guess ? 'success' : 'unrecognized', 
+            category: guess ? `${guess.categoryId}/${guess.itemId}` : undefined,
+            message: guess ? undefined : '已保存，请在文件列表中手动分类'
+          })
+        } else {
+          results.push({ filename: file.name, status: 'error', message: data.error })
+        }
+      } catch {
+        results.push({ filename: file.name, status: 'error', message: '上传失败' })
+      }
+    }
+    
+    return results
+  }
+
+  // 批量上传文件（并行上传，限制并发数为3）
   const handleBatchUpload = async () => {
     if (!selectedProject || batchFiles.length === 0) return
     
     setBatchUploading(true)
-    const results: {filename: string; status: string; category?: string; categoryName?: string; message?: string}[] = []
+    const allResults: {filename: string; status: string; category?: string; categoryName?: string; message?: string}[] = []
+    const totalFiles = batchFiles.length
+    const CONCURRENT_LIMIT = 3 // 并发上传数
     
-    for (const file of batchFiles) {
-      // 检查是否是zip文件
-      if (file.name.toLowerCase().endsWith('.zip')) {
-        // 使用专门的zip上传API
-        try {
-          const formData = new FormData()
-          formData.append('file', file)
-          
-          const response = await fetch(`${API_BASE}/api/projects/${selectedProject.project_id}/material-collection/upload-zip`, {
-            method: 'POST',
-            body: formData
-          })
-          
-          const data = await response.json()
-          if (data.success && data.data) {
-            // 添加zip处理结果
-            const zipData = data.data
-            results.push({
-              filename: `📦 ${file.name}`,
-              status: 'success',
-              category: `解压出 ${zipData.total_files} 个文件`,
-              message: `成功: ${zipData.success_count}, 未识别: ${zipData.unrecognized_count}`
-            })
-            
-            // 添加每个解压文件的结果
-            if (zipData.files) {
-              for (const f of zipData.files) {
-                results.push({
-                  filename: `  └ ${f.filename}`,
-                  status: f.status === 'success' ? 'success' : f.status === 'unrecognized' ? 'unrecognized' : 'error',
-                  category: f.category_id ? `${f.category_id}/${f.item_id}` : undefined,
-                  categoryName: f.category_name,
-                  message: f.message
-                })
-              }
-            }
-          } else {
-            results.push({ 
-              filename: file.name, 
-              status: 'error',
-              message: data.error || '解压失败'
-            })
-          }
-        } catch (e) {
-          results.push({ 
-            filename: file.name, 
-            status: 'error',
-            message: '网络错误'
-          })
-        }
-      } else {
-        // 普通文件使用原有逻辑
-        const guess = guessFileCategory(file.name)
-        
-        try {
-          const formData = new FormData()
-          formData.append('file', file)
-          
-          if (guess) {
-            // 已识别的文件，设置分类
-            formData.append('category_id', guess.categoryId)
-            formData.append('item_id', guess.itemId)
-            formData.append('description', '批量上传')
-          } else {
-            // 未识别的文件，放入"申请人个人资料/其他文档"分类，用户可以后续在文件列表中修改
-            formData.append('category_id', 'folder_1')
-            formData.append('item_id', 'other_docs')
-            formData.append('description', '待手动分类 - 系统未能自动识别')
-          }
-          
-          const response = await fetch(`${API_BASE}/api/projects/${selectedProject.project_id}/material-collection/upload`, {
-            method: 'POST',
-            body: formData
-          })
-          
-          const data = await response.json()
-          if (data.success) {
-            if (guess) {
-              results.push({ 
-                filename: file.name, 
-                status: 'success', 
-                category: `${guess.categoryId}/${guess.itemId}` 
-              })
-            } else {
-              // 未识别但已保存，提示用户去打标签
-              results.push({ 
-                filename: file.name, 
-                status: 'unrecognized',
-                message: '已保存，请在文件列表中手动分类'
-              })
-            }
-          } else {
-            results.push({ filename: file.name, status: 'error', message: data.error })
-          }
-        } catch (e) {
-          results.push({ filename: file.name, status: 'error', message: '上传失败' })
-        }
+    // 初始化进度
+    setUploadProgress({
+      current: 0,
+      total: totalFiles,
+      currentFileName: batchFiles[0]?.name || '',
+      completedFiles: [],
+      failedFiles: []
+    })
+    
+    // 使用信号量控制并发
+    let completedCount = 0
+    const uploadQueue = [...batchFiles]
+    const activeUploads: Promise<void>[] = []
+    
+    const processFile = async (file: File, index: number) => {
+      // 更新当前正在上传的文件
+      setUploadProgress(prev => ({
+        ...prev,
+        currentFileName: file.name,
+      }))
+      
+      const results = await uploadSingleFile(file, selectedProject.project_id)
+      
+      // 更新结果
+      allResults.push(...results)
+      completedCount++
+      
+      // 更新进度
+      const hasError = results.some(r => r.status === 'error')
+      setUploadProgress(prev => ({
+        ...prev,
+        current: completedCount,
+        completedFiles: hasError ? prev.completedFiles : [...prev.completedFiles, file.name],
+        failedFiles: hasError ? [...prev.failedFiles, file.name] : prev.failedFiles
+      }))
+      
+      // 实时更新结果（让用户看到进度）
+      setUploadResults([...allResults])
+    }
+    
+    // 并行处理文件
+    let fileIndex = 0
+    while (fileIndex < uploadQueue.length || activeUploads.length > 0) {
+      // 启动新的上传任务直到达到并发限制
+      while (activeUploads.length < CONCURRENT_LIMIT && fileIndex < uploadQueue.length) {
+        const file = uploadQueue[fileIndex]
+        const currentIndex = fileIndex
+        const uploadPromise = processFile(file, currentIndex).then(() => {
+          // 从活动列表中移除
+          const idx = activeUploads.indexOf(uploadPromise)
+          if (idx > -1) activeUploads.splice(idx, 1)
+        })
+        activeUploads.push(uploadPromise)
+        fileIndex++
+      }
+      
+      // 等待任意一个上传完成
+      if (activeUploads.length > 0) {
+        await Promise.race(activeUploads)
       }
     }
     
-    setUploadResults(results)
+    setUploadResults(allResults)
     setShowResults(true)
     setBatchUploading(false)
     
@@ -994,6 +1053,7 @@ function MaterialCollectionContent() {
     setBatchFiles([])
     setUploadResults([])
     setShowResults(false)
+    setUploadProgress({ current: 0, total: 0, currentFileName: '', completedFiles: [], failedFiles: [] })
   }
 
   // 初始化
@@ -1991,16 +2051,67 @@ function MaterialCollectionContent() {
                 </div>
               </div>
               
+              {/* 上传进度显示 */}
+              {batchUploading && uploadProgress.total > 0 && (
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-blue-700 dark:text-blue-300">
+                      正在上传 ({uploadProgress.current}/{uploadProgress.total})
+                    </span>
+                    <span className="text-sm text-blue-600">
+                      {Math.round((uploadProgress.current / uploadProgress.total) * 100)}%
+                    </span>
+                  </div>
+                  
+                  {/* 进度条 */}
+                  <div className="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                    />
+                  </div>
+                  
+                  {/* 当前文件 */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                    <span className="text-muted-foreground truncate">
+                      {uploadProgress.currentFileName}
+                    </span>
+                  </div>
+                  
+                  {/* 实时结果摘要 */}
+                  {uploadResults.length > 0 && (
+                    <div className="flex items-center gap-4 text-xs pt-2 border-t border-blue-200">
+                      <span className="text-green-600">
+                        ✓ {uploadResults.filter(r => r.status === 'success').length} 成功
+                      </span>
+                      {uploadResults.filter(r => r.status === 'unrecognized').length > 0 && (
+                        <span className="text-yellow-600">
+                          ⚠ {uploadResults.filter(r => r.status === 'unrecognized').length} 待分类
+                        </span>
+                      )}
+                      {uploadResults.filter(r => r.status === 'error').length > 0 && (
+                        <span className="text-red-600">
+                          ✗ {uploadResults.filter(r => r.status === 'error').length} 失败
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              
               {/* 底部按钮 - 固定 */}
               <DialogFooter className="flex-shrink-0 border-t pt-4">
-                <Button variant="outline" onClick={closeBatchUpload}>取消</Button>
+                <Button variant="outline" onClick={closeBatchUpload} disabled={batchUploading}>
+                  取消
+                </Button>
                 <Button 
                   onClick={handleBatchUpload} 
                   disabled={batchFiles.length === 0 || batchUploading}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   {batchUploading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  开始上传 ({batchFiles.length} 个文件)
+                  {batchUploading ? `上传中...` : `开始上传 (${batchFiles.length} 个文件)`}
                 </Button>
               </DialogFooter>
             </>

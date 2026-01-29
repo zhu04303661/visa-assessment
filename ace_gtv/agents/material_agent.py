@@ -205,8 +205,9 @@ OC标准包括：
 class MaterialAgent:
     """可配置的材料制作Agent"""
     
-    def __init__(self, db_path: str = "copywriting.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = None):
+        # 使用环境变量配置的路径，或传入的参数
+        self.db_path = db_path or os.getenv("COPYWRITING_DB_PATH", "copywriting.db")
         self.llm_client = None
         self._init_llm()
         logger.info("材料制作Agent初始化完成")

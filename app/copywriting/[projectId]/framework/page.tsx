@@ -273,7 +273,8 @@ export default function FrameworkPage() {
             file_name: fileName,
             file_type: fileType,
             file_size: f.file_size || f.size,
-            file_path: f.file_path || f.path
+            file_path: f.file_path || f.path,
+            storage_type: f.storage_type || 'local'  // 添加存储类型
           }
         })
       
@@ -294,17 +295,35 @@ export default function FrameworkPage() {
       return
     }
     
-    // 在项目文件中查找匹配的文件（支持模糊匹配）
-    const file = projectFiles.find(f => {
+    // 在项目文件中查找所有匹配的文件（支持模糊匹配）
+    const matchedFiles = projectFiles.filter(f => {
       const fName = f.file_name || ''
-      const match = fName === fileName || 
+      return fName === fileName || 
              fName.includes(fileName) ||
              fileName.includes(fName) ||
              // 忽略路径前缀匹配
              fName.split('/').pop() === fileName.split('/').pop()
-      if (match) console.log("Matched:", fName)
-      return match
     })
+    
+    // 如果有多个匹配，优先选择：
+    // 1. minio/s3/oss 存储的文件（而不是 local）
+    // 2. ID 较大的文件（更新的文件）
+    let file = null
+    if (matchedFiles.length > 0) {
+      // 优先选择对象存储的文件
+      const objectStorageFiles = matchedFiles.filter(f => 
+        f.storage_type && f.storage_type !== 'local'
+      )
+      
+      if (objectStorageFiles.length > 0) {
+        // 选择 ID 最大的
+        file = objectStorageFiles.reduce((a, b) => (a.id > b.id ? a : b))
+      } else {
+        // 没有对象存储文件，选择 ID 最大的本地文件
+        file = matchedFiles.reduce((a, b) => (a.id > b.id ? a : b))
+      }
+      console.log("Matched files:", matchedFiles.length, "Selected:", file)
+    }
     
     if (file) {
       console.log("Opening preview for:", file)
@@ -707,15 +726,31 @@ export default function FrameworkPage() {
       {/* 顶部导航 */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
+          {/* 材料分析流程指示器 */}
+          <div className="flex items-center justify-center gap-2 mb-4 py-2 px-4 bg-muted/50 rounded-lg">
+            <span className="text-xs text-muted-foreground">材料分析流程：</span>
+            <div className="flex items-center gap-1">
+              <span className="flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 text-xs font-medium">
+                <CheckCircle className="h-3 w-3" />
+                1. 内容提取
+              </span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <span className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary text-primary-foreground text-xs font-medium">
+                <Target className="h-3 w-3" />
+                2. GTV框架
+              </span>
+            </div>
+          </div>
+          
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm"
-                onClick={() => router.push(`/copywriting?project=${projectId}`)}
+                onClick={() => router.push(`/copywriting/${projectId}/extraction`)}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                返回项目
+                上一步：内容提取
               </Button>
               <div>
                 <h1 className="text-xl font-semibold flex items-center gap-2">
@@ -764,9 +799,9 @@ export default function FrameworkPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  fetchFrameworkLogs()
+                onClick={async () => {
                   setLogsDialogOpen(true)
+                  await fetchFrameworkLogs()
                 }}
               >
                 <History className="h-4 w-4 mr-2" />
@@ -783,6 +818,15 @@ export default function FrameworkPage() {
               >
                 <Settings className="h-4 w-4 mr-2" />
                 提示词管理
+              </Button>
+              
+              <Button
+                size="sm"
+                onClick={() => router.push(`/copywriting?project=${projectId}`)}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                完成分析
               </Button>
             </div>
           </div>

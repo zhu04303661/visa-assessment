@@ -25,12 +25,12 @@ class GTVAssessmentDatabase:
         self._init_database()
     
     def _init_database(self):
-        """初始化数据库表结构"""
+        """初始化数据库表结构（简化版：只有 assessments 和 uploaded_files 表）"""
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 
-                # 创建评估结果主表
+                # 创建评估结果主表（所有详细数据存储在 raw_data JSON 中）
                 cursor.execute('''
                     CREATE TABLE IF NOT EXISTS assessments (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,104 +56,30 @@ class GTVAssessmentDatabase:
                     )
                 ''')
                 
-                # 创建评估标准详情表
+                # 创建上传文件记录表
                 cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS criteria_assessments (
+                    CREATE TABLE IF NOT EXISTS uploaded_files (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        assessment_id TEXT NOT NULL,
-                        criterion_name TEXT NOT NULL,
-                        score INTEGER,
-                        comments TEXT,
-                        FOREIGN KEY (assessment_id) REFERENCES assessments (assessment_id)
-                    )
-                ''')
-                
-                # 创建优势分析表
-                cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS strengths (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        assessment_id TEXT NOT NULL,
-                        description TEXT NOT NULL,
-                        FOREIGN KEY (assessment_id) REFERENCES assessments (assessment_id)
-                    )
-                ''')
-                
-                # 创建需要改进的地方表
-                cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS weaknesses (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        assessment_id TEXT NOT NULL,
-                        description TEXT NOT NULL,
-                        FOREIGN KEY (assessment_id) REFERENCES assessments (assessment_id)
-                    )
-                ''')
-                
-                # 创建专业建议表
-                cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS professional_advice (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        assessment_id TEXT NOT NULL,
-                        advice TEXT NOT NULL,
-                        FOREIGN KEY (assessment_id) REFERENCES assessments (assessment_id)
-                    )
-                ''')
-                
-                # 创建所需文件表
-                cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS required_documents (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        assessment_id TEXT NOT NULL,
-                        document TEXT NOT NULL,
-                        FOREIGN KEY (assessment_id) REFERENCES assessments (assessment_id)
-                    )
-                ''')
-                
-                # 创建教育背景表
-                cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS education_background (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        assessment_id TEXT NOT NULL,
-                        degree TEXT,
-                        institution TEXT,
-                        field_of_study TEXT,
-                        graduation_year INTEGER,
-                        FOREIGN KEY (assessment_id) REFERENCES assessments (assessment_id)
-                    )
-                ''')
-                
-                # 创建工作经历表
-                cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS work_experience (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        assessment_id TEXT NOT NULL,
-                        position TEXT,
-                        company TEXT,
-                        start_date TEXT,
-                        end_date TEXT,
+                        assessment_id TEXT,
+                        project_id TEXT,
+                        file_name TEXT NOT NULL,
+                        file_type TEXT,
+                        file_size INTEGER DEFAULT 0,
+                        storage_type TEXT DEFAULT 'local',
+                        local_path TEXT,
+                        object_bucket TEXT,
+                        object_key TEXT,
+                        category TEXT,
                         description TEXT,
+                        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (assessment_id) REFERENCES assessments (assessment_id)
                     )
                 ''')
                 
-                # 创建技能专长表
-                cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS skills (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        assessment_id TEXT NOT NULL,
-                        skill TEXT NOT NULL,
-                        FOREIGN KEY (assessment_id) REFERENCES assessments (assessment_id)
-                    )
-                ''')
-                
-                # 创建成就荣誉表
-                cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS achievements (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        assessment_id TEXT NOT NULL,
-                        achievement TEXT NOT NULL,
-                        FOREIGN KEY (assessment_id) REFERENCES assessments (assessment_id)
-                    )
-                ''')
+                # 创建索引
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_assessments_id ON assessments (assessment_id)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_uploaded_files_assessment ON uploaded_files (assessment_id)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_uploaded_files_project ON uploaded_files (project_id)')
                 
                 conn.commit()
                 logger.info("数据库表结构初始化完成")
@@ -173,7 +99,7 @@ class GTVAssessmentDatabase:
             conn.close()
     
     def save_assessment(self, assessment_data: Dict[str, Any], assessment_id: str = None) -> str:
-        """保存评估结果到数据库"""
+        """保存评估结果到数据库（所有详细数据存储在 raw_data JSON 中）"""
         try:
             if not assessment_id:
                 assessment_id = f"GTV_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -186,7 +112,7 @@ class GTVAssessmentDatabase:
                 gtv_pathway = assessment_data.get('gtvPathway', {})
                 estimated_budget = assessment_data.get('estimatedBudget', {})
                 
-                # 插入主表数据
+                # 插入主表数据（所有详细信息存储在 raw_data JSON 中）
                 cursor.execute('''
                     INSERT OR REPLACE INTO assessments (
                         assessment_id, applicant_name, applicant_email, field,
@@ -216,98 +142,6 @@ class GTVAssessmentDatabase:
                     json.dumps(assessment_data, ensure_ascii=False)
                 ))
                 
-                # 保存评估标准详情
-                criteria_assessment = assessment_data.get('criteriaAssessment', [])
-                for criterion in criteria_assessment:
-                    cursor.execute('''
-                        INSERT INTO criteria_assessments (assessment_id, criterion_name, score, comments)
-                        VALUES (?, ?, ?, ?)
-                    ''', (
-                        assessment_id,
-                        criterion.get('name', ''),
-                        criterion.get('score', 0),
-                        criterion.get('comments', '')
-                    ))
-                
-                # 保存优势分析
-                strengths = assessment_data.get('strengths', [])
-                for strength in strengths:
-                    cursor.execute('''
-                        INSERT INTO strengths (assessment_id, description)
-                        VALUES (?, ?)
-                    ''', (assessment_id, strength.get('description', '')))
-                
-                # 保存需要改进的地方
-                weaknesses = assessment_data.get('weaknesses', [])
-                for weakness in weaknesses:
-                    cursor.execute('''
-                        INSERT INTO weaknesses (assessment_id, description)
-                        VALUES (?, ?)
-                    ''', (assessment_id, weakness.get('description', '')))
-                
-                # 保存专业建议
-                professional_advice = assessment_data.get('professionalAdvice', [])
-                for advice in professional_advice:
-                    cursor.execute('''
-                        INSERT INTO professional_advice (assessment_id, advice)
-                        VALUES (?, ?)
-                    ''', (assessment_id, advice))
-                
-                # 保存所需文件
-                required_documents = assessment_data.get('requiredDocuments', [])
-                for document in required_documents:
-                    cursor.execute('''
-                        INSERT INTO required_documents (assessment_id, document)
-                        VALUES (?, ?)
-                    ''', (assessment_id, document))
-                
-                # 保存教育背景
-                education_background = assessment_data.get('educationBackground', {})
-                if education_background:
-                    cursor.execute('''
-                        INSERT INTO education_background (
-                            assessment_id, degree, institution, field_of_study, graduation_year
-                        ) VALUES (?, ?, ?, ?, ?)
-                    ''', (
-                        assessment_id,
-                        education_background.get('degree', ''),
-                        education_background.get('institution', ''),
-                        education_background.get('fieldOfStudy', ''),
-                        education_background.get('graduationYear', 0)
-                    ))
-                
-                # 保存工作经历
-                work_experience = assessment_data.get('workExperience', [])
-                for work in work_experience:
-                    cursor.execute('''
-                        INSERT INTO work_experience (
-                            assessment_id, position, company, start_date, end_date, description
-                        ) VALUES (?, ?, ?, ?, ?, ?)
-                    ''', (
-                        assessment_id,
-                        work.get('position', ''),
-                        work.get('company', ''),
-                        work.get('startDate', ''),
-                        work.get('endDate', ''),
-                        work.get('description', '')
-                    ))
-                
-                # 保存技能专长
-                skills = assessment_data.get('skills', [])
-                for skill in skills:
-                    cursor.execute('''
-                        INSERT INTO skills (assessment_id, skill)
-                        VALUES (?, ?)
-                    ''', (assessment_id, skill))
-                
-                # 保存成就荣誉
-                achievements = assessment_data.get('achievements', [])
-                for achievement in achievements:
-                    cursor.execute('''
-                        INSERT INTO achievements (assessment_id, achievement)
-                        VALUES (?, ?)
-                    ''', (assessment_id, achievement))
-                
                 conn.commit()
                 logger.info(f"评估结果已保存到数据库: {assessment_id}")
                 return assessment_id
@@ -317,7 +151,7 @@ class GTVAssessmentDatabase:
             raise
     
     def get_assessment(self, assessment_id: str) -> Optional[Dict[str, Any]]:
-        """从数据库获取评估结果"""
+        """从数据库获取评估结果（从 raw_data JSON 读取完整数据）"""
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
@@ -329,7 +163,20 @@ class GTVAssessmentDatabase:
                 if not assessment_row:
                     return None
                 
-                # 构建评估数据
+                # 优先从 raw_data 读取完整数据
+                raw_data = assessment_row['raw_data']
+                if raw_data:
+                    try:
+                        assessment_data = json.loads(raw_data)
+                        # 添加数据库字段
+                        assessment_data['assessment_id'] = assessment_row['assessment_id']
+                        assessment_data['created_at'] = assessment_row['created_at']
+                        assessment_data['updated_at'] = assessment_row['updated_at']
+                        return assessment_data
+                    except json.JSONDecodeError:
+                        pass
+                
+                # 如果 raw_data 解析失败，从字段构建基本数据
                 assessment_data = {
                     'assessment_id': assessment_row['assessment_id'],
                     'applicantInfo': {
@@ -356,79 +203,6 @@ class GTVAssessmentDatabase:
                     'created_at': assessment_row['created_at'],
                     'updated_at': assessment_row['updated_at']
                 }
-                
-                # 获取评估标准详情
-                cursor.execute('SELECT * FROM criteria_assessments WHERE assessment_id = ?', (assessment_id,))
-                criteria_rows = cursor.fetchall()
-                assessment_data['criteriaAssessment'] = [
-                    {
-                        'name': row['criterion_name'],
-                        'score': row['score'],
-                        'comments': row['comments']
-                    }
-                    for row in criteria_rows
-                ]
-                
-                # 获取优势分析
-                cursor.execute('SELECT * FROM strengths WHERE assessment_id = ?', (assessment_id,))
-                strength_rows = cursor.fetchall()
-                assessment_data['strengths'] = [
-                    {'description': row['description']}
-                    for row in strength_rows
-                ]
-                
-                # 获取需要改进的地方
-                cursor.execute('SELECT * FROM weaknesses WHERE assessment_id = ?', (assessment_id,))
-                weakness_rows = cursor.fetchall()
-                assessment_data['weaknesses'] = [
-                    {'description': row['description']}
-                    for row in weakness_rows
-                ]
-                
-                # 获取专业建议
-                cursor.execute('SELECT * FROM professional_advice WHERE assessment_id = ?', (assessment_id,))
-                advice_rows = cursor.fetchall()
-                assessment_data['professionalAdvice'] = [row['advice'] for row in advice_rows]
-                
-                # 获取所需文件
-                cursor.execute('SELECT * FROM required_documents WHERE assessment_id = ?', (assessment_id,))
-                document_rows = cursor.fetchall()
-                assessment_data['requiredDocuments'] = [row['document'] for row in document_rows]
-                
-                # 获取教育背景
-                cursor.execute('SELECT * FROM education_background WHERE assessment_id = ?', (assessment_id,))
-                education_row = cursor.fetchone()
-                if education_row:
-                    assessment_data['educationBackground'] = {
-                        'degree': education_row['degree'],
-                        'institution': education_row['institution'],
-                        'fieldOfStudy': education_row['field_of_study'],
-                        'graduationYear': education_row['graduation_year']
-                    }
-                
-                # 获取工作经历
-                cursor.execute('SELECT * FROM work_experience WHERE assessment_id = ?', (assessment_id,))
-                work_rows = cursor.fetchall()
-                assessment_data['workExperience'] = [
-                    {
-                        'position': row['position'],
-                        'company': row['company'],
-                        'startDate': row['start_date'],
-                        'endDate': row['end_date'],
-                        'description': row['description']
-                    }
-                    for row in work_rows
-                ]
-                
-                # 获取技能专长
-                cursor.execute('SELECT * FROM skills WHERE assessment_id = ?', (assessment_id,))
-                skill_rows = cursor.fetchall()
-                assessment_data['skills'] = [row['skill'] for row in skill_rows]
-                
-                # 获取成就荣誉
-                cursor.execute('SELECT * FROM achievements WHERE assessment_id = ?', (assessment_id,))
-                achievement_rows = cursor.fetchall()
-                assessment_data['achievements'] = [row['achievement'] for row in achievement_rows]
                 
                 return assessment_data
                 
@@ -473,17 +247,6 @@ class GTVAssessmentDatabase:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 
-                # 删除相关表数据
-                tables = [
-                    'criteria_assessments', 'strengths', 'weaknesses',
-                    'professional_advice', 'required_documents',
-                    'education_background', 'work_experience',
-                    'skills', 'achievements'
-                ]
-                
-                for table in tables:
-                    cursor.execute(f'DELETE FROM {table} WHERE assessment_id = ?', (assessment_id,))
-                
                 # 删除主表数据
                 cursor.execute('DELETE FROM assessments WHERE assessment_id = ?', (assessment_id,))
                 
@@ -505,6 +268,187 @@ class GTVAssessmentDatabase:
         except Exception as e:
             logger.error(f"获取评估结果总数失败: {e}")
             return 0
+    
+    # ==================== 文件上传记录管理 ====================
+    
+    def save_uploaded_file(
+        self,
+        file_name: str,
+        file_type: str = None,
+        file_size: int = 0,
+        storage_type: str = "local",
+        local_path: str = None,
+        object_bucket: str = None,
+        object_key: str = None,
+        minio_url: str = None,
+        category: str = None,
+        description: str = None,
+        assessment_id: str = None,
+        project_id: str = None
+    ) -> Dict[str, Any]:
+        """
+        保存上传文件记录
+        
+        Args:
+            file_name: 文件名
+            file_type: 文件类型
+            file_size: 文件大小
+            storage_type: 存储类型 (local/minio)
+            local_path: 本地路径
+            object_bucket: MinIO bucket 名称
+            object_key: MinIO 对象名称
+            minio_url: MinIO 访问 URL
+            category: 文件分类
+            description: 描述
+            assessment_id: 关联的评估 ID
+            project_id: 关联的项目 ID
+        
+        Returns:
+            保存结果
+        """
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    INSERT INTO uploaded_files (
+                        assessment_id, project_id, file_name, file_type, file_size,
+                        storage_type, local_path, object_bucket, object_key, 
+                        minio_url, category, description
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    assessment_id, project_id, file_name, file_type, file_size,
+                    storage_type, local_path, object_bucket, object_key,
+                    minio_url, category, description
+                ))
+                
+                file_id = cursor.lastrowid
+                conn.commit()
+                
+                logger.info(f"文件记录保存成功: {file_name} (id={file_id})")
+                return {
+                    "success": True,
+                    "file_id": file_id,
+                    "message": "文件记录保存成功"
+                }
+                
+        except Exception as e:
+            logger.error(f"保存文件记录失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def get_uploaded_files(
+        self,
+        assessment_id: str = None,
+        project_id: str = None,
+        category: str = None
+    ) -> List[Dict[str, Any]]:
+        """
+        获取上传的文件列表
+        
+        Args:
+            assessment_id: 评估 ID（可选）
+            project_id: 项目 ID（可选）
+            category: 文件分类（可选）
+        
+        Returns:
+            文件列表
+        """
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                query = 'SELECT * FROM uploaded_files WHERE 1=1'
+                params = []
+                
+                if assessment_id:
+                    query += ' AND assessment_id = ?'
+                    params.append(assessment_id)
+                
+                if project_id:
+                    query += ' AND project_id = ?'
+                    params.append(project_id)
+                
+                if category:
+                    query += ' AND category = ?'
+                    params.append(category)
+                
+                query += ' ORDER BY uploaded_at DESC'
+                
+                cursor.execute(query, params)
+                rows = cursor.fetchall()
+                
+                return [
+                    {
+                        'id': row['id'],
+                        'assessment_id': row['assessment_id'],
+                        'project_id': row['project_id'],
+                        'file_name': row['file_name'],
+                        'file_type': row['file_type'],
+                        'file_size': row['file_size'],
+                        'storage_type': row['storage_type'],
+                        'local_path': row['local_path'],
+                        'object_bucket': row['object_bucket'],
+                        'object_key': row['object_key'],
+                        'object_url': row['object_url'],
+                        'category': row['category'],
+                        'description': row['description'],
+                        'uploaded_at': row['uploaded_at']
+                    }
+                    for row in rows
+                ]
+                
+        except Exception as e:
+            logger.error(f"获取文件列表失败: {e}")
+            return []
+    
+    def get_uploaded_file(self, file_id: int) -> Optional[Dict[str, Any]]:
+        """获取单个文件记录"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT * FROM uploaded_files WHERE id = ?', (file_id,))
+                row = cursor.fetchone()
+                
+                if row:
+                    return {
+                        'id': row['id'],
+                        'assessment_id': row['assessment_id'],
+                        'project_id': row['project_id'],
+                        'file_name': row['file_name'],
+                        'file_type': row['file_type'],
+                        'file_size': row['file_size'],
+                        'storage_type': row['storage_type'],
+                        'local_path': row['local_path'],
+                        'object_bucket': row['object_bucket'],
+                        'object_key': row['object_key'],
+                        'object_url': row['object_url'],
+                        'category': row['category'],
+                        'description': row['description'],
+                        'uploaded_at': row['uploaded_at']
+                    }
+                return None
+                
+        except Exception as e:
+            logger.error(f"获取文件记录失败: {e}")
+            return None
+    
+    def delete_uploaded_file(self, file_id: int) -> Dict[str, Any]:
+        """删除文件记录"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('DELETE FROM uploaded_files WHERE id = ?', (file_id,))
+                conn.commit()
+                
+                if cursor.rowcount > 0:
+                    logger.info(f"文件记录删除成功: id={file_id}")
+                    return {"success": True, "message": "文件记录删除成功"}
+                else:
+                    return {"success": False, "error": "文件记录不存在"}
+                
+        except Exception as e:
+            logger.error(f"删除文件记录失败: {e}")
+            return {"success": False, "error": str(e)}
 
 # 全局实例
 assessment_db = GTVAssessmentDatabase()

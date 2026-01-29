@@ -9,11 +9,27 @@ import json
 import os
 import uuid
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union, BinaryIO
 from contextlib import contextmanager
 from pathlib import Path
 
+# 确保加载环境变量（MinIO 配置）
+try:
+    from dotenv import load_dotenv
+    env_path = Path(__file__).parent.parent.parent / '.env.local'
+    if env_path.exists():
+        load_dotenv(env_path, override=True)
+except ImportError:
+    pass
+
 from utils.logger_config import setup_module_logger
+
+# 导入 MinIO 客户端
+try:
+    from database.minio_client import get_minio_manager, MinIOManager
+    MINIO_IMPORT_OK = True
+except ImportError:
+    MINIO_IMPORT_OK = False
 
 try:
     from docx import Document
@@ -522,20 +538,167 @@ MATERIAL_CATEGORIES = {
 
 # ==================== 从配置文件加载标签配置 ====================
 def _load_material_categories():
-    """从配置文件加载材料分类配置（如果存在）"""
+    """从数据库加载材料分类配置"""
     global MATERIAL_CATEGORIES
-    config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'material_categories.json')
-    if os.path.exists(config_path):
-        try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                loaded_categories = json.load(f)
-            if loaded_categories and isinstance(loaded_categories, dict):
-                MATERIAL_CATEGORIES = loaded_categories
-                logger.info(f"从配置文件加载材料分类: {config_path}")
-        except Exception as e:
-            logger.warning(f"加载材料分类配置失败，使用默认配置: {e}")
+    db_path = os.getenv("COPYWRITING_DB_PATH", "./copywriting.db")
+    
+    try:
+        import sqlite3
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # 检查表是否存在
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='material_categories'")
+        if not cursor.fetchone():
+            logger.info("数据库中没有 material_categories 表，使用默认配置")
+            conn.close()
+            return
+        
+        # 加载分类
+        cursor.execute('''
+            SELECT * FROM material_categories 
+            WHERE is_active = 1 
+            ORDER BY display_order
+        ''')
+        categories = {}
+        for row in cursor.fetchall():
+            cat_id = row['category_id']
+            categories[cat_id] = {
+                "name": row['name'],
+                "name_en": row['name_en'] or '',
+                "description": row['description'] or '',
+                "order": row['display_order'],
+                "items": []
+            }
+        
+        # 加载子项
+        cursor.execute('''
+            SELECT * FROM material_category_items 
+            WHERE is_active = 1 
+            ORDER BY category_id, display_order
+        ''')
+        for row in cursor.fetchall():
+            cat_id = row['category_id']
+            if cat_id in categories:
+                item = {
+                    "item_id": row['item_id'],
+                    "name": row['name'],
+                    "name_en": row['name_en'] or '',
+                    "description": row['description'] or '',
+                    "tips": row['tips'] or '',
+                    "file_types": json.loads(row['file_types']) if row['file_types'] else [],
+                    "required": bool(row['required']),
+                    "multiple": bool(row['multiple']),
+                    "has_form": bool(row['has_form']),
+                    "form_type": row['form_type'] or ''
+                }
+                categories[cat_id]["items"].append(item)
+        
+        conn.close()
+        
+        if categories:
+            MATERIAL_CATEGORIES = categories
+            logger.info(f"从数据库加载材料分类: {len(categories)} 个分类")
+        else:
+            logger.info("数据库中没有分类数据，使用默认配置")
+            
+    except Exception as e:
+        logger.warning(f"从数据库加载材料分类失败，使用默认配置: {e}")
 
-# 模块加载时尝试加载配置
+
+def save_material_categories_to_db(categories: dict) -> bool:
+    """保存材料分类到数据库"""
+    db_path = os.getenv("COPYWRITING_DB_PATH", "./copywriting.db")
+    
+    try:
+        import sqlite3
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # 开始事务
+        cursor.execute("BEGIN TRANSACTION")
+        
+        # 先标记所有现有数据为非活跃
+        cursor.execute("UPDATE material_categories SET is_active = 0")
+        cursor.execute("UPDATE material_category_items SET is_active = 0")
+        
+        # 插入/更新数据
+        cat_order = 0
+        for cat_id, cat_data in categories.items():
+            cat_order += 1
+            cursor.execute('''
+                INSERT INTO material_categories 
+                (category_id, name, name_en, description, display_order, is_active, updated_at)
+                VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+                ON CONFLICT(category_id) DO UPDATE SET
+                    name = excluded.name,
+                    name_en = excluded.name_en,
+                    description = excluded.description,
+                    display_order = excluded.display_order,
+                    is_active = 1,
+                    updated_at = CURRENT_TIMESTAMP
+            ''', (
+                cat_id,
+                cat_data.get('name', ''),
+                cat_data.get('name_en', ''),
+                cat_data.get('description', ''),
+                cat_data.get('order', cat_order)
+            ))
+            
+            # 插入子项
+            item_order = 0
+            for item in cat_data.get('items', []):
+                item_order += 1
+                cursor.execute('''
+                    INSERT INTO material_category_items
+                    (category_id, item_id, name, name_en, description, tips, file_types, 
+                     required, multiple, has_form, form_type, display_order, is_active, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+                    ON CONFLICT(category_id, item_id) DO UPDATE SET
+                        name = excluded.name,
+                        name_en = excluded.name_en,
+                        description = excluded.description,
+                        tips = excluded.tips,
+                        file_types = excluded.file_types,
+                        required = excluded.required,
+                        multiple = excluded.multiple,
+                        has_form = excluded.has_form,
+                        form_type = excluded.form_type,
+                        display_order = excluded.display_order,
+                        is_active = 1,
+                        updated_at = CURRENT_TIMESTAMP
+                ''', (
+                    cat_id,
+                    item.get('item_id', ''),
+                    item.get('name', ''),
+                    item.get('name_en', ''),
+                    item.get('description', ''),
+                    item.get('tips', ''),
+                    json.dumps(item.get('file_types', [])),
+                    1 if item.get('required') else 0,
+                    1 if item.get('multiple') else 0,
+                    1 if item.get('has_form') else 0,
+                    item.get('form_type', ''),
+                    item_order
+                ))
+        
+        conn.commit()
+        conn.close()
+        
+        # 更新内存中的配置
+        global MATERIAL_CATEGORIES
+        MATERIAL_CATEGORIES = categories
+        
+        logger.info(f"材料分类已保存到数据库: {len(categories)} 个分类")
+        return True
+        
+    except Exception as e:
+        logger.error(f"保存材料分类到数据库失败: {e}")
+        return False
+
+
+# 模块加载时从数据库加载配置
 _load_material_categories()
 
 # ==================== 采集表单模板 ====================
@@ -708,17 +871,34 @@ FORM_TEMPLATES = {
 class RawMaterialManager:
     """原始材料收集管理器"""
     
-    def __init__(self, db_path: str = None, upload_folder: str = None):
+    def __init__(self, db_path: str = None, upload_folder: str = None, use_minio: bool = True):
         """
         初始化管理器
         
         Args:
             db_path: 数据库文件路径
-            upload_folder: 文件上传目录
+            upload_folder: 文件上传目录（本地备份）
+            use_minio: 是否使用 MinIO 存储
         """
         self.db_path = db_path or os.getenv("COPYWRITING_DB_PATH", "copywriting.db")
         self.upload_folder = upload_folder or os.getenv("UPLOAD_FOLDER", "./uploads")
         Path(self.upload_folder).mkdir(parents=True, exist_ok=True)
+        
+        # 初始化 MinIO 客户端
+        self.use_minio = use_minio
+        self.minio_manager: Optional[MinIOManager] = None
+        if use_minio and MINIO_IMPORT_OK:
+            try:
+                self.minio_manager = get_minio_manager()
+                if self.minio_manager.is_enabled():
+                    logger.info("✅ MinIO 存储已启用")
+                else:
+                    logger.warning("⚠️ MinIO 不可用，将使用本地存储")
+                    self.minio_manager = None
+            except Exception as e:
+                logger.warning(f"⚠️ MinIO 初始化失败: {e}，将使用本地存储")
+                self.minio_manager = None
+        
         self._init_tables()
         logger.info(f"原始材料管理器初始化完成")
     
@@ -775,9 +955,31 @@ class RawMaterialManager:
                         file_size INTEGER DEFAULT 0,
                         file_type TEXT,
                         description TEXT,
+                        object_bucket TEXT,
+                        object_key TEXT,
+                        minio_url TEXT,
+                        storage_type TEXT DEFAULT 'local',
                         uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 ''')
+                
+                # 尝试添加新列（如果表已存在但缺少这些列）
+                try:
+                    cursor.execute('ALTER TABLE material_files ADD COLUMN object_bucket TEXT')
+                except:
+                    pass
+                try:
+                    cursor.execute('ALTER TABLE material_files ADD COLUMN object_key TEXT')
+                except:
+                    pass
+                try:
+                    cursor.execute('ALTER TABLE material_files ADD COLUMN minio_url TEXT')
+                except:
+                    pass
+                try:
+                    cursor.execute('ALTER TABLE material_files ADD COLUMN storage_type TEXT DEFAULT "local"')
+                except:
+                    pass
                 
                 # 采集表单数据表
                 cursor.execute('''
@@ -903,7 +1105,10 @@ class RawMaterialManager:
                         "file_size": row["file_size"],
                         "file_type": row["file_type"],
                         "description": row["description"],
-                        "uploaded_at": row["uploaded_at"]
+                        "uploaded_at": row["uploaded_at"],
+                        "storage_type": row["storage_type"] if "storage_type" in row.keys() else "local",
+                        "object_bucket": row["object_bucket"] if "object_bucket" in row.keys() else None,
+                        "object_key": row["object_key"] if "object_key" in row.keys() else None
                     })
                 
                 # 构建完整的状态数据
@@ -976,7 +1181,7 @@ class RawMaterialManager:
     def upload_material(self, project_id: str, category_id: str, item_id: str,
                        file_path: str, file_name: str, file_size: int = 0,
                        file_type: str = None, description: str = None) -> Dict[str, Any]:
-        """上传材料文件"""
+        """上传材料文件（支持 MinIO 存储）"""
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
@@ -1012,12 +1217,43 @@ class RawMaterialManager:
                                     item_info = item
                                     break
                 
+                # MinIO 存储信息
+                object_bucket = None
+                object_key = None
+                minio_url = None
+                storage_type = "local"
+                
+                # 如果启用了 MinIO，上传到 MinIO
+                if self.minio_manager and self.minio_manager.is_enabled():
+                    try:
+                        # 上传到 MinIO
+                        upload_result = self.minio_manager.upload_file_from_path(
+                            project_id=project_id,
+                            local_path=file_path,
+                            category_id=category_id,
+                            item_id=item_id,
+                            custom_name=file_name
+                        )
+                        
+                        if upload_result.get("success"):
+                            object_bucket = upload_result.get("bucket_name")
+                            object_key = upload_result.get("object_name")
+                            minio_url = upload_result.get("file_url")
+                            storage_type = "minio"
+                            logger.info(f"✅ 文件已上传到 MinIO: {object_bucket}/{object_key}")
+                        else:
+                            logger.warning(f"⚠️ MinIO 上传失败: {upload_result.get('error')}，使用本地存储")
+                    except Exception as e:
+                        logger.warning(f"⚠️ MinIO 上传异常: {e}，使用本地存储")
+                
                 # 记录文件
                 cursor.execute('''
                     INSERT INTO material_files 
-                    (project_id, category_id, item_id, file_name, file_path, file_size, file_type, description)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (project_id, category_id, item_id, file_name, file_path, file_size, file_type, description))
+                    (project_id, category_id, item_id, file_name, file_path, file_size, file_type, description, 
+                     object_bucket, object_key, minio_url, storage_type)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (project_id, category_id, item_id, file_name, file_path, file_size, file_type, description,
+                      object_bucket, object_key, minio_url, storage_type))
                 
                 file_id = cursor.lastrowid
                 
@@ -1026,23 +1262,186 @@ class RawMaterialManager:
                     INSERT OR REPLACE INTO material_collection 
                     (project_id, category_id, item_id, status, file_path, file_name, file_size, file_type, collected_at, updated_at)
                     VALUES (?, ?, ?, 'collected', ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                ''', (project_id, category_id, item_id, file_path, file_name, file_size, file_type))
+                ''', (project_id, category_id, item_id, minio_url or file_path, file_name, file_size, file_type))
                 
                 conn.commit()
-                logger.info(f"材料上传成功: {project_id}/{category_id}/{item_id}")
+                logger.info(f"材料上传成功: {project_id}/{category_id}/{item_id} (storage: {storage_type})")
                 
                 return {
                     "success": True,
                     "file_id": file_id,
-                    "message": "文件上传成功"
+                    "message": "文件上传成功",
+                    "storage_type": storage_type,
+                    "object_url": minio_url
                 }
                 
         except Exception as e:
             logger.error(f"上传材料失败: {e}")
             return {"success": False, "error": str(e)}
     
+    def upload_material_bytes(self, project_id: str, category_id: str, item_id: str,
+                              file_data: Union[bytes, BinaryIO], file_name: str, 
+                              file_size: int = 0, file_type: str = None, 
+                              description: str = None) -> Dict[str, Any]:
+        """
+        使用统一文件存储接口上传文件
+        
+        自动选择 MinIO 或本地存储，由 FILE_STORAGE_TYPE 环境变量控制
+        """
+        try:
+            from database.file_storage import get_file_storage
+            
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # 检查分类是否存在
+                item_info = None
+                original_category_id = category_id
+                original_item_id = item_id
+                
+                for cat_id, cat in MATERIAL_CATEGORIES.items():
+                    if cat_id == category_id:
+                        for item in cat["items"]:
+                            if item["item_id"] == item_id:
+                                item_info = item
+                                break
+                
+                # 如果找不到分类，使用默认的"其他文档"分类
+                if not item_info:
+                    category_id = "folder_1"
+                    item_id = "other_docs"
+                    if description:
+                        description = f"[未识别分类: {original_category_id}/{original_item_id}] {description}"
+                    else:
+                        description = f"未识别分类: {original_category_id}/{original_item_id}"
+                
+                # 使用统一存储接口上传文件
+                storage = get_file_storage()
+                
+                # 处理文件数据
+                if isinstance(file_data, bytes):
+                    content = file_data
+                else:
+                    file_data.seek(0)
+                    content = file_data.read()
+                
+                file_size = len(content)
+                
+                # 构建子文件夹路径
+                subfolder = f"{category_id}/{item_id}"
+                
+                # 上传文件
+                file_info = storage.save_file(
+                    project_id=project_id,
+                    category="raw_materials",
+                    filename=file_name,
+                    content=content,
+                    subfolder=subfolder,
+                    content_type=file_type
+                )
+                
+                # 提取存储信息
+                storage_type = file_info.storage_type
+                object_bucket = file_info.bucket if storage_type == "minio" else None
+                object_key = file_info.object_name if storage_type == "minio" else None
+                minio_url = file_info.file_url if storage_type == "minio" else None
+                local_file_path = file_info.file_path if storage_type == "local" else None
+                
+                logger.info(f"✅ 文件已上传 ({storage_type}): {file_info.file_path}")
+                
+                # 记录文件
+                cursor.execute('''
+                    INSERT INTO material_files 
+                    (project_id, category_id, item_id, file_name, file_path, file_size, file_type, description, 
+                     object_bucket, object_key, minio_url, storage_type)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (project_id, category_id, item_id, file_name, local_file_path or "", file_size, file_type, description,
+                      object_bucket, object_key, minio_url, storage_type))
+                
+                file_id = cursor.lastrowid
+                
+                # 更新收集状态
+                cursor.execute('''
+                    INSERT OR REPLACE INTO material_collection 
+                    (project_id, category_id, item_id, status, file_path, file_name, file_size, file_type, collected_at, updated_at)
+                    VALUES (?, ?, ?, 'collected', ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ''', (project_id, category_id, item_id, minio_url or local_file_path, file_name, file_size, file_type))
+                
+                conn.commit()
+                
+                return {
+                    "success": True,
+                    "file_id": file_id,
+                    "message": "文件上传成功",
+                    "storage_type": storage_type,
+                    "object_url": minio_url,
+                    "local_path": local_file_path
+                }
+                
+        except Exception as e:
+            logger.error(f"上传材料失败: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"success": False, "error": str(e)}
+    
+    def _save_to_local(self, project_id: str, category_id: str, item_id: str, 
+                       file_data: Union[bytes, BinaryIO], file_name: str) -> str:
+        """保存文件到本地存储"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_id = str(uuid.uuid4())[:8]
+        safe_filename = f"{timestamp}_{unique_id}_{file_name}"
+        
+        target_dir = os.path.join(self.upload_folder, project_id, "raw_materials", category_id, item_id)
+        Path(target_dir).mkdir(parents=True, exist_ok=True)
+        
+        file_path = os.path.join(target_dir, safe_filename)
+        
+        if isinstance(file_data, bytes):
+            with open(file_path, 'wb') as f:
+                f.write(file_data)
+        else:
+            # BinaryIO
+            file_data.seek(0)
+            with open(file_path, 'wb') as f:
+                f.write(file_data.read())
+        
+        return file_path
+    
+    def get_file_url(self, file_id: int) -> Optional[str]:
+        """获取文件的访问 URL"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT * FROM material_files WHERE id = ?', (file_id,))
+                row = cursor.fetchone()
+                
+                if not row:
+                    return None
+                
+                storage_type = row.get("storage_type", "local") if hasattr(row, "get") else (row["storage_type"] if "storage_type" in row.keys() else "local")
+                
+                if storage_type == "minio" and self.minio_manager:
+                    # 刷新 MinIO URL
+                    project_id = row["project_id"]
+                    object_key = row["object_key"] if "object_key" in row.keys() else None
+                    if object_key:
+                        return self.minio_manager.get_file_url(project_id, object_key)
+                
+                # 本地文件
+                return row["file_path"]
+        except Exception as e:
+            logger.error(f"获取文件 URL 失败: {e}")
+            return None
+    
+    def create_project_bucket(self, project_id: str) -> Dict[str, Any]:
+        """为项目创建 MinIO Bucket"""
+        if not self.minio_manager or not self.minio_manager.is_enabled():
+            return {"success": False, "error": "MinIO 未启用"}
+        
+        return self.minio_manager.create_bucket(project_id)
+    
     def delete_material_file(self, file_id: int) -> Dict[str, Any]:
-        """删除材料文件"""
+        """删除材料文件（支持 MinIO 和本地存储）"""
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
@@ -1058,6 +1457,8 @@ class RawMaterialManager:
                 category_id = row["category_id"]
                 item_id = row["item_id"]
                 file_path = row["file_path"]
+                storage_type = row["storage_type"] if "storage_type" in row.keys() else "local"
+                object_key = row["object_key"] if "object_key" in row.keys() else None
                 
                 # 删除数据库记录
                 cursor.execute('DELETE FROM material_files WHERE id = ?', (file_id,))
@@ -1080,7 +1481,16 @@ class RawMaterialManager:
                 
                 conn.commit()
                 
-                # 删除物理文件
+                # 删除存储的文件
+                if storage_type == "minio" and object_key and self.minio_manager:
+                    # 删除 MinIO 文件
+                    try:
+                        self.minio_manager.delete_file(project_id, object_key)
+                        logger.info(f"✅ MinIO 文件删除成功: {object_key}")
+                    except Exception as e:
+                        logger.warning(f"⚠️ MinIO 文件删除失败: {e}")
+                
+                # 删除本地文件（如果存在）
                 if file_path and os.path.exists(file_path):
                     os.remove(file_path)
                 

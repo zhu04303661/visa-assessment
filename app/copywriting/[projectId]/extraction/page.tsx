@@ -6,7 +6,7 @@ import {
   ArrowLeft, FileText, Search, RefreshCw, Download, Eye, Filter, Clock, File, 
   History, AlertCircle, CheckCircle, Loader2, Settings, Copy, ChevronDown, 
   ChevronRight, Target, Award, Users, Lightbulb, BookOpen, Tag, TrendingUp,
-  ExternalLink, Layers, Star, Briefcase, GraduationCap, UserCheck, Trash2, 
+  Layers, Star, Briefcase, GraduationCap, UserCheck, Trash2, 
   Edit, Plus, Save, X
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -110,6 +110,14 @@ interface ClassificationItem {
   subject_person?: 'applicant' | 'recommender' | 'other'  // 信息主体
 }
 
+// 文件提取状态
+interface FileStatus {
+  filename: string
+  status: 'extracted' | 'skipped'
+  reason: string | null
+  evidence_count: number
+}
+
 // 分类进度
 interface ClassificationProgress {
   status: 'idle' | 'processing' | 'completed' | 'failed'
@@ -120,6 +128,9 @@ interface ClassificationProgress {
   total_classified: number
   progress_percent: number
   error?: string
+  extracted_files?: number
+  skipped_files?: number
+  file_status?: FileStatus[]
 }
 
 // 子类别
@@ -419,7 +430,21 @@ export default function ExtractionPage() {
             setClassifying(false)
             
             if (progressData.data.status === 'completed') {
-              toast.success(`分类完成！共分类 ${progressData.data.total_classified} 条内容`)
+              const { total_classified, extracted_files, skipped_files, file_status } = progressData.data
+              
+              // 显示成功提示
+              toast.success(`分类完成！成功提取 ${extracted_files || 0} 个文件，共分类 ${total_classified} 条证据`)
+              
+              // 如果有跳过的文件，显示警告
+              if (skipped_files && skipped_files > 0 && file_status) {
+                const skippedList = file_status.filter((f: FileStatus) => f.status === 'skipped')
+                if (skippedList.length > 0) {
+                  const skippedNames = skippedList.map((f: FileStatus) => `${f.filename}（${f.reason}）`).join('\n')
+                  toast.warning(`${skipped_files} 个文件无法提取内容：\n${skippedNames}`, {
+                    duration: 10000
+                  })
+                }
+              }
             } else {
               toast.error(progressData.data.error || "分类失败")
             }
@@ -838,6 +863,22 @@ export default function ExtractionPage() {
       {/* 顶部导航 */}
       <div className="border-b bg-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
+          {/* 材料分析流程指示器 */}
+          <div className="flex items-center justify-center gap-2 mb-4 py-2 px-4 bg-muted/50 rounded-lg">
+            <span className="text-xs text-muted-foreground">材料分析流程：</span>
+            <div className="flex items-center gap-1">
+              <span className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary text-primary-foreground text-xs font-medium">
+                <FileText className="h-3 w-3" />
+                1. 内容提取
+              </span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <span className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-muted-foreground text-xs">
+                <Target className="h-3 w-3" />
+                2. GTV框架
+              </span>
+            </div>
+          </div>
+          
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button 
@@ -887,12 +928,12 @@ export default function ExtractionPage() {
                 {extracting ? "提取中..." : "重新提取"}
               </Button>
               <Button
-                variant="outline"
                 size="sm"
                 onClick={() => router.push(`/copywriting/${projectId}/framework`)}
+                className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
               >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                查看框架
+                下一步：GTV框架
+                <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </div>

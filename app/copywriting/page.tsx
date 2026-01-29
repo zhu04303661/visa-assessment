@@ -739,13 +739,14 @@ function CopywritingContent() {
   }
   
   // 工作流步骤配置
+  // key 需要匹配后端 API 返回的 stages key（如 1_collect, 2_analyze 等）
   const workflowSteps = [
-    { key: 'collect', name: '材料收集', icon: Upload, action: () => router.push(`/material-collection?project=${selectedProject?.project_id}`) },
-    { key: 'analyze', name: '材料分析', icon: Brain, action: () => runWorkflowStep('analyze') },
-    { key: 'match', name: '案例匹配', icon: Target, action: () => runWorkflowStep('match') },
-    { key: 'generate', name: '文案生成', icon: Sparkles, action: () => runWorkflowStep('generate') },
-    { key: 'optimize', name: '内容优化', icon: Wand2, action: () => runWorkflowStep('optimize') },
-    { key: 'review', name: '最终审核', icon: FileCheck, action: () => runWorkflowStep('review') },
+    { key: '1_collect', name: '材料收集', icon: Upload, action: () => router.push(`/material-collection?project=${selectedProject?.project_id}`) },
+    { key: '2_analyze', name: '材料分析', icon: Brain, action: () => router.push(`/copywriting/${selectedProject?.project_id}/extraction`) },
+    { key: '3_framework', name: 'GTV框架', icon: Target, action: () => router.push(`/copywriting/${selectedProject?.project_id}/framework`) },
+    { key: '5_generate', name: '文案生成', icon: Sparkles, action: () => runWorkflowStep('generate') },
+    { key: '6_optimize', name: '内容优化', icon: Wand2, action: () => runWorkflowStep('optimize') },
+    { key: '7_review', name: '最终审核', icon: FileCheck, action: () => runWorkflowStep('review') },
   ]
 
   // 防止hydration不匹配 - 服务端和客户端保持一致的初始渲染
@@ -912,37 +913,54 @@ function CopywritingContent() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => router.push(`/material-collection?project=${selectedProject.project_id}`)}
-                        >
-                          <FolderOpen className="h-4 w-4 mr-1.5" />
-                          材料收集
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setIsUploadDialogOpen(true)}
-                        >
-                          <Upload className="h-4 w-4 mr-1.5" />
-                          上传
-                        </Button>
-                        <Button 
-                          size="sm"
-                          onClick={() => runWorkflowStep('full')}
-                          disabled={processing}
-                          className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
-                        >
-                          {processing ? (
-                            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                          ) : (
-                            <Zap className="h-4 w-4 mr-1.5" />
-                          )}
-                          一键生成
-                        </Button>
-                      </div>
+                      {/* 完成度进度显示 */}
+                      {(() => {
+                        const completedSteps = workflowSteps.filter(s => workflowStatus[s.key]?.status === 'completed').length
+                        const totalSteps = workflowSteps.length
+                        const percentage = Math.round((completedSteps / totalSteps) * 100)
+                        // SVG circle 周长 = 2 * π * r = 2 * 3.14159 * 16 ≈ 100.53
+                        const circumference = 2 * Math.PI * 16
+                        const dashOffset = circumference - (circumference * percentage / 100)
+                        
+                        return (
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border">
+                            <div className="relative w-10 h-10">
+                              <svg className="w-10 h-10 transform -rotate-90">
+                                <circle
+                                  cx="20"
+                                  cy="20"
+                                  r="16"
+                                  stroke="currentColor"
+                                  strokeWidth="3"
+                                  fill="none"
+                                  className="text-muted-foreground/20"
+                                />
+                                <circle
+                                  cx="20"
+                                  cy="20"
+                                  r="16"
+                                  stroke="currentColor"
+                                  strokeWidth="3"
+                                  fill="none"
+                                  strokeDasharray={circumference}
+                                  strokeDashoffset={dashOffset}
+                                  strokeLinecap="round"
+                                  className={percentage === 100 ? 'text-green-500' : percentage >= 50 ? 'text-blue-500' : 'text-violet-500'}
+                                />
+                              </svg>
+                              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">
+                                {percentage}%
+                              </span>
+                            </div>
+                            <div className="text-sm">
+                              <p className="font-medium">{completedSteps}/{totalSteps} 步骤完成</p>
+                              <p className="text-xs text-muted-foreground">
+                                {percentage === 100 ? '全部完成 🎉' : percentage >= 50 ? '进行中...' : '待处理'}
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      })()}
                     </div>
                   </div>
                   
@@ -950,22 +968,25 @@ function CopywritingContent() {
                   <div className="px-4 py-3 border-t bg-muted/30">
                     <div className="flex items-center gap-1">
                       {workflowSteps.map((step, index) => {
-                        const statusEntry = Object.entries(workflowStatus).find(([k]) => k.includes(step.key))
-                        const stepStatus = statusEntry ? statusEntry[1].status : 'pending'
+                        // 精确匹配 key
+                        const stageData = workflowStatus[step.key]
+                        const stepStatus = stageData?.status || 'pending'
                         const isCompleted = stepStatus === 'completed'
                         const isActive = stepStatus === 'in_progress'
                         const StepIcon = step.icon
+                        const stepMessage = stageData?.message || ''
                         
                         return (
                           <div key={step.key} className="flex items-center flex-1">
                             <button
                               onClick={step.action}
                               disabled={processing}
+                              title={stepMessage}
                               className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-medium transition-all ${
                                 isCompleted 
-                                  ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300' 
+                                  ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300 ring-1 ring-green-300' 
                                   : isActive 
-                                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300' 
+                                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300 ring-1 ring-blue-300' 
                                     : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground'
                               } ${processing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                             >

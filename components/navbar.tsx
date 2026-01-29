@@ -94,7 +94,7 @@ export function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - 使用 mounted 状态确保服务端和客户端渲染一致 */}
           <div className="hidden md:flex items-center gap-1">
             {/* 首页 */}
             <Link
@@ -105,77 +105,107 @@ export function Navbar() {
               {language === "en" ? "Home" : "首页"}
             </Link>
 
-            {/* AI 评估下拉菜单 */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  <FileCheck className="h-4 w-4" />
-                  {navGroups.aiAssessment.label}
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                {navGroups.aiAssessment.items.map((item) => {
-                  const Icon = item.icon
-                  return (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link href={item.href} className="flex items-center gap-2 cursor-pointer">
-                        <Icon className="h-4 w-4" />
-                        {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  )
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* AI 评估下拉菜单 - 仅在客户端挂载后渲染 DropdownMenu */}
+            {mounted ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                    <FileCheck className="h-4 w-4" />
+                    {navGroups.aiAssessment.label}
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  {navGroups.aiAssessment.items.map((item) => {
+                    const Icon = item.icon
+                    return (
+                      <DropdownMenuItem key={item.href} asChild>
+                        <Link href={item.href} className="flex items-center gap-2 cursor-pointer">
+                          <Icon className="h-4 w-4" />
+                          {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link
+                href="/assessment"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted rounded-md"
+              >
+                <FileCheck className="h-4 w-4" />
+                {language === "en" ? "AI Assessment" : "AI评估"}
+              </Link>
+            )}
 
             {/* AI 文案下拉菜单 */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  <Wand2 className="h-4 w-4" />
-                  {navGroups.aiCopywriting.label}
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                {navGroups.aiCopywriting.items.map((item) => {
-                  const Icon = item.icon
-                  return (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link href={item.href} className="flex items-center gap-2 cursor-pointer">
-                        <Icon className="h-4 w-4" />
-                        {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  )
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {mounted ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                    <Wand2 className="h-4 w-4" />
+                    {navGroups.aiCopywriting.label}
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  {navGroups.aiCopywriting.items.map((item) => {
+                    const Icon = item.icon
+                    return (
+                      <DropdownMenuItem key={item.href} asChild>
+                        <Link href={item.href} className="flex items-center gap-2 cursor-pointer">
+                          <Icon className="h-4 w-4" />
+                          {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link
+                href="/copywriting"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted rounded-md"
+              >
+                <Wand2 className="h-4 w-4" />
+                {language === "en" ? "AI Copywriting" : "AI文案"}
+              </Link>
+            )}
 
             {/* AI 咨询下拉菜单 */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  <MessageCircle className="h-4 w-4" />
-                  {navGroups.aiConsultation.label}
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                {navGroups.aiConsultation.items.map((item) => {
-                  const Icon = item.icon
-                  return (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link href={item.href} className="flex items-center gap-2 cursor-pointer">
-                        <Icon className="h-4 w-4" />
-                        {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  )
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {mounted ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                    <MessageCircle className="h-4 w-4" />
+                    {navGroups.aiConsultation.label}
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  {navGroups.aiConsultation.items.map((item) => {
+                    const Icon = item.icon
+                    return (
+                      <DropdownMenuItem key={item.href} asChild>
+                        <Link href={item.href} className="flex items-center gap-2 cursor-pointer">
+                          <Icon className="h-4 w-4" />
+                          {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link
+                href="/chat"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted rounded-md"
+              >
+                <MessageCircle className="h-4 w-4" />
+                {language === "en" ? "AI Consultation" : "AI咨询"}
+              </Link>
+            )}
 
             {/* 关于我们 */}
             <Link

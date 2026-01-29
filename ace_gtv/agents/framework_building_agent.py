@@ -6,13 +6,15 @@ GTV签证文案制作 - 框架构建Agent
 
 import os
 import json
-import sqlite3
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 import copy
 
 from utils.logger_config import setup_module_logger
+from database.dao import (
+    get_framework_dao, get_classification_dao, get_prompt_dao
+)
 
 logger = setup_module_logger("framework_building_agent", os.getenv("LOG_LEVEL", "INFO"))
 
@@ -240,11 +242,17 @@ class FrameworkBuildingAgent:
     5. 导出为Markdown/XMind格式
     """
     
-    def __init__(self, db_path: str = "copywriting.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = None):
+        # 使用环境变量配置的路径，或传入的参数
+        self.db_path = db_path or os.getenv("COPYWRITING_DB_PATH", "copywriting.db")
         self.llm_client = None
+        
+        # 初始化 DAO 层
+        self.framework_dao = get_framework_dao()
+        self.classification_dao = get_classification_dao()
+        self.prompt_dao = get_prompt_dao()
+        
         self._init_llm()
-        self._ensure_tables()
         logger.info("框架构建Agent初始化完成")
     
     def _init_llm(self):
@@ -264,204 +272,59 @@ class FrameworkBuildingAgent:
         except Exception as e:
             logger.error(f"初始化LLM失败: {e}")
     
-    def _get_connection(self):
-        """获取数据库连接"""
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        return conn
-    
-    def _ensure_tables(self):
-        """确保必要的表存在"""
-        try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS gtv_frameworks (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    project_id TEXT UNIQUE NOT NULL,
-                    framework_data TEXT,
-                    version INTEGER DEFAULT 1,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (project_id) REFERENCES projects(project_id)
-                )
-            ''')
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS client_profile_maps (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    project_id TEXT UNIQUE NOT NULL,
-                    profile_data TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (project_id) REFERENCES projects(project_id)
-                )
-            ''')
-            
-            # 框架构建日志表
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS framework_logs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    project_id TEXT NOT NULL,
-                    log_type TEXT,
-                    action TEXT,
-                    prompt TEXT,
-                    response TEXT,
-                    status TEXT DEFAULT 'success',
-                    error_message TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            
-            conn.commit()
-            conn.close()
-        except Exception as e:
-            logger.error(f"创建表失败: {e}")
-    
     def _log_framework_action(self, project_id: str, log_type: str, action: str, 
                               prompt: str = None, response: str = None,
                               status: str = 'success', error_message: str = None,
                               prompt_version: int = None, prompt_name: str = None):
-        """记录框架构建日志，包含提示词版本信息"""
+        """记录框架构建日志（使用 DAO 层）"""
         try:
-            conn = sqlite3.connect(self.db_path, timeout=30)
-            cursor = conn.cursor()
-            
-            # 检查并添加新列（数据库迁移）
-            cursor.execute("PRAGMA table_info(framework_logs)")
-            columns = [row[1] for row in cursor.fetchall()]
-            if 'prompt_version' not in columns:
-                cursor.execute('ALTER TABLE framework_logs ADD COLUMN prompt_version INTEGER')
-            if 'prompt_name' not in columns:
-                cursor.execute('ALTER TABLE framework_logs ADD COLUMN prompt_name TEXT')
-            
-            cursor.execute('''
-                INSERT INTO framework_logs 
-                (project_id, log_type, action, prompt, response, status, error_message, prompt_version, prompt_name)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (project_id, log_type, action, prompt, response, status, error_message, prompt_version, prompt_name))
-            conn.commit()
-            conn.close()
+            self.framework_dao.add_log(
+                project_id=project_id,
+                log_type=log_type,
+                action=action,
+                prompt=prompt,
+                response=response,
+                status=status,
+                error_message=error_message
+            )
         except Exception as e:
             logger.error(f"记录框架日志失败: {e}")
     
     def _get_prompt_from_db(self, prompt_type: str) -> tuple[Optional[str], Optional[int], Optional[str]]:
-        """从数据库获取提示词（动态加载，每次取最新版本）
-        
-        Args:
-            prompt_type: 提示词类型，如 'framework_domain', 'framework_mc1' 等
-            
-        Returns:
-            (提示词内容, 版本号, 提示词名称) 元组，如果未找到返回 (None, None, None)
-        """
+        """从数据库获取提示词（使用 DAO 层）"""
         try:
-            conn = sqlite3.connect(self.db_path, timeout=30)
-            conn.row_factory = sqlite3.Row
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                SELECT name, content, version FROM system_prompts 
-                WHERE type = ? AND is_active = 1
-                LIMIT 1
-            ''', (prompt_type,))
-            
-            row = cursor.fetchone()
-            conn.close()
+            row = self.prompt_dao.get_latest_version(prompt_type)
             
             if row:
-                version = row['version'] or 1
+                version = row.get('version') or 1
                 logger.debug(f"加载提示词 [{prompt_type}] 版本 {version}")
-                return row['content'], version, row['name']
+                return row.get('content'), version, row.get('name')
             return None, None, None
         except Exception as e:
             logger.error(f"获取提示词失败 ({prompt_type}): {e}")
             return None, None, None
     
     def get_framework_logs(self, project_id: str) -> List[Dict]:
-        """获取项目的框架构建日志，包含提示词版本信息"""
+        """获取项目的框架构建日志（使用 DAO 层）"""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            # 检查表是否有新列
-            cursor.execute("PRAGMA table_info(framework_logs)")
-            columns = [row[1] for row in cursor.fetchall()]
-            
-            # 根据列的存在情况选择查询
-            if 'prompt_version' in columns and 'prompt_name' in columns:
-                cursor.execute('''
-                    SELECT id, log_type, action, prompt, response, status, error_message, 
-                           prompt_version, prompt_name, created_at
-                    FROM framework_logs
-                    WHERE project_id = ?
-                    ORDER BY created_at DESC
-                    LIMIT 100
-                ''', (project_id,))
-            else:
-                cursor.execute('''
-                    SELECT id, log_type, action, prompt, response, status, error_message, created_at
-                    FROM framework_logs
-                    WHERE project_id = ?
-                    ORDER BY created_at DESC
-                    LIMIT 100
-                ''', (project_id,))
-            
-            logs = []
-            for row in cursor.fetchall():
-                log_entry = {
-                    "id": row['id'],
-                    "log_type": row['log_type'],
-                    "action": row['action'],
-                    "prompt": row['prompt'],
-                    "response": row['response'],
-                    "status": row['status'],
-                    "error_message": row['error_message'],
-                    "created_at": row['created_at']
-                }
-                # 添加版本信息（如果存在）
-                if 'prompt_version' in columns:
-                    log_entry["prompt_version"] = row['prompt_version']
-                if 'prompt_name' in columns:
-                    log_entry["prompt_name"] = row['prompt_name']
-                logs.append(log_entry)
-            
-            conn.close()
-            return logs
+            return self.framework_dao.get_logs(project_id, limit=100)
         except Exception as e:
             logger.error(f"获取框架日志失败: {e}")
             return []
     
     def clear_all_framework_data(self, project_id: str) -> Dict[str, Any]:
-        """
-        清除项目的所有框架数据，包括：
-        - GTV框架 (gtv_frameworks)
-        - 框架构建日志 (framework_logs)
-        - 客户画像 (client_profile_maps)
-        """
+        """清除项目的所有框架数据（使用 DAO 层）"""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
             stats = {}
             
-            # 清除GTV框架
-            cursor.execute('DELETE FROM gtv_frameworks WHERE project_id = ?', (project_id,))
-            stats['deleted_frameworks'] = cursor.rowcount
+            # 清除 GTV 框架
+            stats['deleted_frameworks'] = self.framework_dao.delete_framework(project_id)
             
             # 清除框架构建日志
-            cursor.execute('DELETE FROM framework_logs WHERE project_id = ?', (project_id,))
-            stats['deleted_logs'] = cursor.rowcount
+            stats['deleted_logs'] = self.framework_dao.delete_logs(project_id)
             
             # 清除客户画像
-            try:
-                cursor.execute('DELETE FROM client_profile_maps WHERE project_id = ?', (project_id,))
-                stats['deleted_profiles'] = cursor.rowcount
-            except Exception:
-                stats['deleted_profiles'] = 0
-            
-            conn.commit()
-            conn.close()
+            stats['deleted_profiles'] = self.framework_dao.delete_profile(project_id)
             
             logger.info(f"项目 {project_id} 框架数据已清理: {stats}")
             
@@ -555,7 +418,7 @@ class FrameworkBuildingAgent:
     
     def _get_classified_evidence(self, project_id: str) -> Dict[str, List[Dict]]:
         """
-        获取项目的分类证据
+        获取项目的分类证据（使用 DAO 层）
         
         Returns:
             按类别组织的证据字典，如：
@@ -566,36 +429,30 @@ class FrameworkBuildingAgent:
             }
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                SELECT id, category, subcategory, content, source_file, source_page,
-                       relevance_score, evidence_type, key_points, subject_person
-                FROM content_classifications
-                WHERE project_id = ?
-                ORDER BY category, subcategory, relevance_score DESC
-            ''', (project_id,))
-            
-            rows = cursor.fetchall()
-            conn.close()
+            rows = self.classification_dao.get_classified_evidence(project_id)
             
             # 按类别组织
             evidence_by_category = {}
             for row in rows:
-                key = f"{row['category']}/{row['subcategory']}"
+                key = f"{row.get('category', '')}/{row.get('subcategory', '')}"
                 if key not in evidence_by_category:
                     evidence_by_category[key] = []
                 
+                key_points = []
+                try:
+                    key_points = json.loads(row.get('key_points', '[]')) if row.get('key_points') else []
+                except:
+                    pass
+                
                 evidence_by_category[key].append({
-                    "id": row['id'],
-                    "content": row['content'],
-                    "source_file": row['source_file'],
-                    "source_page": row['source_page'],
-                    "relevance_score": row['relevance_score'],
-                    "evidence_type": row['evidence_type'],
-                    "key_points": json.loads(row['key_points']) if row['key_points'] else [],
-                    "subject_person": row['subject_person'] or 'applicant'
+                    "id": row.get('id'),
+                    "content": row.get('content', ''),
+                    "source_file": row.get('source_file', ''),
+                    "source_page": row.get('source_page'),
+                    "relevance_score": row.get('relevance_score', 0),
+                    "evidence_type": row.get('evidence_type', ''),
+                    "key_points": key_points,
+                    "subject_person": row.get('subject_person') or 'applicant'
                 })
             
             logger.info(f"获取到 {len(rows)} 条分类证据，分为 {len(evidence_by_category)} 个类别")
@@ -794,7 +651,7 @@ class FrameworkBuildingAgent:
     
     def _analyze_domain_positioning_v2(self, project_id: str, evidence_list: List[Dict],
                                        context: str, client_name: str) -> Optional[Dict]:
-        """基于分类证据分析领域定位（优化版 - 参考专业人工框架）"""
+        """基于分类证据分析领域定位（优化版 - 使用数据库提示词）"""
         # 格式化证据
         evidence_text = self._format_evidence_for_prompt(evidence_list, max_items=15)
         
@@ -804,212 +661,121 @@ class FrameworkBuildingAgent:
         # 工作岗位选项
         role_options = "\n".join([f"  - {role}" for role in WORK_ROLE_OPTIONS])
         
-        prompt = f"""你是资深GTV签证顾问。请根据以下已分类的申请人证据，深度分析其领域定位。
+        # 准备变量替换
+        variables = {
+            "client_name": client_name,
+            "evidence_text": evidence_text,
+            "context": context[:3000] if context else "无补充信息",
+            "role_options": role_options
+        }
+        
+        # 使用数据库提示词或降级到默认提示词
+        if db_prompt:
+            prompt = self._replace_prompt_variables(db_prompt, variables)
+        else:
+            # 降级：使用硬编码的默认提示词
+            from ace_gtv.prompts.framework_prompts import DOMAIN_POSITIONING_PROMPT
+            prompt = self._replace_prompt_variables(DOMAIN_POSITIONING_PROMPT, variables)
+            version = 0  # 标记为使用默认版本
 
-## 申请人: {client_name}
-
-## 已分类的证据材料
-{evidence_text}
-
-## 补充背景信息
-{context[:3000] if context else "无补充信息"}
-
-## Tech Nation 工作岗位选项（可多选）
-{role_options}
-
-## 输出要求
-基于证据材料进行专业分析，返回JSON格式：
-{{
-    "评估机构": "Tech Nation",
-    "细分领域": "根据Tech Nation官方分类选择（如：AI & Machine Learning, FinTech, Hardware & Devices, Digital Health, Cyber Security, Gaming, Creative Industries等）",
-    "岗位定位": "申请人的核心职业定位（如：创业者/创始人、技术领导者、投资人、产品专家等）",
-    "工作岗位选择": ["从上面的选项中选择1-3个最匹配的岗位"],
-    "核心论点": "一句话精炼概括申请人的独特价值主张，必须具体、有数据支撑、有说服力（如：拥有10年AI领域研发经验的技术领导者，主导开发了服务百万用户的智能系统）",
-    "申请路径": "Exceptional Talent（5年+资深经验、行业领导者）或 Exceptional Promise（早期职业、有突出潜力）",
-    "论证重点": "申请中需要特别论证的关键点（如：如何将投资经历与科技公司运营关联起来）",
-    "背书论证要点": [
-        "需要向Tech Nation论证的核心要点1（如：产品是数字科技导向的产品）",
-        "需要向Tech Nation论证的核心要点2（如：申请人在行业里的先进性和领先地位）"
-    ],
-    "source_files": ["用于判断的主要来源文件"]
-}}
-
-## 重要要求
-1. 所有结论必须基于证据材料中的真实信息，不要杜撰
-2. 核心论点必须具体、量化、有说服力，避免空泛表述
-3. 论证重点要识别申请材料中的"割裂点"或需要解释的地方
-4. 背书论证要点要明确列出需要重点向Tech Nation证明的内容"""
-
-        result_text = self._call_llm(prompt, project_id, "领域定位分析v2", "domain_analysis",
-                                     prompt_version=version, prompt_name=prompt_name)
+        result_text = self._call_llm(prompt, project_id, "领域定位分析", "domain_analysis",
+                                     prompt_version=version, prompt_name=prompt_name or "领域定位分析")
         return self._parse_json_response(result_text)
+    
+    def _replace_prompt_variables(self, template: str, variables: Dict[str, str]) -> str:
+        """替换提示词模板中的变量"""
+        result = template
+        for key, value in variables.items():
+            result = result.replace(f"{{{key}}}", str(value) if value else "")
+        return result
     
     def _analyze_mc_criteria_v2(self, project_id: str, evidence_list: List[Dict],
                                 context: str, mc_key: str, client_name: str) -> Optional[Dict]:
-        """基于分类证据分析MC标准"""
-        mc_descriptions = {
-            "MC1_产品团队领导力": "领导产品导向的数字科技公司/产品/团队增长的证据",
-            "MC2_商业发展": "领导营销或业务开发，实现收入/客户增长的证据",
-            "MC3_非营利组织": "领导数字科技领域非营利组织或社会企业的证据",
-            "MC4_专家评审": "担任评审同行工作的重要专家角色的证据"
+        """基于分类证据分析MC标准（使用数据库提示词）"""
+        from ace_gtv.prompts.framework_prompts import MC_DESCRIPTIONS, MC_REQUIREMENTS, MC_CRITERIA_PROMPT
+        
+        # MC类型映射
+        mc_type_map = {
+            "MC1_产品团队领导力": "framework_mc1",
+            "MC2_商业发展": "framework_mc2",
+            "MC3_非营利组织": "framework_mc3",
+            "MC4_专家评审": "framework_mc4"
         }
         
-        mc_requirements = {
-            "MC1_产品团队领导力": """
-需要证明以下要点：
-1. 在产品导向的数字科技公司/团队中担任领导角色
-2. 领导团队规模、职责范围
-3. 产品/团队增长的具体数据（用户量、收入、团队规模等）
-4. 决策权和影响力的证据""",
-            "MC2_商业发展": """
-需要证明以下要点：
-1. 在营销或业务开发中的领导角色
-2. 具体的收入增长数据（百分比、金额）
-3. 客户/用户增长数据
-4. 市场拓展成果（新市场、新渠道等）""",
-            "MC3_非营利组织": """
-需要证明以下要点：
-1. 在数字科技领域非营利组织或社会企业中的领导角色
-2. 组织的规模和影响力
-3. 社会影响力的具体数据
-4. 技术或创新方面的贡献""",
-            "MC4_专家评审": """
-需要证明以下要点：
-1. 作为评审专家的资格和邀请
-2. 评审的会议/期刊/项目的级别和影响力
-3. 评审的次数和持续时间
-4. 评审领域与数字科技的关联"""
-        }
+        prompt_type = mc_type_map.get(mc_key, "framework_mc1")
+        db_prompt, version, prompt_name = self._get_prompt_from_db(prompt_type)
         
         # 格式化证据
         evidence_text = self._format_evidence_for_prompt(evidence_list, max_items=8)
         
-        prompt = f"""你是GTV签证专家。请根据以下已分类的证据，分析申请人是否符合MC标准：{mc_key}
+        # 准备变量替换
+        variables = {
+            "mc_key": mc_key,
+            "mc_description": MC_DESCRIPTIONS.get(mc_key, ""),
+            "mc_requirement": MC_REQUIREMENTS.get(mc_key, ""),
+            "client_name": client_name,
+            "evidence_text": evidence_text,
+            "context": context[:2000] if context else "无补充材料"
+        }
+        
+        # 使用数据库提示词或降级到默认提示词
+        if db_prompt:
+            prompt = self._replace_prompt_variables(db_prompt, variables)
+        else:
+            prompt = self._replace_prompt_variables(MC_CRITERIA_PROMPT, variables)
+            version = 0
 
-## 标准描述
-{mc_descriptions.get(mc_key, "")}
-
-{mc_requirements.get(mc_key, "")}
-
-## 申请人: {client_name}
-
-## 该标准的相关证据
-{evidence_text}
-
-## 补充材料
-{context[:2000] if context else "无补充材料"}
-
-## 输出要求
-严格根据以上证据分析，返回JSON格式：
-{{
-    "applicable": true或false（是否适用此标准）,
-    "evidence_list": [
-        {{
-            "title": "证据标题（必须是材料中的真实内容）",
-            "description": "具体描述（引用材料原文关键内容）",
-            "source_file": "来源文件名",
-            "strength": "强/中/弱",
-            "key_data": "关键数据指标（如有）"
-        }}
-    ],
-    "summary": "一段话概述如何满足此标准（必须基于实际证据）",
-    "strength_score": 0-5（基于证据强度的评分：0=无证据，1-2=弱，3=中等，4-5=强）,
-    "gaps": ["如有不足，列出需要补充的证据"]
-}}
-
-## 重要要求
-1. evidence_list中的每项必须来自上述证据材料，带有明确的source_file
-2. 如果没有相关证据，applicable应为false，evidence_list为空
-3. 不要杜撰或假设任何信息
-4. strength_score必须与证据质量相匹配"""
-
-        result_text = self._call_llm(prompt, project_id, f"{mc_key}标准分析v2", "mc_analysis")
+        result_text = self._call_llm(prompt, project_id, f"{mc_key}标准分析", "mc_analysis",
+                                     prompt_version=version, prompt_name=prompt_name or f"{mc_key}分析")
         return self._parse_json_response(result_text)
     
     def _analyze_oc_criteria_v2(self, project_id: str, evidence_list: List[Dict],
                                 context: str, oc_key: str, client_name: str) -> Optional[Dict]:
-        """基于分类证据分析OC标准"""
-        oc_descriptions = {
-            "OC1_创新": "创新/产品开发及市场验证证据（专利、产品发布、用户规模等）",
-            "OC2_行业认可": "作为领域专家获得的认可证据（奖项、媒体报道、演讲邀请等）",
-            "OC3_重大贡献": "对数字技术产品的重大技术/商业贡献（用户量、收入、技术突破等）",
-            "OC4_学术贡献": "在数字技术领域的学术贡献（论文发表、引用、学术会议等）"
+        """基于分类证据分析OC标准（使用数据库提示词）"""
+        from ace_gtv.prompts.framework_prompts import OC_DESCRIPTIONS, OC_REQUIREMENTS, OC_CRITERIA_PROMPT
+        
+        # OC类型映射
+        oc_type_map = {
+            "OC1_创新": "framework_oc1",
+            "OC2_行业认可": "framework_oc2",
+            "OC3_重大贡献": "framework_oc3",
+            "OC4_学术贡献": "framework_oc4"
         }
         
-        oc_requirements = {
-            "OC1_创新": """
-需要证明以下要点：
-1. 创新产品/技术的开发（发明、专利、新产品）
-2. 市场验证证据（用户反馈、市场份额、商业化成果）
-3. 创新的独特性和技术难度
-4. 创新对行业的影响""",
-            "OC2_行业认可": """
-需要证明以下要点：
-1. 获得的奖项（奖项名称、颁发机构、级别）
-2. 媒体报道（媒体名称、报道内容）
-3. 演讲邀请（会议名称、级别、主题）
-4. 专家身份的认可（评审、顾问等）""",
-            "OC3_重大贡献": """
-需要证明以下要点：
-1. 对产品的具体贡献（功能、模块、系统）
-2. 贡献的规模和影响（用户量、收入贡献）
-3. 技术突破或创新点
-4. 团队/公司对其贡献的认可""",
-            "OC4_学术贡献": """
-需要证明以下要点：
-1. 论文发表（期刊/会议名称、CCF级别、引用数）
-2. 学术会议参与（会议名称、角色）
-3. 开源贡献（项目名称、Star数、影响力）
-4. 学术合作和影响力"""
-        }
+        prompt_type = oc_type_map.get(oc_key, "framework_oc1")
+        db_prompt, version, prompt_name = self._get_prompt_from_db(prompt_type)
         
         # 格式化证据
         evidence_text = self._format_evidence_for_prompt(evidence_list, max_items=8)
         
-        prompt = f"""你是GTV签证专家。请根据以下已分类的证据，分析申请人是否符合OC标准：{oc_key}
+        # 准备变量替换
+        variables = {
+            "oc_key": oc_key,
+            "oc_description": OC_DESCRIPTIONS.get(oc_key, ""),
+            "oc_requirement": OC_REQUIREMENTS.get(oc_key, ""),
+            "client_name": client_name,
+            "evidence_text": evidence_text,
+            "context": context[:2000] if context else "无补充材料"
+        }
+        
+        # 使用数据库提示词或降级到默认提示词
+        if db_prompt:
+            prompt = self._replace_prompt_variables(db_prompt, variables)
+        else:
+            prompt = self._replace_prompt_variables(OC_CRITERIA_PROMPT, variables)
+            version = 0
 
-## 标准描述
-{oc_descriptions.get(oc_key, "")}
-
-{oc_requirements.get(oc_key, "")}
-
-## 申请人: {client_name}
-
-## 该标准的相关证据
-{evidence_text}
-
-## 补充材料
-{context[:2000] if context else "无补充材料"}
-
-## 输出要求
-严格根据以上证据分析，返回JSON格式：
-{{
-    "applicable": true或false（是否适用此标准）,
-    "evidence_list": [
-        {{
-            "title": "证据标题",
-            "description": "具体描述（引用材料原文关键内容）",
-            "source_file": "来源文件名",
-            "strength": "强/中/弱",
-            "key_data": "关键数据指标（如有）"
-        }}
-    ],
-    "summary": "一段话概述如何满足此标准",
-    "strength_score": 0-5,
-    "gaps": ["需要补充的证据"]
-}}
-
-## 重要要求
-1. 每条证据必须有明确的source_file来源
-2. 没有证据时applicable为false
-3. 不要杜撰信息"""
-
-        result_text = self._call_llm(prompt, project_id, f"{oc_key}标准分析v2", "oc_analysis")
+        result_text = self._call_llm(prompt, project_id, f"{oc_key}标准分析", "oc_analysis",
+                                     prompt_version=version, prompt_name=prompt_name or f"{oc_key}分析")
         return self._parse_json_response(result_text)
     
     def _analyze_recommenders_v2(self, project_id: str, evidence_list: List[Dict],
                                  context: str, client_name: str) -> Optional[Dict]:
-        """基于分类证据分析推荐人（优化版 - 参考专业人工框架）"""
+        """基于分类证据分析推荐人（使用数据库提示词）"""
+        from ace_gtv.prompts.framework_prompts import RECOMMENDER_ANALYSIS_PROMPT
+        
+        db_prompt, version, prompt_name = self._get_prompt_from_db("framework_recommenders")
+        
         # 格式化推荐人相关证据
         formatted_evidence = []
         for e in evidence_list[:20]:
@@ -1028,132 +794,59 @@ class FrameworkBuildingAgent:
         
         evidence_text = "\n".join(formatted_evidence) if formatted_evidence else "暂无推荐人相关证据"
         
-        prompt = f"""你是资深GTV签证顾问。请根据以下推荐人相关证据，专业分析并组织推荐人策略。
+        # 准备变量替换
+        variables = {
+            "client_name": client_name,
+            "evidence_text": evidence_text,
+            "context": context[:2000] if context else "无补充材料"
+        }
+        
+        # 使用数据库提示词或降级到默认提示词
+        if db_prompt:
+            prompt = self._replace_prompt_variables(db_prompt, variables)
+        else:
+            prompt = self._replace_prompt_variables(RECOMMENDER_ANALYSIS_PROMPT, variables)
+            version = 0
 
-## 申请人: {client_name}
-
-## 推荐人相关证据
-{evidence_text}
-
-## 补充材料
-{context[:2000] if context else "无补充材料"}
-
-## GTV推荐信要求
-- 需要3封推荐信，每封应聚焦不同能力维度
-- 推荐人应是"领先行业专家"(leading industry expert)
-- 推荐人背景应多元化：学术专家、行业领袖、商业合作伙伴等
-- 每位推荐人需要有明确的推荐角度和论点
-
-## 输出要求
-返回JSON格式（每位推荐人都要有明确的推荐角度）：
-{{
-    "推荐人1": {{
-        "name": "推荐人姓名",
-        "title": "职位/职称",
-        "organization": "机构/公司",
-        "field": "推荐人的专业领域（如：人工智能、光学工程、投资等）",
-        "relationship": "与申请人的具体关系（如：博士导师、投资合作伙伴、技术顾问）",
-        "recommendation_angle": "推荐角度/论点（如：从AI技术研发创新能力角度推荐申请人）",
-        "focus_points": [
-            "推荐信中应重点阐述的论点1（具体到可操作）",
-            "推荐信中应重点阐述的论点2"
-        ],
-        "supports_criteria": ["支持的MC/OC标准，如MC1, OC1"],
-        "status": "已确认/待确认",
-        "source_file": "信息来源文件"
-    }},
-    "推荐人2": {{
-        "name": "",
-        "title": "",
-        "organization": "",
-        "field": "",
-        "relationship": "",
-        "recommendation_angle": "",
-        "focus_points": [],
-        "supports_criteria": [],
-        "status": "",
-        "source_file": ""
-    }},
-    "推荐人3": {{
-        "name": "",
-        "title": "",
-        "organization": "",
-        "field": "",
-        "relationship": "",
-        "recommendation_angle": "",
-        "focus_points": [],
-        "supports_criteria": [],
-        "status": "",
-        "source_file": ""
-    }}
-}}
-
-## 重要要求
-1. 信息必须来自上述证据材料，不要杜撰推荐人
-2. recommendation_angle必须具体明确，如"从被投资企业角度论证申请人对数字科技企业的商业敏感度"
-3. focus_points要具体到推荐信撰写可以直接参考
-4. supports_criteria要明确每位推荐人的推荐信可以支持哪些MC/OC标准
-5. 三位推荐人的角度应互补，覆盖不同维度"""
-
-        result_text = self._call_llm(prompt, project_id, "推荐人分析v2", "recommender_analysis")
+        result_text = self._call_llm(prompt, project_id, "推荐人分析", "recommender_analysis",
+                                     prompt_version=version, prompt_name=prompt_name or "推荐人分析")
         return self._parse_json_response(result_text)
     
     def _generate_personal_statement_v2(self, project_id: str, evidence_list: List[Dict],
                                         client_name: str, framework: Dict) -> Optional[Dict]:
-        """基于分类证据生成个人陈述要点"""
+        """基于分类证据生成个人陈述要点（使用数据库提示词）"""
+        from ace_gtv.prompts.framework_prompts import PERSONAL_STATEMENT_PROMPT
+        
+        db_prompt, version, prompt_name = self._get_prompt_from_db("framework_ps")
+        
         # 格式化申请人证据
         evidence_text = self._format_evidence_for_prompt(evidence_list, max_items=20)
         
         # 从框架中提取已分析的信息
         domain_info = framework.get("领域定位", {})
-        mc_info = framework.get("MC_必选标准", {})
-        oc_info = framework.get("OC_可选标准", {})
         
-        prompt = f"""你是GTV签证专家。请根据以下信息，生成个人陈述的核心要点。
-
-## 申请人: {client_name}
-
-## 领域定位
-- 细分领域: {domain_info.get('细分领域', '待定')}
+        # 格式化领域定位信息
+        domain_info_text = f"""- 细分领域: {domain_info.get('细分领域', '待定')}
 - 岗位定位: {domain_info.get('岗位定位', '待定')}
 - 核心论点: {domain_info.get('核心论点', '待定')}
-- 申请路径: {domain_info.get('申请路径', '待定')}
+- 申请路径: {domain_info.get('申请路径', '待定')}"""
+        
+        # 准备变量替换
+        variables = {
+            "client_name": client_name,
+            "domain_info": domain_info_text,
+            "evidence_text": evidence_text
+        }
+        
+        # 使用数据库提示词或降级到默认提示词
+        if db_prompt:
+            prompt = self._replace_prompt_variables(db_prompt, variables)
+        else:
+            prompt = self._replace_prompt_variables(PERSONAL_STATEMENT_PROMPT, variables)
+            version = 0
 
-## 申请人证据概览
-{evidence_text}
-
-## 输出要求
-返回JSON格式：
-{{
-    "opening_hook": "个人陈述开篇引言（吸引人的开头，展现独特价值）",
-    "technical_journey": "技术/职业发展历程概述（关键转折点和成长）",
-    "key_achievements": [
-        {{
-            "achievement": "核心成就1",
-            "evidence": "支撑证据",
-            "source_file": "来源文件"
-        }},
-        {{
-            "achievement": "核心成就2",
-            "evidence": "支撑证据",
-            "source_file": "来源文件"
-        }},
-        {{
-            "achievement": "核心成就3",
-            "evidence": "支撑证据",
-            "source_file": "来源文件"
-        }}
-    ],
-    "uk_vision": "对英国数字科技领域的贡献愿景",
-    "conclusion": "总结陈述"
-}}
-
-## 重要要求
-1. key_achievements必须基于真实证据，标注来源
-2. 内容应与GTV评估标准紧密对应
-3. 语言应专业、有说服力，适合正式申请文书"""
-
-        result_text = self._call_llm(prompt, project_id, "个人陈述要点v2", "ps_analysis")
+        result_text = self._call_llm(prompt, project_id, "个人陈述要点", "ps_analysis",
+                                     prompt_version=version, prompt_name=prompt_name or "个人陈述要点生成")
         return self._parse_json_response(result_text)
     
     def _analyze_domain_positioning(self, project_id: str, context: str, 
@@ -1542,23 +1235,9 @@ class FrameworkBuildingAgent:
             framework["OC_可选标准"]["选择的OC"] = [oc[0].split("_")[0] for oc in sorted_ocs[:2] if oc[1] > 0]
     
     def _get_project_info(self, project_id: str) -> Optional[Dict]:
-        """获取项目信息"""
+        """获取项目信息（使用 DAO 层）"""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            for table in ["projects", "copywriting_projects"]:
-                try:
-                    cursor.execute(f"SELECT * FROM {table} WHERE project_id = ?", (project_id,))
-                    row = cursor.fetchone()
-                    if row:
-                        conn.close()
-                        return dict(row)
-                except:
-                    continue
-            
-            conn.close()
-            return None
+            return self.framework_dao.get_project_info(project_id)
         except Exception as e:
             logger.error(f"获取项目信息失败: {e}")
             return None
@@ -1676,57 +1355,29 @@ class FrameworkBuildingAgent:
         return framework
     
     def _save_framework(self, project_id: str, framework: Dict):
-        """保存框架到数据库"""
+        """保存框架到数据库（使用 DAO 层）"""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            # 获取当前版本
-            cursor.execute('''
-                SELECT version FROM gtv_frameworks WHERE project_id = ?
-            ''', (project_id,))
-            row = cursor.fetchone()
-            new_version = (row['version'] + 1) if row else 1
-            
-            cursor.execute('''
-                INSERT INTO gtv_frameworks (project_id, framework_data, version, updated_at)
-                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-                ON CONFLICT(project_id) 
-                DO UPDATE SET 
-                    framework_data = excluded.framework_data,
-                    version = excluded.version,
-                    updated_at = CURRENT_TIMESTAMP
-            ''', (project_id, json.dumps(framework, ensure_ascii=False), new_version))
-            
-            conn.commit()
-            conn.close()
-            
-            logger.info(f"保存框架: {project_id} v{new_version}")
-            
+            self.framework_dao.save_framework_simple(project_id, framework)
+            logger.info(f"保存框架: {project_id}")
         except Exception as e:
             logger.error(f"保存框架失败: {e}")
     
     def get_framework(self, project_id: str) -> Dict[str, Any]:
-        """获取项目框架"""
+        """获取项目框架（使用 DAO 层）"""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                SELECT framework_data, version, updated_at
-                FROM gtv_frameworks WHERE project_id = ?
-            ''', (project_id,))
-            
-            row = cursor.fetchone()
-            conn.close()
+            row = self.framework_dao.get_framework_with_meta(project_id)
             
             if row:
+                framework_data = row.get('framework_data')
+                if isinstance(framework_data, str):
+                    framework_data = json.loads(framework_data)
+                
                 return {
                     "success": True,
                     "data": {
-                        "framework_data": json.loads(row['framework_data']),
-                        "version": row['version'],
-                        "updated_at": row['updated_at']
+                        "framework_data": framework_data,
+                        "version": row.get('version', 1),
+                        "updated_at": row.get('updated_at')
                     }
                 }
             
@@ -1945,48 +1596,28 @@ class FrameworkBuildingAgent:
         return profile
     
     def _save_profile(self, project_id: str, profile: Dict):
-        """保存信息脉络图到数据库"""
+        """保存信息脉络图到数据库（使用 DAO 层）"""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                INSERT INTO client_profile_maps (project_id, profile_data, updated_at)
-                VALUES (?, ?, CURRENT_TIMESTAMP)
-                ON CONFLICT(project_id) 
-                DO UPDATE SET 
-                    profile_data = excluded.profile_data,
-                    updated_at = CURRENT_TIMESTAMP
-            ''', (project_id, json.dumps(profile, ensure_ascii=False)))
-            
-            conn.commit()
-            conn.close()
-            
+            self.framework_dao.save_profile_simple(project_id, profile)
             logger.info(f"保存信息脉络图: {project_id}")
-            
         except Exception as e:
             logger.error(f"保存信息脉络图失败: {e}")
     
     def get_profile(self, project_id: str) -> Dict[str, Any]:
-        """获取客户信息脉络图"""
+        """获取客户信息脉络图（使用 DAO 层）"""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                SELECT profile_data, updated_at
-                FROM client_profile_maps WHERE project_id = ?
-            ''', (project_id,))
-            
-            row = cursor.fetchone()
-            conn.close()
+            row = self.framework_dao.get_profile_simple(project_id)
             
             if row:
+                profile_data = row.get('profile_data')
+                if isinstance(profile_data, str):
+                    profile_data = json.loads(profile_data)
+                
                 return {
                     "success": True,
                     "data": {
-                        "profile": json.loads(row['profile_data']),
-                        "updated_at": row['updated_at']
+                        "profile": profile_data,
+                        "updated_at": row.get('updated_at')
                     }
                 }
             
