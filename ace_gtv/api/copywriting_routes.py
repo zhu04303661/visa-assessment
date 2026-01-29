@@ -672,14 +672,7 @@ def preview_file_by_id(file_id):
     from database.file_storage import get_file_from_db_record, get_file_storage
     
     logger = _get_logger()
-<<<<<<< HEAD
     db_path = DB_PATH
-=======
-    
-    # 获取脚本所在目录（ace_gtv目录）
-    base_dir = os.path.dirname(os.path.dirname(__file__))
-    db_path = os.path.join(base_dir, 'copywriting.db')
->>>>>>> bd0e4a5f3047214dc821192441109cf999b550f8
     
     try:
         conn = sqlite3.connect(db_path)
@@ -699,7 +692,6 @@ def preview_file_by_id(file_id):
         
         file_name = row['file_name']
         
-<<<<<<< HEAD
         # 使用统一存储接口获取文件内容
         record = dict(row)
         content = get_file_from_db_record(record)
@@ -722,27 +714,6 @@ def preview_file_by_id(file_id):
                 'Access-Control-Allow-Origin': '*'
             }
         )
-=======
-        # 检查文件是否存在
-        if not os.path.exists(file_path):
-            # 如果是相对路径（以 ./ 开头），尝试将其转换为基于 ace_gtv 目录的绝对路径
-            if file_path.startswith('./'):
-                alt_path = os.path.join(base_dir, file_path[2:])  # 去掉 './' 前缀
-            else:
-                # 尝试在 uploads 目录下查找
-                alt_path = os.path.join(base_dir, 'uploads', file_path)
-            
-            logger.info(f"尝试备用路径: {alt_path}")
-            if os.path.exists(alt_path):
-                file_path = alt_path
-            else:
-                logger.error(f"文件不存在: 原始路径={row['file_path']}, 备用路径={alt_path}")
-                return jsonify({"success": False, "error": f"文件不存在: {file_path}"}), 404
-        
-        logger.info(f"返回文件: {file_path}")
-        # 返回文件
-        return send_file(file_path, as_attachment=False, download_name=file_name)
->>>>>>> bd0e4a5f3047214dc821192441109cf999b550f8
         
     except Exception as e:
         logger.error(f"文件预览失败: {e}")

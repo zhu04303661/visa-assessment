@@ -49,10 +49,10 @@ except ImportError:
 
 # 导入 Supabase 路由
 try:
-    from auth_routes import auth_bp
-    from assessment_routes import assessment_bp
-    from chat_routes import chat_bp
-    from file_routes import file_bp
+    from api.routes.auth_routes import auth_bp
+    from api.routes.assessment_routes import assessment_bp
+    from api.routes.chat_routes import chat_bp
+    from api.routes.file_routes import file_bp
     SUPABASE_ROUTES_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"⚠️ Supabase 路由导入失败: {e}")
@@ -60,13 +60,13 @@ except ImportError as e:
 
 # 导入Agent和分析器
 try:
-    from scoring_agent_lite import ScoringAgent
+    from agents.scoring_agent_lite import ScoringAgent
 except ImportError:
     logging.error("无法导入ScoringAgent")
     ScoringAgent = None
 
 try:
-    from document_analyzer import KnowledgeExtractor, DocumentExtractor
+    from processors.document_analyzer import KnowledgeExtractor, DocumentExtractor
 except ImportError:
     logging.error("无法导入DocumentAnalyzer")
     KnowledgeExtractor = None
@@ -74,7 +74,7 @@ except ImportError:
 
 # 导入简历处理的必要函数
 try:
-    from resume_processor import (
+    from processors.resume_processor import (
         extract_text_from_file,
         call_ai_for_extraction,
         call_ai_for_gtv_assessment,
@@ -101,7 +101,7 @@ except ImportError as e:
 
 # 导入LangGraph评分Agent
 try:
-    from langgraph_scoring_agent import LangGraphScoringAgent, KnowledgeBaseManager
+    from agents.langgraph_scoring_agent import LangGraphScoringAgent, KnowledgeBaseManager
     logging.info("✅ LangGraph评分Agent导入成功")
     LANGGRAPH_SCORING_AVAILABLE = True
 except ImportError as e:
@@ -111,7 +111,7 @@ except ImportError as e:
 # 导入LangGraph OC评估Agent
 LANGGRAPH_OC_AVAILABLE = False  # 默认值，如果导入成功会被设置为True
 try:
-    from langgraph_oc_agent import LangGraphOCAgent
+    from agents.langgraph_oc_agent import LangGraphOCAgent
     logging.info("✅ LangGraph OC评估Agent导入成功")
     LANGGRAPH_OC_AVAILABLE = True
 except ImportError as e:
