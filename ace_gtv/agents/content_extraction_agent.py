@@ -1568,7 +1568,7 @@ class ContentExtractionAgent:
             stats['deleted_logs'] = self.extraction_dao.delete_logs(project_id)
             
             # 清除内容分类
-            stats['deleted_classifications'] = self.classification_dao.delete_classifications(project_id)
+            stats['deleted_classifications'] = self.classification_dao.delete_by_project(project_id)
             
             logger.info(f"项目 {project_id} 提取数据已清理: {stats}")
             

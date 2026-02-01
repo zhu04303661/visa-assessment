@@ -21,6 +21,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import {
   ArrowLeft,
   Save,
@@ -43,6 +46,15 @@ import {
   Upload,
   Search,
   BookOpen,
+  Database,
+  FolderOpen,
+  LayoutGrid,
+  ChevronDown,
+  ChevronRight,
+  FileCode,
+  Play,
+  Layers,
+  Settings2,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -111,6 +123,57 @@ interface ReferenceDocument {
   project_status: string
 }
 
+// 提取内容分类
+interface ExtractedClassification {
+  id: number
+  category: string
+  subcategory: string
+  content: string
+  source_file: string
+  relevance_score: number
+  key_points: string[]
+  recommender_name?: string
+  recommender_title?: string
+  recommender_org?: string
+}
+
+// 原始材料文件
+interface RawMaterialFile {
+  id: number
+  file_name: string
+  file_type: string
+  category: string
+  file_size: number
+  upload_time: string
+  extracted: boolean
+}
+
+// GTV框架数据
+interface GTVFramework {
+  领域定位?: {
+    评估机构?: string
+    细分领域?: string
+    岗位定位?: string
+    核心论点?: string
+    申请路径?: string
+  }
+  MC_必选标准?: {
+    选择的MC?: string
+    [key: string]: any
+  }
+  OC_可选标准?: {
+    选择的OC?: string[]
+    [key: string]: any
+  }
+  推荐信?: {
+    推荐人1?: any
+    推荐人2?: any
+    推荐人3?: any
+  }
+  个人陈述要点?: any
+  证据清单?: any[]
+}
+
 export default function PackageDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -142,6 +205,15 @@ export default function PackageDetailPage() {
   
   // 案例选择相关
   const [cases, setCases] = useState<SuccessCase[]>([])
+  
+  // 输入材料相关
+  const [extractedClassifications, setExtractedClassifications] = useState<ExtractedClassification[]>([])
+  const [rawMaterials, setRawMaterials] = useState<RawMaterialFile[]>([])
+  const [gtvFramework, setGtvFramework] = useState<GTVFramework | null>(null)
+  const [selectedClassifications, setSelectedClassifications] = useState<Set<number>>(new Set())
+  const [selectedMaterials, setSelectedMaterials] = useState<Set<number>>(new Set())
+  const [includeFramework, setIncludeFramework] = useState(true)
+  const [sidebarTab, setSidebarTab] = useState("input") // input | prompts | history
   const [referenceDocuments, setReferenceDocuments] = useState<ReferenceDocument[]>([])
   const [selectedRefDocId, setSelectedRefDocId] = useState<string>("")
   const [caseSearchKeyword, setCaseSearchKeyword] = useState("")
@@ -162,6 +234,13 @@ export default function PackageDetailPage() {
   })
   const [savingConfig, setSavingConfig] = useState(false)
   const [customInstructions, setCustomInstructions] = useState("")
+  
+  // 提示词调试相关
+  const [debugTab, setDebugTab] = useState<"edit" | "preview" | "test">("edit")
+  const [debugOutput, setDebugOutput] = useState("")
+  const [debugLoading, setDebugLoading] = useState(false)
+  const [promptTemplates, setPromptTemplates] = useState<Array<{id: string; name: string; type: string; content: string}>>([])
+  const [instructionHistory, setInstructionHistory] = useState<string[]>([])
   
   const packageInfo = PACKAGE_TYPES[packageType] || { 
     name: packageType, 
@@ -264,6 +343,187 @@ export default function PackageDetailPage() {
     }
   }, [projectId, packageType])
   
+  // 加载提取的分类内容
+  const loadExtractedClassifications = useCallback(async () => {
+    try {
+      const data = await apiCall(`/api/projects/${projectId}/extraction/classifications`)
+      if (data.success && data.data) {
+        setExtractedClassifications(data.data)
+        // 默认全选
+        setSelectedClassifications(new Set(data.data.map((c: ExtractedClassification) => c.id)))
+      }
+    } catch (err) {
+      console.error("加载提取内容失败")
+    }
+  }, [projectId])
+  
+  // 加载原始材料列表
+  const loadRawMaterials = useCallback(async () => {
+    try {
+      const data = await apiCall(`/api/projects/${projectId}/material-collection/files`)
+      if (data.success && data.data) {
+        setRawMaterials(data.data)
+        // 默认全选
+        setSelectedMaterials(new Set(data.data.map((m: RawMaterialFile) => m.id)))
+      }
+    } catch (err) {
+      console.error("加载原始材料失败")
+    }
+  }, [projectId])
+  
+  // 加载GTV框架
+  const loadGTVFramework = useCallback(async () => {
+    try {
+      const data = await apiCall(`/api/projects/${projectId}/framework`)
+      if (data.success && data.data) {
+        setGtvFramework(data.data.framework_data || data.data)
+      }
+    } catch (err) {
+      console.error("加载GTV框架失败")
+    }
+  }, [projectId])
+  
+  // 切换分类选择
+  const toggleClassification = (id: number) => {
+    const newSet = new Set(selectedClassifications)
+    if (newSet.has(id)) {
+      newSet.delete(id)
+    } else {
+      newSet.add(id)
+    }
+    setSelectedClassifications(newSet)
+  }
+  
+  // 切换材料选择
+  const toggleMaterial = (id: number) => {
+    const newSet = new Set(selectedMaterials)
+    if (newSet.has(id)) {
+      newSet.delete(id)
+    } else {
+      newSet.add(id)
+    }
+    setSelectedMaterials(newSet)
+  }
+  
+  // 全选/取消全选分类
+  const toggleAllClassifications = () => {
+    if (selectedClassifications.size === extractedClassifications.length) {
+      setSelectedClassifications(new Set())
+    } else {
+      setSelectedClassifications(new Set(extractedClassifications.map(c => c.id)))
+    }
+  }
+  
+  // 全选/取消全选材料
+  const toggleAllMaterials = () => {
+    if (selectedMaterials.size === rawMaterials.length) {
+      setSelectedMaterials(new Set())
+    } else {
+      setSelectedMaterials(new Set(rawMaterials.map(m => m.id)))
+    }
+  }
+  
+  // 获取分类的中文名称
+  const getCategoryName = (category: string) => {
+    const names: Record<string, string> = {
+      'MC': 'MC必选标准',
+      'OC': 'OC可选标准',
+      'RECOMMENDER': '推荐人信息',
+      'APPLICANT': '申请人信息',
+    }
+    return names[category] || category
+  }
+  
+  // 加载提示词模板
+  const loadPromptTemplates = useCallback(async () => {
+    try {
+      const data = await apiCall(`/api/agent-prompts`)
+      if (data.success && data.data) {
+        setPromptTemplates(data.data)
+      }
+    } catch (err) {
+      console.error("加载提示词模板失败")
+    }
+  }, [])
+  
+  // 测试运行提示词
+  const handleDebugPrompt = async () => {
+    try {
+      setDebugLoading(true)
+      setDebugOutput("")
+      
+      // 构建测试上下文
+      const testContext = `申请人: ${project?.client_name || '测试申请人'}
+签证类型: ${project?.visa_type || 'GTV'}
+材料包类型: ${packageInfo.name}
+
+[此处将包含从选定的输入材料中提取的内容]`
+      
+      const promptContent = agentConfig.system_prompt || `默认${packageInfo.name}系统提示词`
+      
+      const data = await apiCall(`/api/agent-prompts/debug`, {
+        method: 'POST',
+        body: JSON.stringify({
+          prompt_content: promptContent,
+          variables: {
+            context: testContext,
+            custom_instructions: agentConfig.custom_instructions || '',
+            package_type: packageType
+          }
+        })
+      })
+      
+      if (data.success) {
+        setDebugOutput(data.data?.output || "测试完成，无输出")
+        // 保存到指令历史
+        if (agentConfig.custom_instructions && !instructionHistory.includes(agentConfig.custom_instructions)) {
+          setInstructionHistory(prev => [agentConfig.custom_instructions, ...prev.slice(0, 9)])
+        }
+      } else {
+        setDebugOutput(`错误: ${data.error || '测试失败'}`)
+      }
+    } catch (err) {
+      setDebugOutput("测试运行失败，请检查网络连接")
+    } finally {
+      setDebugLoading(false)
+    }
+  }
+  
+  // 预览变量替换结果
+  const getPreviewPrompt = () => {
+    const template = agentConfig.user_prompt_template || `请基于以下申请人信息，撰写${packageInfo.name}：
+
+{context}
+
+{custom_instructions}`
+    
+    const context = `申请人: ${project?.client_name || '申请人'}
+签证类型: ${project?.visa_type || 'GTV'}
+
+[已选择 ${selectedClassifications.size} 项提取内容]
+[已选择 ${selectedMaterials.size} 个原始材料]
+${includeFramework ? '[包含GTV框架数据]' : ''}`
+    
+    return template
+      .replace('{context}', context)
+      .replace('{custom_instructions}', agentConfig.custom_instructions || '[无自定义指令]')
+      .replace('{package_type}', packageInfo.name)
+  }
+  
+  // 应用提示词模板
+  const applyPromptTemplate = (template: {content: string; type: string}) => {
+    if (template.type === 'system') {
+      setAgentConfig({...agentConfig, system_prompt: template.content})
+    } else if (template.type === 'user') {
+      setAgentConfig({...agentConfig, user_prompt_template: template.content})
+    }
+  }
+  
+  // 从历史中选择指令
+  const selectFromHistory = (instruction: string) => {
+    setAgentConfig({...agentConfig, custom_instructions: instruction})
+  }
+  
   // 保存Agent配置
   const saveAgentConfig = async () => {
     try {
@@ -341,11 +601,19 @@ export default function PackageDetailPage() {
         customInstructions
       ].filter(Boolean).join("\n\n")
       
+      // 构建选定的输入材料
+      const selectedInputs = {
+        include_framework: includeFramework,
+        classification_ids: Array.from(selectedClassifications),
+        material_ids: Array.from(selectedMaterials)
+      }
+      
       const data = await apiCall(`/api/projects/${projectId}/packages/${packageType}/generate`, {
         method: 'POST',
         body: JSON.stringify({
           reference_doc_id: selectedRefDocId && selectedRefDocId !== "none" ? selectedRefDocId : undefined,
-          custom_instructions: combinedInstructions || undefined
+          custom_instructions: combinedInstructions || undefined,
+          selected_inputs: selectedInputs
         })
       })
       
@@ -482,8 +750,12 @@ export default function PackageDetailPage() {
       loadVersions()
       loadCases()
       loadAgentConfig()
+      loadExtractedClassifications()
+      loadRawMaterials()
+      loadGTVFramework()
+      loadPromptTemplates()
     }
-  }, [projectId, packageType, loadProject, loadContent, loadVersions, loadCases, loadAgentConfig])
+  }, [projectId, packageType, loadProject, loadContent, loadVersions, loadCases, loadAgentConfig, loadExtractedClassifications, loadRawMaterials, loadGTVFramework, loadPromptTemplates])
   
   // 检查是否有未保存的更改
   const hasChanges = content !== originalContent
@@ -652,122 +924,330 @@ export default function PackageDetailPage() {
             </Card>
           </div>
           
-          {/* 侧边栏 - 版本历史 */}
+          {/* 侧边栏 - 工具面板 */}
           <div className="lg:col-span-1">
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <History className="h-5 w-5" />
-                  版本历史
-                </CardTitle>
-                <CardDescription>
-                  共 {versions.length} 个版本
-                </CardDescription>
+              <CardHeader className="pb-2">
+                <Tabs value={sidebarTab} onValueChange={setSidebarTab}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="input" className="text-xs">
+                      <Database className="h-3 w-3 mr-1" />
+                      输入
+                    </TabsTrigger>
+                    <TabsTrigger value="prompts" className="text-xs">
+                      <Settings2 className="h-3 w-3 mr-1" />
+                      提示词
+                    </TabsTrigger>
+                    <TabsTrigger value="history" className="text-xs">
+                      <History className="h-3 w-3 mr-1" />
+                      历史
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </CardHeader>
               
-              <CardContent>
-                <ScrollArea className="h-[450px]">
-                  {versions.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-8">
-                      暂无版本记录
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {versions.map((version) => (
-                        <div
-                          key={version.id}
-                          className={`p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors ${
-                            version.version === currentVersion ? 'border-primary bg-primary/5' : ''
-                          }`}
-                          onClick={() => handleViewVersion(version)}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <Badge variant={version.version === currentVersion ? "default" : "outline"}>
-                              v{version.version}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(version.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                          
-                          <p className="text-sm font-medium truncate">{version.edit_summary}</p>
-                          
-                          <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                            {version.edit_type === 'ai' ? (
-                              <Bot className="h-3 w-3" />
-                            ) : (
-                              <User className="h-3 w-3" />
-                            )}
-                            <span>{version.editor}</span>
-                            <span>·</span>
-                            <span>{version.word_count} 词</span>
-                          </div>
+              <CardContent className="pt-2">
+                {/* 输入材料面板 */}
+                {sidebarTab === "input" && (
+                  <ScrollArea className="h-[500px]">
+                    <div className="space-y-4">
+                      {/* GTV框架 */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <LayoutGrid className="h-4 w-4" />
+                            GTV框架
+                          </Label>
+                          <Checkbox 
+                            checked={includeFramework}
+                            onCheckedChange={(checked) => setIncludeFramework(checked as boolean)}
+                          />
                         </div>
-                      ))}
+                        {gtvFramework && includeFramework && (
+                          <div className="text-xs text-muted-foreground bg-muted/50 rounded p-2 space-y-1">
+                            {gtvFramework.领域定位 && (
+                              <div>领域: {gtvFramework.领域定位.细分领域 || '未设置'}</div>
+                            )}
+                            {gtvFramework.MC_必选标准?.选择的MC && (
+                              <div>MC: {gtvFramework.MC_必选标准.选择的MC}</div>
+                            )}
+                            {gtvFramework.OC_可选标准?.选择的OC && (
+                              <div>OC: {gtvFramework.OC_可选标准.选择的OC.join(', ')}</div>
+                            )}
+                          </div>
+                        )}
+                        {!gtvFramework && (
+                          <p className="text-xs text-muted-foreground">尚未构建GTV框架</p>
+                        )}
+                      </div>
+                      
+                      <Separator />
+                      
+                      {/* 提取内容 */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <Layers className="h-4 w-4" />
+                            提取内容
+                          </Label>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={toggleAllClassifications}
+                            className="text-xs h-6 px-2"
+                          >
+                            {selectedClassifications.size === extractedClassifications.length ? '取消全选' : '全选'}
+                          </Button>
+                        </div>
+                        
+                        {extractedClassifications.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">暂无提取内容</p>
+                        ) : (
+                          <Accordion type="multiple" className="w-full">
+                            {/* 按分类分组 */}
+                            {['MC', 'OC', 'RECOMMENDER', 'APPLICANT'].map(category => {
+                              const items = extractedClassifications.filter(c => c.category === category)
+                              if (items.length === 0) return null
+                              
+                              return (
+                                <AccordionItem key={category} value={category} className="border-b-0">
+                                  <AccordionTrigger className="py-2 text-sm hover:no-underline">
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className="text-xs">
+                                        {items.filter(i => selectedClassifications.has(i.id)).length}/{items.length}
+                                      </Badge>
+                                      {getCategoryName(category)}
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent>
+                                    <div className="space-y-2 pl-2">
+                                      {items.map(item => (
+                                        <div 
+                                          key={item.id} 
+                                          className="flex items-start gap-2 p-2 rounded border hover:bg-muted/50"
+                                        >
+                                          <Checkbox 
+                                            checked={selectedClassifications.has(item.id)}
+                                            onCheckedChange={() => toggleClassification(item.id)}
+                                            className="mt-0.5"
+                                          />
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-xs font-medium truncate">
+                                              {item.subcategory || item.category}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground line-clamp-2">
+                                              {item.content?.substring(0, 100)}...
+                                            </div>
+                                            {item.recommender_name && (
+                                              <div className="text-xs text-blue-600 mt-1">
+                                                推荐人: {item.recommender_name}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              )
+                            })}
+                          </Accordion>
+                        )}
+                      </div>
+                      
+                      <Separator />
+                      
+                      {/* 原始材料 */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <FolderOpen className="h-4 w-4" />
+                            原始材料
+                          </Label>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={toggleAllMaterials}
+                            className="text-xs h-6 px-2"
+                          >
+                            {selectedMaterials.size === rawMaterials.length ? '取消全选' : '全选'}
+                          </Button>
+                        </div>
+                        
+                        {rawMaterials.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">暂无原始材料</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {rawMaterials.map(material => (
+                              <div 
+                                key={material.id}
+                                className="flex items-center gap-2 p-2 rounded border hover:bg-muted/50"
+                              >
+                                <Checkbox 
+                                  checked={selectedMaterials.has(material.id)}
+                                  onCheckedChange={() => toggleMaterial(material.id)}
+                                />
+                                <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs font-medium truncate">
+                                    {material.file_name}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {material.category || material.file_type}
+                                  </div>
+                                </div>
+                                {material.extracted && (
+                                  <Badge variant="secondary" className="text-xs">已提取</Badge>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* 选择统计 */}
+                      <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-3 text-xs">
+                        <div className="font-medium text-blue-700 dark:text-blue-300 mb-1">已选择的输入</div>
+                        <div className="text-blue-600 dark:text-blue-400 space-y-0.5">
+                          <div>框架: {includeFramework ? '包含' : '不包含'}</div>
+                          <div>提取内容: {selectedClassifications.size} 项</div>
+                          <div>原始材料: {selectedMaterials.size} 个文件</div>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-            
-            {/* Agent配置卡片 */}
-            <Card className="mt-4">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Bot className="h-5 w-5" />
-                  Agent配置
-                </CardTitle>
-                <CardDescription>
-                  自定义AI生成行为
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                {/* 自定义指令 */}
-                <div className="space-y-2">
-                  <Label className="text-sm">自定义指令</Label>
-                  <Textarea
-                    value={agentConfig.custom_instructions}
-                    onChange={(e) => setAgentConfig({
-                      ...agentConfig,
-                      custom_instructions: e.target.value
-                    })}
-                    placeholder="添加特殊要求，如语气、风格、重点等..."
-                    className="h-20 text-sm"
-                  />
-                </div>
+                  </ScrollArea>
+                )}
                 
-                {/* 系统提示词预览 */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">系统提示词</Label>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsAgentConfigOpen(true)}
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      编辑
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {agentConfig.system_prompt || "使用默认提示词"}
-                  </p>
-                </div>
+                {/* 提示词面板 */}
+                {sidebarTab === "prompts" && (
+                  <ScrollArea className="h-[500px]">
+                    <div className="space-y-4">
+                      {/* 自定义指令 */}
+                      <div className="space-y-2">
+                        <Label className="text-sm">自定义指令</Label>
+                        <Textarea
+                          value={agentConfig.custom_instructions}
+                          onChange={(e) => setAgentConfig({
+                            ...agentConfig,
+                            custom_instructions: e.target.value
+                          })}
+                          placeholder="添加特殊要求，如语气、风格、重点等..."
+                          className="h-20 text-sm"
+                        />
+                      </div>
+                      
+                      {/* 系统提示词预览 */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">系统提示词</Label>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsAgentConfigOpen(true)}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            编辑
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-3 bg-muted/50 rounded p-2">
+                          {agentConfig.system_prompt || "使用默认提示词"}
+                        </p>
+                      </div>
+                      
+                      {/* 用户提示词模板预览 */}
+                      <div className="space-y-2">
+                        <Label className="text-sm">用户提示词模板</Label>
+                        <p className="text-xs text-muted-foreground line-clamp-3 bg-muted/50 rounded p-2">
+                          {agentConfig.user_prompt_template || "使用默认模板"}
+                        </p>
+                      </div>
+                      
+                      <Button 
+                        size="sm" 
+                        className="w-full"
+                        onClick={saveAgentConfig}
+                        disabled={savingConfig}
+                      >
+                        {savingConfig ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Save className="h-4 w-4 mr-2" />
+                        )}
+                        保存配置
+                      </Button>
+                      
+                      <Separator />
+                      
+                      {/* 提示词调试 */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium flex items-center gap-2">
+                          <Play className="h-4 w-4" />
+                          提示词调试
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          点击下方按钮打开完整的提示词调试面板
+                        </p>
+                        <Button 
+                          variant="outline"
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => setIsAgentConfigOpen(true)}
+                        >
+                          <FileCode className="h-4 w-4 mr-2" />
+                          打开调试面板
+                        </Button>
+                      </div>
+                    </div>
+                  </ScrollArea>
+                )}
                 
-                <Button 
-                  size="sm" 
-                  className="w-full"
-                  onClick={saveAgentConfig}
-                  disabled={savingConfig}
-                >
-                  {savingConfig ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
-                  保存配置
-                </Button>
+                {/* 版本历史面板 */}
+                {sidebarTab === "history" && (
+                  <ScrollArea className="h-[500px]">
+                    <div className="mb-2 text-xs text-muted-foreground">
+                      共 {versions.length} 个版本
+                    </div>
+                    {versions.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-8">
+                        暂无版本记录
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {versions.map((version) => (
+                          <div
+                            key={version.id}
+                            className={`p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors ${
+                              version.version === currentVersion ? 'border-primary bg-primary/5' : ''
+                            }`}
+                            onClick={() => handleViewVersion(version)}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <Badge variant={version.version === currentVersion ? "default" : "outline"}>
+                                v{version.version}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(version.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                            
+                            <p className="text-sm font-medium truncate">{version.edit_summary}</p>
+                            
+                            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                              {version.edit_type === 'ai' ? (
+                                <Bot className="h-3 w-3" />
+                              ) : (
+                                <User className="h-3 w-3" />
+                              )}
+                              <span>{version.editor}</span>
+                              <span>·</span>
+                              <span>{version.word_count} 词</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -894,86 +1374,207 @@ export default function PackageDetailPage() {
         </DialogContent>
       </Dialog>
       
-      {/* Agent配置编辑对话框 */}
+      {/* Agent配置编辑对话框 - 增强版 */}
       <Dialog open={isAgentConfigOpen} onOpenChange={setIsAgentConfigOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="max-w-4xl max-h-[85vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
-              Agent 提示词配置
+              提示词调试与配置
             </DialogTitle>
             <DialogDescription>
-              自定义此材料包的AI生成行为，调整系统提示词和用户提示词模板
+              编辑、预览和测试{packageInfo.name}的AI生成提示词
             </DialogDescription>
           </DialogHeader>
           
-          <ScrollArea className="max-h-[500px]">
-            <div className="space-y-6 py-4 pr-4">
-              {/* 系统提示词 */}
-              <div className="space-y-2">
-                <Label className="font-medium">系统提示词 (System Prompt)</Label>
-                <p className="text-xs text-muted-foreground">
-                  定义AI的角色和行为准则，留空使用默认提示词
-                </p>
-                <Textarea
-                  value={agentConfig.system_prompt}
-                  onChange={(e) => setAgentConfig({
-                    ...agentConfig,
-                    system_prompt: e.target.value
-                  })}
-                  placeholder={`你是一位专业的GTV签证${packageInfo.name}撰写专家...`}
-                  className="min-h-[150px] font-mono text-sm"
-                />
+          <Tabs value={debugTab} onValueChange={(v) => setDebugTab(v as "edit" | "preview" | "test")}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="edit">
+                <Edit className="h-4 w-4 mr-2" />
+                编辑
+              </TabsTrigger>
+              <TabsTrigger value="preview">
+                <Eye className="h-4 w-4 mr-2" />
+                预览
+              </TabsTrigger>
+              <TabsTrigger value="test">
+                <Play className="h-4 w-4 mr-2" />
+                测试
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* 编辑面板 */}
+            <TabsContent value="edit" className="mt-4">
+              <ScrollArea className="h-[400px] pr-4">
+                <div className="space-y-6">
+                  {/* 提示词模板库 */}
+                  {promptTemplates.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="font-medium flex items-center gap-2">
+                        <BookOpen className="h-4 w-4" />
+                        模板库
+                      </Label>
+                      <div className="flex flex-wrap gap-2">
+                        {promptTemplates.slice(0, 5).map((template) => (
+                          <Button
+                            key={template.id}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => applyPromptTemplate(template)}
+                          >
+                            {template.name}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* 系统提示词 */}
+                  <div className="space-y-2">
+                    <Label className="font-medium">系统提示词 (System Prompt)</Label>
+                    <p className="text-xs text-muted-foreground">
+                      定义AI的角色和行为准则，留空使用默认提示词
+                    </p>
+                    <Textarea
+                      value={agentConfig.system_prompt}
+                      onChange={(e) => setAgentConfig({
+                        ...agentConfig,
+                        system_prompt: e.target.value
+                      })}
+                      placeholder={`你是一位专业的GTV签证${packageInfo.name}撰写专家...`}
+                      className="min-h-[150px] font-mono text-sm"
+                    />
+                  </div>
+                  
+                  {/* 用户提示词模板 */}
+                  <div className="space-y-2">
+                    <Label className="font-medium">用户提示词模板 (User Prompt Template)</Label>
+                    <p className="text-xs text-muted-foreground">
+                      可使用变量: {'{context}'} - 客户信息, {'{custom_instructions}'} - 自定义指令
+                    </p>
+                    <Textarea
+                      value={agentConfig.user_prompt_template}
+                      onChange={(e) => setAgentConfig({
+                        ...agentConfig,
+                        user_prompt_template: e.target.value
+                      })}
+                      placeholder={`请基于以下申请人信息，撰写${packageInfo.name}：\n\n{context}\n\n{custom_instructions}`}
+                      className="min-h-[120px] font-mono text-sm"
+                    />
+                  </div>
+                  
+                  {/* 默认自定义指令 */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-medium">默认自定义指令</Label>
+                      {instructionHistory.length > 0 && (
+                        <Select onValueChange={selectFromHistory}>
+                          <SelectTrigger className="w-[180px] h-8">
+                            <SelectValue placeholder="从历史选择..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {instructionHistory.map((inst, idx) => (
+                              <SelectItem key={idx} value={inst}>
+                                {inst.substring(0, 30)}...
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                    <Textarea
+                      value={agentConfig.custom_instructions}
+                      onChange={(e) => setAgentConfig({
+                        ...agentConfig,
+                        custom_instructions: e.target.value
+                      })}
+                      placeholder="请用英文撰写，确保内容专业、有说服力..."
+                      className="min-h-[80px] text-sm"
+                    />
+                  </div>
+                </div>
+              </ScrollArea>
+            </TabsContent>
+            
+            {/* 预览面板 */}
+            <TabsContent value="preview" className="mt-4">
+              <ScrollArea className="h-[400px]">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="font-medium">系统提示词预览</Label>
+                    <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm whitespace-pre-wrap">
+                      {agentConfig.system_prompt || `[使用默认${packageInfo.name}系统提示词]`}
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <Label className="font-medium">用户提示词预览 (变量已替换)</Label>
+                    <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm whitespace-pre-wrap">
+                      {getPreviewPrompt()}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4">
+                    <h4 className="font-medium text-sm text-blue-700 dark:text-blue-300 mb-2">
+                      变量说明
+                    </h4>
+                    <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+                      <li>• <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">{'{context}'}</code> - 包含申请人信息和选定的输入材料</li>
+                      <li>• <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">{'{custom_instructions}'}</code> - 您添加的自定义指令</li>
+                      <li>• <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">{'{package_type}'}</code> - 当前材料包类型</li>
+                    </ul>
+                  </div>
+                </div>
+              </ScrollArea>
+            </TabsContent>
+            
+            {/* 测试面板 */}
+            <TabsContent value="test" className="mt-4">
+              <div className="grid grid-cols-2 gap-4 h-[400px]">
+                <div className="space-y-2">
+                  <Label className="font-medium">输入提示词</Label>
+                  <Textarea
+                    value={agentConfig.system_prompt || `[使用默认${packageInfo.name}提示词]`}
+                    readOnly
+                    className="h-[280px] font-mono text-xs bg-muted/30"
+                  />
+                  <Button 
+                    onClick={handleDebugPrompt} 
+                    disabled={debugLoading}
+                    className="w-full"
+                  >
+                    {debugLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Play className="h-4 w-4 mr-2" />
+                    )}
+                    运行测试
+                  </Button>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="font-medium">测试输出</Label>
+                  <ScrollArea className="h-[320px] border rounded-lg p-3">
+                    {debugLoading ? (
+                      <div className="flex items-center justify-center h-full">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    ) : debugOutput ? (
+                      <div className="prose prose-sm max-w-none dark:prose-invert">
+                        <ReactMarkdown>{debugOutput}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-center py-10">
+                        点击"运行测试"查看输出结果
+                      </p>
+                    )}
+                  </ScrollArea>
+                </div>
               </div>
-              
-              {/* 用户提示词模板 */}
-              <div className="space-y-2">
-                <Label className="font-medium">用户提示词模板 (User Prompt Template)</Label>
-                <p className="text-xs text-muted-foreground">
-                  可使用变量: {'{context}'} - 客户信息, {'{custom_instructions}'} - 自定义指令
-                </p>
-                <Textarea
-                  value={agentConfig.user_prompt_template}
-                  onChange={(e) => setAgentConfig({
-                    ...agentConfig,
-                    user_prompt_template: e.target.value
-                  })}
-                  placeholder={`请基于以下申请人信息，撰写${packageInfo.name}：\n\n{context}\n\n{custom_instructions}`}
-                  className="min-h-[120px] font-mono text-sm"
-                />
-              </div>
-              
-              {/* 默认自定义指令 */}
-              <div className="space-y-2">
-                <Label className="font-medium">默认自定义指令</Label>
-                <p className="text-xs text-muted-foreground">
-                  每次生成时都会应用的默认指令
-                </p>
-                <Textarea
-                  value={agentConfig.custom_instructions}
-                  onChange={(e) => setAgentConfig({
-                    ...agentConfig,
-                    custom_instructions: e.target.value
-                  })}
-                  placeholder="请用英文撰写，确保内容专业、有说服力..."
-                  className="min-h-[80px] text-sm"
-                />
-              </div>
-              
-              {/* 提示 */}
-              <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4">
-                <h4 className="font-medium text-sm text-blue-700 dark:text-blue-300 mb-2">
-                  配置说明
-                </h4>
-                <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
-                  <li>• 系统提示词定义AI的专业角色和写作风格</li>
-                  <li>• 用户提示词模板控制如何将客户信息传递给AI</li>
-                  <li>• 自定义指令可添加特殊要求，如格式、长度、重点等</li>
-                  <li>• 留空的配置项将使用系统默认值</li>
-                </ul>
-              </div>
-            </div>
-          </ScrollArea>
+            </TabsContent>
+          </Tabs>
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAgentConfigOpen(false)}>

@@ -744,7 +744,7 @@ function CopywritingContent() {
     { key: '1_collect', name: '材料收集', icon: Upload, action: () => router.push(`/material-collection?project=${selectedProject?.project_id}`) },
     { key: '2_analyze', name: '材料分析', icon: Brain, action: () => router.push(`/copywriting/${selectedProject?.project_id}/extraction`) },
     { key: '3_framework', name: 'GTV框架', icon: Target, action: () => router.push(`/copywriting/${selectedProject?.project_id}/framework`) },
-    { key: '5_generate', name: '文案生成', icon: Sparkles, action: () => runWorkflowStep('generate') },
+    { key: '5_generate', name: '文案生成', icon: Sparkles, action: () => router.push(`/copywriting/${selectedProject?.project_id}/generation`) },
     { key: '6_optimize', name: '内容优化', icon: Wand2, action: () => runWorkflowStep('optimize') },
     { key: '7_review', name: '最终审核', icon: FileCheck, action: () => runWorkflowStep('review') },
   ]

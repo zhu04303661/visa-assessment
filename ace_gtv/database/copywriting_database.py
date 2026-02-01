@@ -265,6 +265,54 @@ class CopywritingDatabase:
                     )
                 ''')
                 
+                # ==================== 提示词模板表 ====================
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS prompt_templates (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        package_type TEXT,
+                        content TEXT NOT NULL,
+                        description TEXT,
+                        is_default INTEGER DEFAULT 0,
+                        is_active INTEGER DEFAULT 1,
+                        usage_count INTEGER DEFAULT 0,
+                        created_by TEXT DEFAULT 'system',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE(name, type)
+                    )
+                ''')
+                
+                # ==================== 指令历史表 ====================
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS instruction_history (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        project_id TEXT,
+                        package_type TEXT,
+                        instruction TEXT NOT NULL,
+                        used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        result_quality TEXT,
+                        FOREIGN KEY (project_id) REFERENCES projects (project_id)
+                    )
+                ''')
+                
+                # ==================== Agent配置表 ====================
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS agent_configs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        project_id TEXT NOT NULL,
+                        package_type TEXT NOT NULL,
+                        system_prompt TEXT,
+                        user_prompt_template TEXT,
+                        custom_instructions TEXT,
+                        reference_doc_id TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE(project_id, package_type)
+                    )
+                ''')
+                
                 # 创建索引
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_projects_status ON projects (status)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_projects_client ON projects (client_name)')
@@ -276,6 +324,9 @@ class CopywritingDatabase:
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_agent_prompts ON agent_prompts (project_id, package_type)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_profile_map ON client_profile_map (project_id)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_gtv_framework ON gtv_framework (project_id)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_prompt_templates ON prompt_templates (type, package_type)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_instruction_history ON instruction_history (project_id, package_type)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_agent_configs ON agent_configs (project_id, package_type)')
                 
                 conn.commit()
                 logger.info("数据库表结构初始化完成")

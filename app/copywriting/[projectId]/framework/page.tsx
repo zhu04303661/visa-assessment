@@ -3,10 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { 
-  ArrowLeft, RefreshCw, Download, FileText, Target, Award, 
+  ArrowLeft, ArrowRight, RefreshCw, Download, FileText, Target, Award, 
   Users, MessageSquare, CheckCircle, AlertCircle, ChevronDown, 
   ChevronRight, Edit2, Save, X, History, Settings, Code, Copy,
-  Loader2, Clock, Edit3, Play, Trash2, Calendar
+  Loader2, Clock, Edit3, Play, Trash2, Calendar, Sparkles
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -818,6 +818,17 @@ export default function FrameworkPage() {
               >
                 <Settings className="h-4 w-4 mr-2" />
                 提示词管理
+              </Button>
+              
+              <Button
+                size="sm"
+                onClick={() => router.push(`/copywriting/${projectId}/generation`)}
+                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700"
+                disabled={!framework}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                下一步：文案生成
+                <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
               
               <Button

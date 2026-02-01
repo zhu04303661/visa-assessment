@@ -2236,3 +2236,802 @@ def download_all_materials(project_id):
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==================== 文案生成 - 材料包管理 API ====================
+
+@copywriting_bp.route('/projects/<project_id>/generation-context', methods=['GET'])
+def get_generation_context(project_id):
+    """
+    获取文案生成的聚合上下文
+    包括提取的分类内容、原始材料摘要、GTV框架信息
+    """
+    import sqlite3
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        context = {
+            "project_id": project_id,
+            "classifications": [],
+            "raw_materials": [],
+            "framework": None,
+            "recommenders": []
+        }
+        
+        # 获取提取的分类内容
+        conn = sqlite3.connect(db.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, category, subcategory, content, source_file, 
+                   relevance_score, key_points, recommender_name, 
+                   recommender_title, recommender_org, relationship
+            FROM content_classifications
+            WHERE project_id = ?
+            ORDER BY category, relevance_score DESC
+        ''', (project_id,))
+        
+        classifications = []
+        for row in cursor.fetchall():
+            classifications.append({
+                "id": row['id'],
+                "category": row['category'],
+                "subcategory": row['subcategory'],
+                "content": row['content'],
+                "source_file": row['source_file'],
+                "relevance_score": row['relevance_score'],
+                "key_points": json.loads(row['key_points']) if row['key_points'] else [],
+                "recommender_name": row['recommender_name'],
+                "recommender_title": row['recommender_title'],
+                "recommender_org": row['recommender_org'],
+                "relationship": row['relationship']
+            })
+        context["classifications"] = classifications
+        
+        # 获取原始材料列表
+        cursor.execute('''
+            SELECT id, file_name, file_type, category_id, file_size, upload_time
+            FROM material_files
+            WHERE project_id = ?
+        ''', (project_id,))
+        
+        materials = []
+        for row in cursor.fetchall():
+            materials.append({
+                "id": row['id'],
+                "file_name": row['file_name'],
+                "file_type": row['file_type'],
+                "category": row['category_id'],
+                "file_size": row['file_size'],
+                "upload_time": row['upload_time']
+            })
+        context["raw_materials"] = materials
+        
+        # 获取GTV框架
+        cursor.execute('''
+            SELECT framework_data FROM gtv_framework
+            WHERE project_id = ?
+        ''', (project_id,))
+        
+        row = cursor.fetchone()
+        if row and row['framework_data']:
+            context["framework"] = json.loads(row['framework_data'])
+            
+            # 提取推荐人信息
+            if context["framework"] and "推荐信" in context["framework"]:
+                rec_info = context["framework"]["推荐信"]
+                for key in ["推荐人1", "推荐人2", "推荐人3"]:
+                    if key in rec_info and rec_info[key]:
+                        context["recommenders"].append({
+                            "key": key,
+                            **rec_info[key]
+                        })
+        
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "data": context
+        })
+        
+    except Exception as e:
+        logger.error(f"获取生成上下文失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/packages/<package_type>', methods=['GET'])
+def get_package_content(project_id, package_type):
+    """获取材料包内容"""
+    import sqlite3
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        conn = sqlite3.connect(db.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # 确保表存在
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS package_contents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id TEXT NOT NULL,
+                package_type TEXT NOT NULL,
+                current_version INTEGER DEFAULT 1,
+                content TEXT,
+                status TEXT DEFAULT 'draft',
+                last_edited_by TEXT,
+                ai_generated INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(project_id, package_type)
+            )
+        ''')
+        conn.commit()
+        
+        cursor.execute('''
+            SELECT * FROM package_contents
+            WHERE project_id = ? AND package_type = ?
+        ''', (project_id, package_type))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return jsonify({
+                "success": True,
+                "data": {
+                    "project_id": row['project_id'],
+                    "package_type": row['package_type'],
+                    "current_version": row['current_version'],
+                    "content": row['content'],
+                    "status": row['status'],
+                    "last_edited_by": row['last_edited_by'],
+                    "ai_generated": bool(row['ai_generated']),
+                    "updated_at": row['updated_at']
+                }
+            })
+        else:
+            return jsonify({
+                "success": True,
+                "data": {
+                    "project_id": project_id,
+                    "package_type": package_type,
+                    "current_version": 0,
+                    "content": "",
+                    "status": "draft",
+                    "last_edited_by": None,
+                    "ai_generated": False,
+                    "updated_at": None
+                }
+            })
+        
+    except Exception as e:
+        logger.error(f"获取材料包内容失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/packages/<package_type>', methods=['POST'])
+def save_package_content(project_id, package_type):
+    """保存材料包内容"""
+    import sqlite3
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        content = data.get('content', '')
+        edit_type = data.get('edit_type', 'manual')
+        edit_summary = data.get('edit_summary', '保存内容')
+        
+        conn = sqlite3.connect(db.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # 确保表存在
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS package_contents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id TEXT NOT NULL,
+                package_type TEXT NOT NULL,
+                current_version INTEGER DEFAULT 1,
+                content TEXT,
+                status TEXT DEFAULT 'draft',
+                last_edited_by TEXT,
+                ai_generated INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(project_id, package_type)
+            )
+        ''')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS document_versions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id TEXT NOT NULL,
+                package_type TEXT NOT NULL,
+                version INTEGER NOT NULL,
+                content TEXT,
+                edit_type TEXT,
+                edit_summary TEXT,
+                editor TEXT,
+                word_count INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
+        
+        # 获取当前版本号
+        cursor.execute('''
+            SELECT current_version FROM package_contents
+            WHERE project_id = ? AND package_type = ?
+        ''', (project_id, package_type))
+        
+        row = cursor.fetchone()
+        new_version = (row['current_version'] + 1) if row else 1
+        
+        # 保存版本历史
+        word_count = len(content.split()) if content else 0
+        cursor.execute('''
+            INSERT INTO document_versions 
+            (project_id, package_type, version, content, edit_type, edit_summary, editor, word_count)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (project_id, package_type, new_version, content, edit_type, edit_summary, 'user', word_count))
+        
+        # 更新或插入当前内容
+        cursor.execute('''
+            INSERT INTO package_contents 
+            (project_id, package_type, current_version, content, status, last_edited_by, ai_generated, updated_at)
+            VALUES (?, ?, ?, ?, 'draft', 'user', 0, CURRENT_TIMESTAMP)
+            ON CONFLICT(project_id, package_type) 
+            DO UPDATE SET 
+                current_version = excluded.current_version,
+                content = excluded.content,
+                status = 'draft',
+                last_edited_by = 'user',
+                updated_at = CURRENT_TIMESTAMP
+        ''', (project_id, package_type, new_version, content))
+        
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"保存材料包内容: {project_id}/{package_type} v{new_version}")
+        
+        return jsonify({
+            "success": True,
+            "version": new_version,
+            "message": f"已保存为版本 {new_version}"
+        })
+        
+    except Exception as e:
+        logger.error(f"保存材料包内容失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/packages/<package_type>/generate', methods=['POST'])
+def generate_package_content(project_id, package_type):
+    """使用AI生成材料包内容"""
+    import sqlite3
+    import os
+    import requests
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json() or {}
+        custom_instructions = data.get('custom_instructions', '')
+        selected_inputs = data.get('selected_inputs', {})
+        recommender_info = data.get('recommender_info', {})
+        
+        # 获取生成上下文
+        conn = sqlite3.connect(db.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # 构建上下文
+        context_parts = []
+        
+        # 获取项目信息
+        cursor.execute('SELECT * FROM projects WHERE project_id = ?', (project_id,))
+        project_row = cursor.fetchone()
+        if project_row:
+            context_parts.append(f"申请人: {project_row['client_name']}")
+            context_parts.append(f"签证类型: {project_row['visa_type']}")
+        
+        # 获取GTV框架
+        include_framework = selected_inputs.get('include_framework', True)
+        if include_framework:
+            cursor.execute('SELECT framework_data FROM gtv_framework WHERE project_id = ?', (project_id,))
+            fw_row = cursor.fetchone()
+            if fw_row and fw_row['framework_data']:
+                framework = json.loads(fw_row['framework_data'])
+                context_parts.append("\n--- GTV框架 ---")
+                if framework.get('领域定位'):
+                    context_parts.append(f"领域定位: {json.dumps(framework['领域定位'], ensure_ascii=False)}")
+                if framework.get('MC_必选标准'):
+                    context_parts.append(f"MC标准: {framework['MC_必选标准'].get('选择的MC', '')}")
+                if framework.get('OC_可选标准'):
+                    context_parts.append(f"OC标准: {', '.join(framework['OC_可选标准'].get('选择的OC', []))}")
+        
+        # 获取分类内容
+        classification_ids = selected_inputs.get('classification_ids', [])
+        if classification_ids:
+            placeholders = ','.join('?' * len(classification_ids))
+            cursor.execute(f'''
+                SELECT category, subcategory, content FROM content_classifications
+                WHERE project_id = ? AND id IN ({placeholders})
+            ''', [project_id] + classification_ids)
+            
+            context_parts.append("\n--- 提取的内容 ---")
+            for row in cursor.fetchall():
+                context_parts.append(f"\n[{row['category']}] {row['subcategory'] or ''}:")
+                context_parts.append(row['content'][:2000])
+        
+        conn.close()
+        
+        # 添加推荐人信息（如果是推荐信）
+        if package_type.startswith('rl_') and recommender_info:
+            context_parts.append("\n--- 推荐人信息 ---")
+            context_parts.append(f"姓名: {recommender_info.get('name', '待填写')}")
+            context_parts.append(f"职位: {recommender_info.get('title', '待填写')}")
+            context_parts.append(f"机构: {recommender_info.get('organization', '待填写')}")
+            context_parts.append(f"关系: {recommender_info.get('relationship', '待填写')}")
+        
+        # 添加自定义指令
+        if custom_instructions:
+            context_parts.append(f"\n--- 特别要求 ---\n{custom_instructions}")
+        
+        context = "\n".join(context_parts)
+        
+        # 获取材料包类型的系统提示词
+        package_prompts = {
+            "personal_statement": "你是一位专业的GTV签证个人陈述撰写专家。请根据提供的信息，撰写一份有说服力的个人陈述（英文），1000-1500词。",
+            "cv_resume": "你是一位专业的简历优化专家。请根据提供的信息，生成一份符合GTV签证要求的专业简历（英文）。",
+            "rl_1": "你是一位专业的推荐信撰写专家。请撰写一封来自行业专家的GTV签证推荐信（英文），1-1.5页。",
+            "rl_2": "你是一位专业的推荐信撰写专家。请撰写一封来自技术/学术专家的GTV签证推荐信（英文），1-1.5页。",
+            "rl_3": "你是一位专业的推荐信撰写专家。请撰写一封来自商业合作伙伴的GTV签证推荐信（英文），1-1.5页。",
+            "evidence_portfolio": "你是一位GTV签证证据材料整理专家。请根据提供的信息，整理证据材料清单和说明。",
+            "cover_letter": "你是一位专业的签证申请信撰写专家。请撰写一封正式的GTV签证申请信（英文）。",
+            "endorsement_letter": "你是一位Tech Nation背书申请专家。请撰写背书申请材料。",
+            "business_plan": "你是一位商业计划书撰写专家。请撰写创业者路径所需的商业计划书。",
+            "supplementary": "你是一位签证材料整理专家。请整理补充材料说明。"
+        }
+        
+        system_prompt = package_prompts.get(package_type, "你是一位专业的签证材料撰写专家。")
+        
+        # 调用LLM
+        llm_provider = os.getenv("LLM_PROVIDER", "ENNCLOUD").upper()
+        
+        if llm_provider == "ENNCLOUD":
+            api_key = os.getenv("ENNCLOUD_API_KEY")
+            base_url = os.getenv("ENNCLOUD_BASE_URL", "https://ai.enncloud.cn/v1")
+            model = os.getenv("ENNCLOUD_MODEL", "GLM-4.5-Air")
+            
+            if not api_key:
+                return jsonify({"success": False, "error": "ENNCLOUD_API_KEY 未配置"}), 500
+            
+            url = f"{base_url}/chat/completions"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}"
+            }
+            payload = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"请基于以下信息生成内容：\n\n{context}"}
+                ],
+                "temperature": 0.7,
+                "max_tokens": 4000,
+                "stream": False
+            }
+            response = requests.post(url, headers=headers, json=payload, timeout=120)
+            response.raise_for_status()
+            resp_data = response.json()
+            generated_content = resp_data["choices"][0]["message"]["content"]
+            
+        elif llm_provider == "ANTHROPIC":
+            from anthropic import Anthropic
+            api_key = os.getenv("ANTHROPIC_API_KEY")
+            base_url = os.getenv("ANTHROPIC_BASE_URL")
+            
+            if not api_key:
+                return jsonify({"success": False, "error": "ANTHROPIC_API_KEY 未配置"}), 500
+            
+            if base_url:
+                client = Anthropic(api_key=api_key, base_url=base_url)
+            else:
+                client = Anthropic(api_key=api_key)
+            
+            model = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
+            response = client.messages.create(
+                model=model,
+                max_tokens=4000,
+                system=system_prompt,
+                messages=[{"role": "user", "content": f"请基于以下信息生成内容：\n\n{context}"}]
+            )
+            generated_content = response.content[0].text if response.content else ""
+            
+        else:
+            return jsonify({"success": False, "error": f"不支持的 LLM 提供商: {llm_provider}"}), 500
+        
+        # 保存生成的内容
+        conn = sqlite3.connect(db.db_path)
+        cursor = conn.cursor()
+        
+        # 获取当前版本号
+        cursor.execute('''
+            SELECT current_version FROM package_contents
+            WHERE project_id = ? AND package_type = ?
+        ''', (project_id, package_type))
+        
+        row = cursor.fetchone()
+        new_version = (row[0] + 1) if row else 1
+        
+        # 保存版本历史
+        word_count = len(generated_content.split()) if generated_content else 0
+        cursor.execute('''
+            INSERT INTO document_versions 
+            (project_id, package_type, version, content, edit_type, edit_summary, editor, word_count)
+            VALUES (?, ?, ?, ?, 'ai_generate', 'AI生成内容', 'ai', ?)
+        ''', (project_id, package_type, new_version, generated_content, word_count))
+        
+        # 更新当前内容
+        cursor.execute('''
+            INSERT INTO package_contents 
+            (project_id, package_type, current_version, content, status, last_edited_by, ai_generated, updated_at)
+            VALUES (?, ?, ?, ?, 'draft', 'ai', 1, CURRENT_TIMESTAMP)
+            ON CONFLICT(project_id, package_type) 
+            DO UPDATE SET 
+                current_version = excluded.current_version,
+                content = excluded.content,
+                status = 'draft',
+                last_edited_by = 'ai',
+                ai_generated = 1,
+                updated_at = CURRENT_TIMESTAMP
+        ''', (project_id, package_type, new_version, generated_content))
+        
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"AI生成材料包内容: {project_id}/{package_type} v{new_version}")
+        
+        return jsonify({
+            "success": True,
+            "content": generated_content,
+            "version": new_version,
+            "word_count": word_count
+        })
+        
+    except Exception as e:
+        logger.error(f"生成材料包内容失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/packages/<package_type>/versions', methods=['GET'])
+def get_package_versions(project_id, package_type):
+    """获取材料包版本历史"""
+    import sqlite3
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        conn = sqlite3.connect(db.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, version, edit_type, edit_summary, editor, word_count, created_at
+            FROM document_versions
+            WHERE project_id = ? AND package_type = ?
+            ORDER BY version DESC
+        ''', (project_id, package_type))
+        
+        versions = []
+        for row in cursor.fetchall():
+            versions.append({
+                "id": row['id'],
+                "version": row['version'],
+                "edit_type": row['edit_type'],
+                "edit_summary": row['edit_summary'],
+                "editor": row['editor'],
+                "word_count": row['word_count'],
+                "created_at": row['created_at']
+            })
+        
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "data": versions
+        })
+        
+    except Exception as e:
+        logger.error(f"获取版本历史失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/packages/<package_type>/versions/<int:version>', methods=['GET'])
+def get_package_version_content(project_id, package_type, version):
+    """获取特定版本的内容"""
+    import sqlite3
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        conn = sqlite3.connect(db.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT * FROM document_versions
+            WHERE project_id = ? AND package_type = ? AND version = ?
+        ''', (project_id, package_type, version))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return jsonify({
+                "success": True,
+                "data": {
+                    "version": row['version'],
+                    "content": row['content'],
+                    "edit_type": row['edit_type'],
+                    "edit_summary": row['edit_summary'],
+                    "editor": row['editor'],
+                    "word_count": row['word_count'],
+                    "created_at": row['created_at']
+                }
+            })
+        else:
+            return jsonify({"success": False, "error": "版本不存在"}), 404
+        
+    except Exception as e:
+        logger.error(f"获取版本内容失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/packages/<package_type>/rollback', methods=['POST'])
+def rollback_package_version(project_id, package_type):
+    """回滚到指定版本"""
+    import sqlite3
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        target_version = data.get('version')
+        
+        if not target_version:
+            return jsonify({"success": False, "error": "请指定目标版本"}), 400
+        
+        conn = sqlite3.connect(db.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # 获取目标版本内容
+        cursor.execute('''
+            SELECT content FROM document_versions
+            WHERE project_id = ? AND package_type = ? AND version = ?
+        ''', (project_id, package_type, target_version))
+        
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            return jsonify({"success": False, "error": "目标版本不存在"}), 404
+        
+        target_content = row['content']
+        
+        # 获取当前版本号
+        cursor.execute('''
+            SELECT current_version FROM package_contents
+            WHERE project_id = ? AND package_type = ?
+        ''', (project_id, package_type))
+        
+        current_row = cursor.fetchone()
+        new_version = (current_row['current_version'] + 1) if current_row else 1
+        
+        # 保存新版本（回滚）
+        word_count = len(target_content.split()) if target_content else 0
+        cursor.execute('''
+            INSERT INTO document_versions 
+            (project_id, package_type, version, content, edit_type, edit_summary, editor, word_count)
+            VALUES (?, ?, ?, ?, 'rollback', ?, 'user', ?)
+        ''', (project_id, package_type, new_version, target_content, f"回滚到版本 {target_version}", word_count))
+        
+        # 更新当前内容
+        cursor.execute('''
+            UPDATE package_contents 
+            SET current_version = ?, content = ?, last_edited_by = 'user', updated_at = CURRENT_TIMESTAMP
+            WHERE project_id = ? AND package_type = ?
+        ''', (new_version, target_content, project_id, package_type))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "version": new_version,
+            "message": f"已回滚到版本 {target_version}，保存为新版本 {new_version}"
+        })
+        
+    except Exception as e:
+        logger.error(f"回滚版本失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/packages/<package_type>/agent-config', methods=['GET'])
+def get_agent_config(project_id, package_type):
+    """获取Agent配置"""
+    import sqlite3
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        conn = sqlite3.connect(db.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # 确保表存在
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS agent_configs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id TEXT NOT NULL,
+                package_type TEXT NOT NULL,
+                system_prompt TEXT,
+                user_prompt_template TEXT,
+                custom_instructions TEXT,
+                reference_doc_id TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(project_id, package_type)
+            )
+        ''')
+        conn.commit()
+        
+        cursor.execute('''
+            SELECT * FROM agent_configs
+            WHERE project_id = ? AND package_type = ?
+        ''', (project_id, package_type))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return jsonify({
+                "success": True,
+                "data": {
+                    "system_prompt": row['system_prompt'],
+                    "user_prompt_template": row['user_prompt_template'],
+                    "custom_instructions": row['custom_instructions'],
+                    "reference_doc_id": row['reference_doc_id']
+                }
+            })
+        else:
+            return jsonify({
+                "success": True,
+                "data": {
+                    "system_prompt": "",
+                    "user_prompt_template": "",
+                    "custom_instructions": "",
+                    "reference_doc_id": None
+                }
+            })
+        
+    except Exception as e:
+        logger.error(f"获取Agent配置失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/packages/<package_type>/agent-config', methods=['PUT'])
+def save_agent_config(project_id, package_type):
+    """保存Agent配置"""
+    import sqlite3
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        
+        conn = sqlite3.connect(db.db_path)
+        cursor = conn.cursor()
+        
+        # 确保表存在
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS agent_configs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id TEXT NOT NULL,
+                package_type TEXT NOT NULL,
+                system_prompt TEXT,
+                user_prompt_template TEXT,
+                custom_instructions TEXT,
+                reference_doc_id TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(project_id, package_type)
+            )
+        ''')
+        
+        cursor.execute('''
+            INSERT INTO agent_configs 
+            (project_id, package_type, system_prompt, user_prompt_template, custom_instructions, reference_doc_id, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(project_id, package_type) 
+            DO UPDATE SET 
+                system_prompt = excluded.system_prompt,
+                user_prompt_template = excluded.user_prompt_template,
+                custom_instructions = excluded.custom_instructions,
+                reference_doc_id = excluded.reference_doc_id,
+                updated_at = CURRENT_TIMESTAMP
+        ''', (
+            project_id, 
+            package_type, 
+            data.get('system_prompt', ''),
+            data.get('user_prompt_template', ''),
+            data.get('custom_instructions', ''),
+            data.get('reference_doc_id')
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "message": "Agent配置已保存"
+        })
+        
+    except Exception as e:
+        logger.error(f"保存Agent配置失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
