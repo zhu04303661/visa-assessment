@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { AuthGuard } from "@/components/auth-guard"
 import { 
   ArrowLeft, FileText, Search, RefreshCw, Download, Eye, Filter, Clock, File, 
   History, AlertCircle, CheckCircle, Loader2, Settings, Copy, ChevronDown, 
@@ -859,6 +860,7 @@ export default function ExtractionPage() {
   }
 
   return (
+    <AuthGuard requireAuth={true} allowedRoles={['admin', 'super_admin']} unauthorizedMessage="AI文案功能仅对管理员开放">
     <div className="min-h-screen bg-background">
       {/* 顶部导航 */}
       <div className="border-b bg-card sticky top-0 z-10">
@@ -2474,5 +2476,6 @@ export default function ExtractionPage() {
         file={previewFile}
       />
     </div>
+    </AuthGuard>
   )
 }

@@ -47,16 +47,8 @@ except ImportError:
     logging.basicConfig(level=getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO))
     logger = logging.getLogger("api_server")
 
-# 导入 Supabase 路由
-try:
-    from api.routes.auth_routes import auth_bp
-    from api.routes.assessment_routes import assessment_bp
-    from api.routes.chat_routes import chat_bp
-    from api.routes.file_routes import file_bp
-    SUPABASE_ROUTES_AVAILABLE = True
-except ImportError as e:
-    logger.warning(f"⚠️ Supabase 路由导入失败: {e}")
-    SUPABASE_ROUTES_AVAILABLE = False
+# Supabase 路由已弃用，认证功能已迁移到 copywriting_routes.py
+SUPABASE_ROUTES_AVAILABLE = False
 
 # 导入Agent和分析器
 try:
@@ -131,15 +123,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB (支持大型zip文件)
 
-# 注册 Supabase 路由（如果可用）
-if SUPABASE_ROUTES_AVAILABLE:
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(assessment_bp)
-    app.register_blueprint(chat_bp)
-    app.register_blueprint(file_bp)
-    logger.info("✅ Supabase 路由注册成功")
-else:
-    logger.warning("⚠️ Supabase 路由不可用，相关功能将被禁用")
+# 认证功能已迁移到 copywriting_routes.py 中的 /api/auth/* 路由
+logger.info("✅ 认证功能通过 copywriting_routes 提供 (/api/auth/*)")
 
 # 注册文案系统路由
 COPYWRITING_ROUTES_AVAILABLE = False

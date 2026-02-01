@@ -5,7 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { LanguageProvider } from "@/lib/i18n"
-import { AuthProvider } from "@/lib/supabase/auth-context"
+import { AuthProvider } from "@/lib/auth/auth-context"
 import { Suspense } from "react"
 
 export const metadata: Metadata = {

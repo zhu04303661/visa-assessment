@@ -30,12 +30,25 @@ except Exception as e:
     print(f"❌ PDF报告生成器导入失败: {e}")
     generate_gtv_pdf_report = None
 
-# 导入数据库管理器
+# 导入数据库管理器（已合并到 copywriting_database）
 try:
-    from database.assessment_database import save_assessment_to_database, load_assessment_from_database, list_all_assessments
-    print("✅ 评估数据库管理器导入成功")
+    from database.copywriting_database import CopywritingDatabase
+    _copywriting_db = CopywritingDatabase()
+    
+    # 兼容旧接口的包装函数
+    def save_assessment_to_database(assessment_data, assessment_id=None):
+        return _copywriting_db.save_assessment_legacy(assessment_data, assessment_id)
+    
+    def load_assessment_from_database(assessment_id):
+        return _copywriting_db.get_assessment_legacy(assessment_id)
+    
+    def list_all_assessments(limit=50):
+        return _copywriting_db.list_assessments_legacy(limit)
+    
+    print("✅ 评估数据库管理器导入成功（使用 copywriting_database）")
 except Exception as e:
     print(f"❌ 评估数据库管理器导入失败: {e}")
+    _copywriting_db = None
     save_assessment_to_database = None
     load_assessment_from_database = None
     list_all_assessments = None
@@ -1837,10 +1850,14 @@ def get_assessment(assessment_id):
 def delete_assessment(assessment_id):
     """删除指定评估ID的结果"""
     try:
-        from database.assessment_database import assessment_db
+        if not _copywriting_db:
+            return jsonify({
+                "success": False,
+                "error": "数据库未初始化"
+            }), 500
         
-        success = assessment_db.delete_assessment(assessment_id)
-        if success:
+        result = _copywriting_db.delete_assessment(assessment_id)
+        if result.get('success'):
             return jsonify({
                 "success": True,
                 "message": f"评估结果 {assessment_id} 已删除"
@@ -1848,7 +1865,7 @@ def delete_assessment(assessment_id):
         else:
             return jsonify({
                 "success": False,
-                "error": f"删除评估结果 {assessment_id} 失败"
+                "error": result.get('error', f"删除评估结果 {assessment_id} 失败")
             }), 500
         
     except Exception as e:

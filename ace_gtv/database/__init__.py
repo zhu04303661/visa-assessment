@@ -1,11 +1,21 @@
 #!/usr/bin/env python3
 """
 数据库模块
-包含 SQLite、Supabase、MinIO 客户端和 DAO 层
+包含 SQLite、MinIO 客户端和 DAO 层
+
+注意：assessments.db 已合并到 copywriting.db
+GTVAssessmentDatabase 和 assessment_db 已废弃，请使用 CopywritingDatabase
 """
 
-from .assessment_database import GTVAssessmentDatabase, assessment_db
 from .copywriting_database import CopywritingDatabase
+
+# 创建全局数据库实例
+copywriting_db = CopywritingDatabase()
+
+# 兼容性别名（已废弃，请使用 CopywritingDatabase）
+# GTVAssessmentDatabase 功能已合并到 CopywritingDatabase
+GTVAssessmentDatabase = CopywritingDatabase
+assessment_db = copywriting_db
 
 # DAO 层（支持切换数据库）
 try:
@@ -28,18 +38,13 @@ try:
 except ImportError:
     MINIO_AVAILABLE = False
 
-# Supabase 客户端
-try:
-    from .supabase_client import SupabaseManager, get_supabase_manager
-    SUPABASE_AVAILABLE = True
-except ImportError:
-    SUPABASE_AVAILABLE = False
-
 __all__ = [
-    # 原有数据库类
+    # 主数据库类
+    'CopywritingDatabase',
+    'copywriting_db',
+    # 兼容性别名（已废弃）
     'GTVAssessmentDatabase',
     'assessment_db',
-    'CopywritingDatabase',
     # DAO 层
     'BaseDAO',
     'DatabaseConfig',
@@ -61,8 +66,4 @@ __all__ = [
     'upload_to_minio',
     'get_minio_url',
     'MINIO_AVAILABLE',
-    # Supabase
-    'SupabaseManager',
-    'get_supabase_manager',
-    'SUPABASE_AVAILABLE',
 ]

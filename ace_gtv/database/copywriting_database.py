@@ -313,6 +313,94 @@ class CopywritingDatabase:
                     )
                 ''')
                 
+                # ==================== 用户表（替代 Supabase auth.users）====================
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS users (
+                        id TEXT PRIMARY KEY,
+                        email TEXT UNIQUE NOT NULL,
+                        password_hash TEXT NOT NULL,
+                        full_name TEXT,
+                        phone TEXT,
+                        company TEXT,
+                        position TEXT,
+                        role TEXT DEFAULT 'guest',
+                        email_verified INTEGER DEFAULT 0,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        last_sign_in TIMESTAMP
+                    )
+                ''')
+                
+                # ==================== 用户会话表 ====================
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS user_sessions (
+                        id TEXT PRIMARY KEY,
+                        user_id TEXT NOT NULL,
+                        token TEXT UNIQUE NOT NULL,
+                        expires_at TIMESTAMP NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+                    )
+                ''')
+                
+                # ==================== 评估记录表（迁移自 Supabase）====================
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS assessments (
+                        id TEXT PRIMARY KEY,
+                        user_id TEXT,
+                        assessment_type TEXT NOT NULL,
+                        applicant_name TEXT,
+                        applicant_email TEXT,
+                        applicant_phone TEXT,
+                        field TEXT,
+                        current_position TEXT,
+                        company TEXT,
+                        years_of_experience INTEGER,
+                        resume_text TEXT,
+                        resume_file_name TEXT,
+                        resume_file_url TEXT,
+                        additional_info TEXT,
+                        overall_score REAL,
+                        eligibility_level TEXT,
+                        gtv_pathway TEXT,
+                        pathway_analysis TEXT,
+                        final_recommendation TEXT,
+                        timeline TEXT,
+                        estimated_budget_min INTEGER,
+                        estimated_budget_max INTEGER,
+                        estimated_budget_currency TEXT DEFAULT 'GBP',
+                        data TEXT,
+                        status TEXT DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+                    )
+                ''')
+                
+                # ==================== 上传文件记录表（合并自 assessments.db）====================
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS uploaded_files (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        assessment_id TEXT,
+                        project_id TEXT,
+                        user_id TEXT,
+                        file_name TEXT NOT NULL,
+                        file_type TEXT,
+                        file_size INTEGER DEFAULT 0,
+                        storage_type TEXT DEFAULT 'local',
+                        local_path TEXT,
+                        object_bucket TEXT,
+                        object_key TEXT,
+                        object_url TEXT,
+                        category TEXT,
+                        description TEXT,
+                        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (assessment_id) REFERENCES assessments (id) ON DELETE SET NULL,
+                        FOREIGN KEY (project_id) REFERENCES projects (project_id) ON DELETE SET NULL,
+                        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+                    )
+                ''')
+                
                 # 创建索引
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_projects_status ON projects (status)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_projects_client ON projects (client_name)')
@@ -327,6 +415,17 @@ class CopywritingDatabase:
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_prompt_templates ON prompt_templates (type, package_type)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_instruction_history ON instruction_history (project_id, package_type)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_agent_configs ON agent_configs (project_id, package_type)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_role ON users (role)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions (user_id)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions (token)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_sessions_expires ON user_sessions (expires_at)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_assessments_user ON assessments (user_id)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_assessments_email ON assessments (applicant_email)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_assessments_created ON assessments (created_at)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_uploaded_files_assessment ON uploaded_files (assessment_id)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_uploaded_files_project ON uploaded_files (project_id)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_uploaded_files_user ON uploaded_files (user_id)')
                 
                 conn.commit()
                 logger.info("数据库表结构初始化完成")
@@ -1524,6 +1623,492 @@ class CopywritingDatabase:
             logger.error(f"获取GTV框架失败: {e}")
             return {"success": False, "error": str(e)}
 
+    # ==================== 用户管理 ====================
+    
+    def create_user(self, email: str, password_hash: str, full_name: str = None,
+                   phone: str = None, company: str = None, position: str = None,
+                   role: str = 'guest') -> Dict[str, Any]:
+        """创建新用户"""
+        try:
+            user_id = str(uuid.uuid4())
+            
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    INSERT INTO users (id, email, password_hash, full_name, phone, company, position, role)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (user_id, email.lower(), password_hash, full_name, phone, company, position, role))
+                
+                logger.info(f"用户创建成功: {email}")
+                return {
+                    "success": True,
+                    "user_id": user_id,
+                    "user": {
+                        "id": user_id,
+                        "email": email.lower(),
+                        "full_name": full_name,
+                        "phone": phone,
+                        "company": company,
+                        "position": position,
+                        "role": role,
+                        "email_verified": False
+                    }
+                }
+                
+        except sqlite3.IntegrityError:
+            return {"success": False, "error": "该邮箱已被注册"}
+        except Exception as e:
+            logger.error(f"创建用户失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def get_user_by_email(self, email: str) -> Dict[str, Any]:
+        """根据邮箱获取用户"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('SELECT * FROM users WHERE email = ?', (email.lower(),))
+                row = cursor.fetchone()
+                
+                if row:
+                    return {
+                        "success": True,
+                        "user": {
+                            "id": row['id'],
+                            "email": row['email'],
+                            "password_hash": row['password_hash'],
+                            "full_name": row['full_name'],
+                            "phone": row['phone'],
+                            "company": row['company'],
+                            "position": row['position'],
+                            "role": row['role'],
+                            "email_verified": bool(row['email_verified']),
+                            "created_at": row['created_at'],
+                            "updated_at": row['updated_at'],
+                            "last_sign_in": row['last_sign_in']
+                        }
+                    }
+                
+                return {"success": False, "error": "用户不存在"}
+                
+        except Exception as e:
+            logger.error(f"获取用户失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def get_user_by_id(self, user_id: str) -> Dict[str, Any]:
+        """根据ID获取用户"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
+                row = cursor.fetchone()
+                
+                if row:
+                    return {
+                        "success": True,
+                        "user": {
+                            "id": row['id'],
+                            "email": row['email'],
+                            "full_name": row['full_name'],
+                            "phone": row['phone'],
+                            "company": row['company'],
+                            "position": row['position'],
+                            "role": row['role'],
+                            "email_verified": bool(row['email_verified']),
+                            "created_at": row['created_at'],
+                            "updated_at": row['updated_at'],
+                            "last_sign_in": row['last_sign_in']
+                        }
+                    }
+                
+                return {"success": False, "error": "用户不存在"}
+                
+        except Exception as e:
+            logger.error(f"获取用户失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def update_user(self, user_id: str, **kwargs) -> Dict[str, Any]:
+        """更新用户信息"""
+        try:
+            allowed_fields = ['full_name', 'phone', 'company', 'position', 'role', 'email_verified']
+            updates = {k: v for k, v in kwargs.items() if k in allowed_fields}
+            
+            if not updates:
+                return {"success": False, "error": "没有可更新的字段"}
+            
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                set_clause = ', '.join([f"{k} = ?" for k in updates.keys()])
+                values = list(updates.values())
+                values.append(user_id)
+                
+                cursor.execute(f'''
+                    UPDATE users 
+                    SET {set_clause}, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ''', values)
+                
+                if cursor.rowcount == 0:
+                    return {"success": False, "error": "用户不存在"}
+                
+                return {"success": True, "message": "用户信息更新成功"}
+                
+        except Exception as e:
+            logger.error(f"更新用户失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def update_last_sign_in(self, user_id: str) -> Dict[str, Any]:
+        """更新用户最后登录时间"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    UPDATE users 
+                    SET last_sign_in = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ''', (user_id,))
+                
+                return {"success": True}
+                
+        except Exception as e:
+            logger.error(f"更新登录时间失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def list_users(self, page: int = 1, page_size: int = 20, role: str = None) -> Dict[str, Any]:
+        """列出所有用户"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # 获取总数
+                if role:
+                    cursor.execute('SELECT COUNT(*) as count FROM users WHERE role = ?', (role,))
+                else:
+                    cursor.execute('SELECT COUNT(*) as count FROM users')
+                total = cursor.fetchone()['count']
+                
+                # 分页查询
+                offset = (page - 1) * page_size
+                if role:
+                    cursor.execute('''
+                        SELECT * FROM users WHERE role = ?
+                        ORDER BY created_at DESC 
+                        LIMIT ? OFFSET ?
+                    ''', (role, page_size, offset))
+                else:
+                    cursor.execute('''
+                        SELECT * FROM users 
+                        ORDER BY created_at DESC 
+                        LIMIT ? OFFSET ?
+                    ''', (page_size, offset))
+                
+                users = []
+                for row in cursor.fetchall():
+                    users.append({
+                        "id": row['id'],
+                        "email": row['email'],
+                        "full_name": row['full_name'],
+                        "phone": row['phone'],
+                        "company": row['company'],
+                        "position": row['position'],
+                        "role": row['role'],
+                        "email_verified": bool(row['email_verified']),
+                        "created_at": row['created_at'],
+                        "updated_at": row['updated_at'],
+                        "last_sign_in": row['last_sign_in']
+                    })
+                
+                return {
+                    "success": True,
+                    "users": users,
+                    "page": page,
+                    "page_size": page_size,
+                    "total": total,
+                    "total_pages": (total + page_size - 1) // page_size
+                }
+                
+        except Exception as e:
+            logger.error(f"列出用户失败: {e}")
+            return {"success": False, "error": str(e), "users": []}
+    
+    def delete_user(self, user_id: str) -> Dict[str, Any]:
+        """删除用户"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # 删除用户会话
+                cursor.execute('DELETE FROM user_sessions WHERE user_id = ?', (user_id,))
+                
+                # 删除用户
+                cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
+                
+                if cursor.rowcount == 0:
+                    return {"success": False, "error": "用户不存在"}
+                
+                logger.info(f"用户删除成功: {user_id}")
+                return {"success": True, "message": "用户删除成功"}
+                
+        except Exception as e:
+            logger.error(f"删除用户失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    # ==================== 会话管理 ====================
+    
+    def create_session(self, user_id: str, token: str, expires_at: datetime) -> Dict[str, Any]:
+        """创建用户会话"""
+        try:
+            session_id = str(uuid.uuid4())
+            
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # 清理该用户的过期会话
+                cursor.execute('''
+                    DELETE FROM user_sessions 
+                    WHERE user_id = ? AND expires_at < CURRENT_TIMESTAMP
+                ''', (user_id,))
+                
+                # 创建新会话
+                cursor.execute('''
+                    INSERT INTO user_sessions (id, user_id, token, expires_at)
+                    VALUES (?, ?, ?, ?)
+                ''', (session_id, user_id, token, expires_at.isoformat()))
+                
+                logger.info(f"会话创建成功: {session_id}")
+                return {"success": True, "session_id": session_id}
+                
+        except Exception as e:
+            logger.error(f"创建会话失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def validate_session(self, token: str) -> Dict[str, Any]:
+        """验证会话有效性"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    SELECT s.*, u.email, u.full_name, u.role, u.phone, u.company, u.position, u.email_verified
+                    FROM user_sessions s
+                    JOIN users u ON s.user_id = u.id
+                    WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP
+                ''', (token,))
+                
+                row = cursor.fetchone()
+                
+                if row:
+                    return {
+                        "success": True,
+                        "valid": True,
+                        "session": {
+                            "id": row['id'],
+                            "user_id": row['user_id'],
+                            "expires_at": row['expires_at']
+                        },
+                        "user": {
+                            "id": row['user_id'],
+                            "email": row['email'],
+                            "full_name": row['full_name'],
+                            "phone": row['phone'],
+                            "company": row['company'],
+                            "position": row['position'],
+                            "role": row['role'],
+                            "email_verified": bool(row['email_verified'])
+                        }
+                    }
+                
+                return {"success": True, "valid": False, "error": "会话无效或已过期"}
+                
+        except Exception as e:
+            logger.error(f"验证会话失败: {e}")
+            return {"success": False, "valid": False, "error": str(e)}
+    
+    def delete_session(self, token: str) -> Dict[str, Any]:
+        """删除会话（登出）"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('DELETE FROM user_sessions WHERE token = ?', (token,))
+                
+                return {"success": True, "message": "会话已删除"}
+                
+        except Exception as e:
+            logger.error(f"删除会话失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def delete_user_sessions(self, user_id: str) -> Dict[str, Any]:
+        """删除用户的所有会话"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('DELETE FROM user_sessions WHERE user_id = ?', (user_id,))
+                
+                return {"success": True, "message": "所有会话已删除", "count": cursor.rowcount}
+                
+        except Exception as e:
+            logger.error(f"删除用户会话失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def cleanup_expired_sessions(self) -> Dict[str, Any]:
+        """清理过期会话"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('DELETE FROM user_sessions WHERE expires_at < CURRENT_TIMESTAMP')
+                
+                count = cursor.rowcount
+                if count > 0:
+                    logger.info(f"清理了 {count} 个过期会话")
+                
+                return {"success": True, "cleaned_count": count}
+                
+        except Exception as e:
+            logger.error(f"清理过期会话失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    # ==================== 评估记录管理 ====================
+    
+    def save_assessment(self, assessment_data: Dict[str, Any]) -> Dict[str, Any]:
+        """保存评估记录"""
+        try:
+            assessment_id = assessment_data.get('id') or str(uuid.uuid4())
+            
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    INSERT INTO assessments 
+                    (id, user_id, assessment_type, applicant_name, applicant_email, 
+                     applicant_phone, field, resume_text, resume_file_name, resume_file_url,
+                     additional_info, overall_score, eligibility_level, gtv_pathway, data, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    assessment_id,
+                    assessment_data.get('user_id'),
+                    assessment_data.get('assessment_type', 'gtv'),
+                    assessment_data.get('applicant_name'),
+                    assessment_data.get('applicant_email'),
+                    assessment_data.get('applicant_phone'),
+                    assessment_data.get('field'),
+                    assessment_data.get('resume_text'),
+                    assessment_data.get('resume_file_name'),
+                    assessment_data.get('resume_file_url'),
+                    assessment_data.get('additional_info'),
+                    assessment_data.get('overall_score'),
+                    assessment_data.get('eligibility_level'),
+                    assessment_data.get('gtv_pathway'),
+                    json.dumps(assessment_data.get('data', {}), ensure_ascii=False),
+                    assessment_data.get('status', 'completed')
+                ))
+                
+                logger.info(f"评估记录保存成功: {assessment_id}")
+                return {"success": True, "assessment_id": assessment_id}
+                
+        except Exception as e:
+            logger.error(f"保存评估记录失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def get_assessment(self, assessment_id: str) -> Dict[str, Any]:
+        """获取评估记录"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('SELECT * FROM assessments WHERE id = ?', (assessment_id,))
+                row = cursor.fetchone()
+                
+                if row:
+                    data = dict(row)
+                    if data.get('data'):
+                        data['data'] = json.loads(data['data'])
+                    return {"success": True, "assessment": data}
+                
+                return {"success": False, "error": "评估记录不存在"}
+                
+        except Exception as e:
+            logger.error(f"获取评估记录失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def delete_assessment(self, assessment_id: str) -> Dict[str, Any]:
+        """删除评估记录"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # 先删除关联的上传文件记录
+                cursor.execute('DELETE FROM uploaded_files WHERE assessment_id = ?', (assessment_id,))
+                
+                # 删除评估记录
+                cursor.execute('DELETE FROM assessments WHERE id = ?', (assessment_id,))
+                
+                conn.commit()
+                
+                if cursor.rowcount > 0:
+                    logger.info(f"评估记录已删除: {assessment_id}")
+                    return {"success": True, "message": "评估记录删除成功"}
+                else:
+                    return {"success": False, "error": "评估记录不存在"}
+                
+        except Exception as e:
+            logger.error(f"删除评估记录失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def list_assessments(self, user_id: str = None, page: int = 1, page_size: int = 20) -> Dict[str, Any]:
+        """列出评估记录"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # 获取总数
+                if user_id:
+                    cursor.execute('SELECT COUNT(*) as count FROM assessments WHERE user_id = ?', (user_id,))
+                else:
+                    cursor.execute('SELECT COUNT(*) as count FROM assessments')
+                total = cursor.fetchone()['count']
+                
+                # 分页查询
+                offset = (page - 1) * page_size
+                if user_id:
+                    cursor.execute('''
+                        SELECT * FROM assessments WHERE user_id = ?
+                        ORDER BY created_at DESC 
+                        LIMIT ? OFFSET ?
+                    ''', (user_id, page_size, offset))
+                else:
+                    cursor.execute('''
+                        SELECT * FROM assessments 
+                        ORDER BY created_at DESC 
+                        LIMIT ? OFFSET ?
+                    ''', (page_size, offset))
+                
+                assessments = []
+                for row in cursor.fetchall():
+                    data = dict(row)
+                    if data.get('data'):
+                        data['data'] = json.loads(data['data'])
+                    assessments.append(data)
+                
+                return {
+                    "success": True,
+                    "assessments": assessments,
+                    "page": page,
+                    "page_size": page_size,
+                    "total": total,
+                    "total_pages": (total + page_size - 1) // page_size
+                }
+                
+        except Exception as e:
+            logger.error(f"列出评估记录失败: {e}")
+            return {"success": False, "error": str(e), "assessments": []}
+    
     def add_sample_cases(self) -> Dict[str, Any]:
         """添加示例案例"""
         sample_cases = [
@@ -1582,6 +2167,308 @@ class CopywritingDatabase:
             "added_count": added_count,
             "results": results
         }
+    
+    # ==================== 文件上传记录管理（合并自 assessment_database.py）====================
+    
+    def save_uploaded_file(
+        self,
+        file_name: str,
+        file_type: str = None,
+        file_size: int = 0,
+        storage_type: str = "local",
+        local_path: str = None,
+        object_bucket: str = None,
+        object_key: str = None,
+        object_url: str = None,
+        category: str = None,
+        description: str = None,
+        assessment_id: str = None,
+        project_id: str = None,
+        user_id: str = None
+    ) -> Dict[str, Any]:
+        """
+        保存上传文件记录
+        
+        Args:
+            file_name: 文件名
+            file_type: 文件类型
+            file_size: 文件大小
+            storage_type: 存储类型 (local/minio/s3)
+            local_path: 本地路径
+            object_bucket: 对象存储 bucket 名称
+            object_key: 对象存储 key
+            object_url: 对象存储访问 URL
+            category: 文件分类
+            description: 描述
+            assessment_id: 关联的评估 ID
+            project_id: 关联的项目 ID
+            user_id: 关联的用户 ID
+        
+        Returns:
+            保存结果
+        """
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    INSERT INTO uploaded_files (
+                        assessment_id, project_id, user_id, file_name, file_type, file_size,
+                        storage_type, local_path, object_bucket, object_key, object_url,
+                        category, description
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    assessment_id, project_id, user_id, file_name, file_type, file_size,
+                    storage_type, local_path, object_bucket, object_key, object_url,
+                    category, description
+                ))
+                
+                file_id = cursor.lastrowid
+                conn.commit()
+                
+                logger.info(f"文件记录保存成功: {file_name} (id={file_id})")
+                return {
+                    "success": True,
+                    "file_id": file_id,
+                    "message": "文件记录保存成功"
+                }
+                
+        except Exception as e:
+            logger.error(f"保存文件记录失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def get_uploaded_files(
+        self,
+        assessment_id: str = None,
+        project_id: str = None,
+        user_id: str = None,
+        category: str = None
+    ) -> List[Dict[str, Any]]:
+        """
+        获取上传的文件列表
+        
+        Args:
+            assessment_id: 评估 ID（可选）
+            project_id: 项目 ID（可选）
+            user_id: 用户 ID（可选）
+            category: 文件分类（可选）
+        
+        Returns:
+            文件列表
+        """
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                query = 'SELECT * FROM uploaded_files WHERE 1=1'
+                params = []
+                
+                if assessment_id:
+                    query += ' AND assessment_id = ?'
+                    params.append(assessment_id)
+                
+                if project_id:
+                    query += ' AND project_id = ?'
+                    params.append(project_id)
+                
+                if user_id:
+                    query += ' AND user_id = ?'
+                    params.append(user_id)
+                
+                if category:
+                    query += ' AND category = ?'
+                    params.append(category)
+                
+                query += ' ORDER BY uploaded_at DESC'
+                
+                cursor.execute(query, params)
+                rows = cursor.fetchall()
+                
+                return [dict(row) for row in rows]
+                
+        except Exception as e:
+            logger.error(f"获取文件列表失败: {e}")
+            return []
+    
+    def get_uploaded_file(self, file_id: int) -> Optional[Dict[str, Any]]:
+        """获取单个文件记录"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT * FROM uploaded_files WHERE id = ?', (file_id,))
+                row = cursor.fetchone()
+                return dict(row) if row else None
+                
+        except Exception as e:
+            logger.error(f"获取文件记录失败: {e}")
+            return None
+    
+    def delete_uploaded_file(self, file_id: int) -> Dict[str, Any]:
+        """删除文件记录"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('DELETE FROM uploaded_files WHERE id = ?', (file_id,))
+                conn.commit()
+                
+                if cursor.rowcount > 0:
+                    logger.info(f"文件记录删除成功: id={file_id}")
+                    return {"success": True, "message": "文件记录删除成功"}
+                else:
+                    return {"success": False, "error": "文件记录不存在"}
+                
+        except Exception as e:
+            logger.error(f"删除文件记录失败: {e}")
+            return {"success": False, "error": str(e)}
+    
+    # ==================== 兼容 assessment_database.py 的评估保存方法 ====================
+    
+    def save_assessment_legacy(self, assessment_data: Dict[str, Any], assessment_id: str = None) -> str:
+        """
+        保存评估结果（兼容旧版 assessment_database.py 的接口）
+        
+        Args:
+            assessment_data: 评估数据（旧格式）
+            assessment_id: 评估 ID（可选，自动生成）
+        
+        Returns:
+            评估 ID
+        """
+        try:
+            if not assessment_id:
+                assessment_id = f"GTV_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            
+            # 转换旧格式到新格式
+            applicant_info = assessment_data.get('applicantInfo', {})
+            gtv_pathway = assessment_data.get('gtvPathway', {})
+            estimated_budget = assessment_data.get('estimatedBudget', {})
+            
+            new_data = {
+                'id': assessment_id,
+                'assessment_type': 'gtv',
+                'applicant_name': applicant_info.get('name', ''),
+                'applicant_email': applicant_info.get('email', ''),
+                'field': applicant_info.get('field', ''),
+                'current_position': applicant_info.get('currentPosition', ''),
+                'company': applicant_info.get('company', ''),
+                'years_of_experience': applicant_info.get('yearsOfExperience', 0),
+                'overall_score': assessment_data.get('overallScore', 0),
+                'eligibility_level': gtv_pathway.get('eligibilityLevel', ''),
+                'gtv_pathway': gtv_pathway.get('recommendedRoute', ''),
+                'pathway_analysis': gtv_pathway.get('analysis', ''),
+                'final_recommendation': assessment_data.get('recommendation', ''),
+                'timeline': assessment_data.get('timeline', ''),
+                'estimated_budget_min': estimated_budget.get('min', 0),
+                'estimated_budget_max': estimated_budget.get('max', 0),
+                'estimated_budget_currency': estimated_budget.get('currency', 'GBP'),
+                'data': assessment_data,
+                'status': 'completed'
+            }
+            
+            result = self.save_assessment(new_data)
+            if result.get('success'):
+                return assessment_id
+            else:
+                raise Exception(result.get('error', '保存失败'))
+                
+        except Exception as e:
+            logger.error(f"保存评估结果到数据库失败: {e}")
+            raise
+    
+    def get_assessment_legacy(self, assessment_id: str) -> Optional[Dict[str, Any]]:
+        """
+        获取评估结果（兼容旧版 assessment_database.py 的接口）
+        
+        Args:
+            assessment_id: 评估 ID
+        
+        Returns:
+            评估数据（旧格式）
+        """
+        try:
+            result = self.get_assessment(assessment_id)
+            if not result.get('success') or not result.get('assessment'):
+                return None
+            
+            assessment = result['assessment']
+            data = assessment.get('data')
+            
+            # 如果有原始数据，直接返回
+            if data:
+                if isinstance(data, str):
+                    try:
+                        data = json.loads(data)
+                    except:
+                        data = {}
+                data['assessment_id'] = assessment_id
+                data['created_at'] = assessment.get('created_at')
+                data['updated_at'] = assessment.get('updated_at')
+                return data
+            
+            # 否则从字段构建
+            return {
+                'assessment_id': assessment_id,
+                'applicantInfo': {
+                    'name': assessment.get('applicant_name', ''),
+                    'email': assessment.get('applicant_email', ''),
+                    'field': assessment.get('field', ''),
+                    'currentPosition': assessment.get('current_position', ''),
+                    'company': assessment.get('company', ''),
+                    'yearsOfExperience': assessment.get('years_of_experience', 0)
+                },
+                'overallScore': assessment.get('overall_score', 0),
+                'gtvPathway': {
+                    'recommendedRoute': assessment.get('gtv_pathway', ''),
+                    'eligibilityLevel': assessment.get('eligibility_level', ''),
+                    'analysis': assessment.get('pathway_analysis', '')
+                },
+                'recommendation': assessment.get('final_recommendation', ''),
+                'timeline': assessment.get('timeline', ''),
+                'estimatedBudget': {
+                    'min': assessment.get('estimated_budget_min', 0),
+                    'max': assessment.get('estimated_budget_max', 0),
+                    'currency': assessment.get('estimated_budget_currency', 'GBP')
+                },
+                'created_at': assessment.get('created_at'),
+                'updated_at': assessment.get('updated_at')
+            }
+                
+        except Exception as e:
+            logger.error(f"从数据库获取评估结果失败: {e}")
+            return None
+    
+    def list_assessments_legacy(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        列出评估结果（兼容旧版接口）
+        """
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT id, applicant_name, field, overall_score, 
+                           gtv_pathway, created_at, updated_at
+                    FROM assessments 
+                    ORDER BY created_at DESC 
+                    LIMIT ?
+                ''', (limit,))
+                
+                rows = cursor.fetchall()
+                return [
+                    {
+                        'assessment_id': row['id'],
+                        'applicant_name': row['applicant_name'],
+                        'field': row['field'],
+                        'overall_score': row['overall_score'],
+                        'gtv_pathway': row['gtv_pathway'],
+                        'created_at': row['created_at'],
+                        'updated_at': row['updated_at']
+                    }
+                    for row in rows
+                ]
+                
+        except Exception as e:
+            logger.error(f"列出评估结果失败: {e}")
+            return []
 
 
 # 测试代码

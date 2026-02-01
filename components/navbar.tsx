@@ -15,7 +15,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Menu, X, MessageCircle, FileCheck, Home, Info, LogIn, User, LogOut, Wand2, ClipboardList, Tags, Activity, ChevronDown } from "lucide-react"
 import { useLanguage } from "@/lib/i18n"
-import { useAuth } from "@/lib/supabase/auth-context"
+import { useAuth } from "@/lib/auth/auth-context"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { AuthDialog } from "@/components/auth-dialog"
 
@@ -237,7 +237,7 @@ export function Navbar() {
                   <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        {user.user_metadata?.full_name || "User"}
+                        {user.full_name || "User"}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.email}
@@ -304,7 +304,7 @@ export function Navbar() {
                   <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        {user.user_metadata?.full_name || "User"}
+                        {user.full_name || "User"}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.email}

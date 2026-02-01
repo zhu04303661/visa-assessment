@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowRight, Loader2, FileText, Upload, AlertCircle, CheckCircle2, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/i18n"
-import { useAuth } from "@/lib/supabase/auth-context"
+import { useAuth } from "@/lib/auth/auth-context"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { ErrorDialog } from "@/components/error-dialog"
 import { AssessmentLoading } from "@/components/assessment-loading"
@@ -373,17 +373,17 @@ export function AssessmentForm() {
         console.log(`[上传全链路][${submitRequestId}] ✅ 数据已存储 (完整响应)`)
       }
 
-      // 保存评估数据到 Supabase
+      // 保存评估数据到数据库
       try {
-        console.log(`[上传全链路][${submitRequestId}] 💾 开始保存评估数据到 Supabase`)
+        console.log(`[上传全链路][${submitRequestId}] 💾 开始保存评估数据到数据库`)
         
-        // 1. 如果有上传的文件，先上传到 Supabase Storage
+        // 1. 如果有上传的文件，先上传到服务器
         let resumeFileUrl: string | null = null
         let resumeFileName: string | null = null
         
         if (uploadedFile && uploadMethod === "upload" && user) {
           try {
-            console.log(`[上传全链路][${submitRequestId}] 📤 上传简历文件到 Supabase Storage`)
+            console.log(`[上传全链路][${submitRequestId}] 📤 上传简历文件到服务器`)
             const uploadFormData = new FormData()
             uploadFormData.append('file', uploadedFile)
             uploadFormData.append('userId', user.id)
@@ -407,7 +407,7 @@ export function AssessmentForm() {
           }
         }
 
-        // 2. 保存评估数据到 Supabase（支持匿名用户）
+        // 2. 保存评估数据到数据库（支持匿名用户）
         const assessmentDataToSave = {
           userId: user?.id || null, // 如果用户未登录，userId 为 null
           applicantName: formData.name,

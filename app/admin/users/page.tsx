@@ -42,10 +42,9 @@ import {
   Edit,
   Loader2,
 } from "lucide-react"
-import { useAuth } from "@/lib/supabase/auth-context"
+import { useAuth, type UserRole } from "@/lib/auth/auth-context"
 import { useLanguage } from "@/lib/i18n"
 import { Navbar } from "@/components/navbar"
-import type { UserRole } from "@/lib/supabase/auth-context"
 
 interface User {
   id: string
@@ -78,7 +77,7 @@ const getRoleLabel = (role: string | null | undefined): { label: string; color: 
 
 export default function UserManagementPage() {
   const router = useRouter()
-  const { user, session, profile, loading: authLoading, isAdmin } = useAuth()
+  const { user, profile, loading: authLoading, isAdmin } = useAuth()
   const { language } = useLanguage()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -94,7 +93,7 @@ export default function UserManagementPage() {
   // 权限检查
   useEffect(() => {
     if (!authLoading) {
-      if (!user || !session) {
+      if (!user || !profile) {
         router.push("/")
         return
       }
@@ -103,20 +102,18 @@ export default function UserManagementPage() {
         router.push("/")
       }
     }
-  }, [user, session, authLoading, isAdmin, router])
+  }, [user, profile, authLoading, isAdmin, router])
 
   // 加载用户列表
   const loadUsers = async () => {
-    if (!session) return
+    if (!profile) return
 
     try {
       setLoading(true)
       setError("")
 
       const response = await fetch("/api/admin/users", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        credentials: 'include',
       })
 
       const data = await response.json()
@@ -139,14 +136,14 @@ export default function UserManagementPage() {
   }
 
   useEffect(() => {
-    if (session && isAdmin()) {
+    if (profile && isAdmin()) {
       loadUsers()
     }
-  }, [session, isAdmin])
+  }, [profile, isAdmin])
 
   // 更新用户角色
   const handleUpdateRole = async () => {
-    if (!editingUser || !session) return
+    if (!editingUser || !profile) return
 
     try {
       setUpdating(true)
@@ -156,8 +153,8 @@ export default function UserManagementPage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({
           userId: editingUser.id,
           role: newRole,

@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAuth } from "@/lib/supabase/auth-context"
+import { useAuth } from "@/lib/auth/auth-context"
 import { useLanguage } from "@/lib/i18n"
-import { Loader2, Mail, Lock, User } from "lucide-react"
+import { Loader2, Mail, Lock, User, Phone } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface AuthDialogProps {
@@ -30,6 +30,7 @@ export function AuthDialog({ open, onOpenChange, defaultMode = "login" }: AuthDi
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
+  const [phone, setPhone] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -55,7 +56,13 @@ export function AuthDialog({ open, onOpenChange, defaultMode = "login" }: AuthDi
           setPassword("")
         }
       } else if (mode === "register") {
-        const { error } = await signUp(email, password, fullName)
+        // 验证手机号
+        if (!phone || phone.trim().length < 11) {
+          setError(language === "en" ? "Please enter a valid phone number" : "请输入有效的手机号码")
+          setIsLoading(false)
+          return
+        }
+        const { error } = await signUp(email, password, fullName, phone)
         if (error) {
           setError(
             language === "en"
@@ -65,14 +72,15 @@ export function AuthDialog({ open, onOpenChange, defaultMode = "login" }: AuthDi
         } else {
           setSuccessMessage(
             language === "en"
-              ? "Registration successful! Please check your email to verify your account."
-              : "注册成功！请检查您的邮箱以验证账户。"
+              ? "Registration successful! You can now sign in."
+              : "注册成功！您现在可以登录了。"
           )
           setTimeout(() => {
             setMode("login")
             setEmail("")
             setPassword("")
             setFullName("")
+            setPhone("")
             setSuccessMessage(null)
           }, 2000)
         }
@@ -115,6 +123,7 @@ export function AuthDialog({ open, onOpenChange, defaultMode = "login" }: AuthDi
     setEmail("")
     setPassword("")
     setFullName("")
+    setPhone("")
   }
 
   return (
@@ -163,22 +172,44 @@ export function AuthDialog({ open, onOpenChange, defaultMode = "login" }: AuthDi
           )}
 
           {mode === "register" && (
-            <div className="space-y-2">
-              <Label htmlFor="fullName">
-                {language === "en" ? "Full Name" : "姓名"}
-              </Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder={language === "en" ? "John Doe" : "张三"}
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="pl-9"
-                />
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">
+                  {language === "en" ? "Full Name" : "姓名"} <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder={language === "en" ? "John Doe" : "张三"}
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    className="pl-9"
+                  />
+                </div>
               </div>
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">
+                  {language === "en" ? "Phone Number" : "手机号码"} <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder={language === "en" ? "13800138000" : "13800138000"}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    minLength={11}
+                    maxLength={11}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           <div className="space-y-2">

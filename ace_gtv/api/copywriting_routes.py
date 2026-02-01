@@ -3035,3 +3035,342 @@ def save_agent_config(project_id, package_type):
     except Exception as e:
         logger.error(f"保存Agent配置失败: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==================== 用户认证 API ====================
+
+@copywriting_bp.route('/auth/register', methods=['POST'])
+def auth_register():
+    """用户注册"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        email = data.get('email')
+        password_hash = data.get('password_hash')
+        full_name = data.get('full_name')
+        phone = data.get('phone')
+        role = data.get('role', 'guest')
+        
+        if not email or not password_hash:
+            return jsonify({"success": False, "error": "邮箱和密码为必填项"}), 400
+        
+        result = db.create_user(
+            email=email,
+            password_hash=password_hash,
+            full_name=full_name,
+            phone=phone,
+            role=role
+        )
+        
+        if result.get('success'):
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+        
+    except Exception as e:
+        logger.error(f"用户注册失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/auth/user-by-email', methods=['POST'])
+def auth_get_user_by_email():
+    """根据邮箱获取用户"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        email = data.get('email')
+        
+        if not email:
+            return jsonify({"success": False, "error": "邮箱为必填项"}), 400
+        
+        result = db.get_user_by_email(email)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取用户失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/auth/user-by-id', methods=['POST'])
+def auth_get_user_by_id():
+    """根据ID获取用户"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({"success": False, "error": "用户ID为必填项"}), 400
+        
+        result = db.get_user_by_id(user_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取用户失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/auth/session', methods=['POST'])
+def auth_create_session():
+    """创建用户会话"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        user_id = data.get('user_id')
+        token = data.get('token')
+        expires_at = data.get('expires_at')
+        
+        if not user_id or not token or not expires_at:
+            return jsonify({"success": False, "error": "缺少必要参数"}), 400
+        
+        # 解析过期时间
+        from datetime import datetime
+        if isinstance(expires_at, str):
+            expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+        
+        result = db.create_session(user_id, token, expires_at)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"创建会话失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/auth/session', methods=['DELETE'])
+def auth_delete_session():
+    """删除用户会话"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        token = data.get('token')
+        
+        if not token:
+            return jsonify({"success": False, "error": "Token为必填项"}), 400
+        
+        result = db.delete_session(token)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"删除会话失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/auth/validate-session', methods=['POST'])
+def auth_validate_session():
+    """验证会话"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        token = data.get('token')
+        
+        if not token:
+            return jsonify({"success": False, "valid": False, "error": "Token为必填项"}), 400
+        
+        result = db.validate_session(token)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"验证会话失败: {e}")
+        return jsonify({"success": False, "valid": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/auth/update-last-sign-in', methods=['POST'])
+def auth_update_last_sign_in():
+    """更新最后登录时间"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({"success": False, "error": "用户ID为必填项"}), 400
+        
+        result = db.update_last_sign_in(user_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"更新登录时间失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/auth/users', methods=['GET'])
+def auth_list_users():
+    """列出所有用户"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        page = request.args.get('page', 1, type=int)
+        page_size = request.args.get('page_size', 20, type=int)
+        role = request.args.get('role')
+        
+        result = db.list_users(page=page, page_size=page_size, role=role)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"列出用户失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/auth/users/<user_id>', methods=['PATCH'])
+def auth_update_user(user_id):
+    """更新用户信息"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        
+        result = db.update_user(user_id, **data)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"更新用户失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/auth/users/<user_id>', methods=['DELETE'])
+def auth_delete_user(user_id):
+    """删除用户"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        result = db.delete_user(user_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"删除用户失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==================== 评估记录 API ====================
+
+@copywriting_bp.route('/assessments', methods=['POST'])
+def save_assessment():
+    """保存评估记录"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        
+        result = db.save_assessment(data)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"保存评估记录失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/assessments/<assessment_id>', methods=['GET'])
+def get_assessment(assessment_id):
+    """获取评估记录"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        result = db.get_assessment(assessment_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"获取评估记录失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/assessments', methods=['GET'])
+def list_assessments():
+    """列出评估记录"""
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        user_id = request.args.get('user_id')
+        page = request.args.get('page', 1, type=int)
+        page_size = request.args.get('page_size', 20, type=int)
+        
+        result = db.list_assessments(user_id=user_id, page=page, page_size=page_size)
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"列出评估记录失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500

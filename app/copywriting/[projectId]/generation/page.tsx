@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { AuthGuard } from "@/components/auth-guard"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -297,6 +298,7 @@ export default function GenerationOverviewPage() {
   const progress = calculateProgress()
 
   return (
+    <AuthGuard requireAuth={true} allowedRoles={['admin', 'super_admin']} unauthorizedMessage="AI文案功能仅对管理员开放">
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
       <Navbar />
       
@@ -483,5 +485,6 @@ export default function GenerationOverviewPage() {
       
       <Footer />
     </div>
+    </AuthGuard>
   )
 }

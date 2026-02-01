@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { AuthGuard } from "@/components/auth-guard"
 import { 
   ArrowLeft, ArrowRight, RefreshCw, Download, FileText, Target, Award, 
   Users, MessageSquare, CheckCircle, AlertCircle, ChevronDown, 
@@ -722,6 +723,7 @@ export default function FrameworkPage() {
   }, [fetchProjectInfo, fetchFramework, fetchProjectFiles])
 
   return (
+    <AuthGuard requireAuth={true} allowedRoles={['admin', 'super_admin']} unauthorizedMessage="AI文案功能仅对管理员开放">
     <div className="min-h-screen bg-background">
       {/* 顶部导航 */}
       <div className="border-b bg-card">
@@ -2188,5 +2190,6 @@ export default function FrameworkPage() {
         file={previewFile}
       />
     </div>
+    </AuthGuard>
   )
 }

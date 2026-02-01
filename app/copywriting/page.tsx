@@ -64,6 +64,7 @@ import {
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import { AuthGuard } from "@/components/auth-guard"
 import { UnifiedFilePreview } from "@/components/unified-file-preview"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -1950,18 +1951,25 @@ function CopywritingContent() {
   )
 }
 
-// 导出带 Suspense 包装的组件，正确处理 useSearchParams
+// 导出带 Suspense 和 AuthGuard 包装的组件
+// AI文案功能需要管理员权限才能访问
 export default function CopywritingPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="text-sm text-muted-foreground">加载中...</p>
+    <AuthGuard
+      requireAuth={true}
+      allowedRoles={['admin', 'super_admin']}
+      unauthorizedMessage="AI文案功能仅对管理员开放，请联系管理员获取访问权限。"
+    >
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+          <div className="flex flex-col items-center gap-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="text-sm text-muted-foreground">加载中...</p>
+          </div>
         </div>
-      </div>
-    }>
-      <CopywritingContent />
-    </Suspense>
+      }>
+        <CopywritingContent />
+      </Suspense>
+    </AuthGuard>
   )
 }

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/lib/i18n"
 import ACEChatUIComponent from "@/components/ace-chat-ui"
 import { Navbar } from "@/components/navbar"
+import { AuthGuard } from "@/components/auth-guard"
 import { MessageCircle, Sparkles } from "lucide-react"
 import { useState } from "react"
 
@@ -25,6 +26,7 @@ export default function ChatAssessmentPage() {
   const [isAssessmentComplete, setIsAssessmentComplete] = useState(false)
 
   return (
+    <AuthGuard requireAuth={true}>
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <Navbar />
       <div className="container mx-auto px-4 py-12">
@@ -174,5 +176,6 @@ export default function ChatAssessmentPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   )
 }

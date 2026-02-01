@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { AuthGuard } from '@/components/auth-guard'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -891,15 +892,17 @@ function AnalysisPageContent() {
 // 使用 Suspense 包裹，因为 useSearchParams 需要 Suspense 边界
 export default function AnalysisPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">加载中...</p>
+    <AuthGuard requireAuth={true}>
+      <Suspense fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">加载中...</p>
+          </div>
         </div>
-      </div>
-    }>
-      <AnalysisPageContent />
-    </Suspense>
+      }>
+        <AnalysisPageContent />
+      </Suspense>
+    </AuthGuard>
   )
 }
