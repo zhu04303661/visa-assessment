@@ -2546,6 +2546,8 @@ def generate_package_content(project_id, package_type):
         custom_instructions = data.get('custom_instructions', '')
         selected_inputs = data.get('selected_inputs', {})
         recommender_info = data.get('recommender_info', {})
+        custom_prompt = data.get('custom_prompt', '')  # 用户自定义的系统提示词
+        include_strategy = data.get('include_strategy', True)  # 是否包含GTV策略信息
         
         # 获取生成上下文
         conn = sqlite3.connect(db.db_path)
@@ -2562,20 +2564,63 @@ def generate_package_content(project_id, package_type):
             context_parts.append(f"申请人: {project_row['client_name']}")
             context_parts.append(f"签证类型: {project_row['visa_type']}")
         
-        # 获取GTV框架
-        include_framework = selected_inputs.get('include_framework', True)
+        # 获取GTV框架（增强版：包含更多策略信息）
+        include_framework = selected_inputs.get('include_framework', True) and include_strategy
         if include_framework:
-            cursor.execute('SELECT framework_data FROM gtv_framework WHERE project_id = ?', (project_id,))
+            cursor.execute('SELECT framework_data, mc_criteria, oc_criteria, domain_positioning FROM gtv_framework WHERE project_id = ?', (project_id,))
             fw_row = cursor.fetchone()
-            if fw_row and fw_row['framework_data']:
-                framework = json.loads(fw_row['framework_data'])
-                context_parts.append("\n--- GTV框架 ---")
-                if framework.get('领域定位'):
-                    context_parts.append(f"领域定位: {json.dumps(framework['领域定位'], ensure_ascii=False)}")
-                if framework.get('MC_必选标准'):
-                    context_parts.append(f"MC标准: {framework['MC_必选标准'].get('选择的MC', '')}")
-                if framework.get('OC_可选标准'):
-                    context_parts.append(f"OC标准: {', '.join(framework['OC_可选标准'].get('选择的OC', []))}")
+            if fw_row:
+                context_parts.append("\n--- GTV申请策略 ---")
+                
+                # 解析框架数据
+                if fw_row['framework_data']:
+                    framework = json.loads(fw_row['framework_data'])
+                    
+                    # 领域定位
+                    if framework.get('领域定位'):
+                        domain = framework['领域定位']
+                        context_parts.append(f"\n【领域定位】")
+                        if isinstance(domain, dict):
+                            if domain.get('核心领域'):
+                                context_parts.append(f"核心领域: {domain['核心领域']}")
+                            if domain.get('岗位定位'):
+                                context_parts.append(f"岗位定位: {domain['岗位定位']}")
+                            if domain.get('核心论点'):
+                                context_parts.append(f"核心论点: {domain['核心论点']}")
+                            if domain.get('关键成就'):
+                                context_parts.append(f"关键成就: {domain['关键成就']}")
+                        else:
+                            context_parts.append(str(domain))
+                    
+                    # MC标准详情
+                    if framework.get('MC_必选标准'):
+                        mc = framework['MC_必选标准']
+                        context_parts.append(f"\n【MC标准 - 必选】")
+                        context_parts.append(f"选择的MC: {mc.get('选择的MC', '')}")
+                        if mc.get('核心论点'):
+                            context_parts.append(f"核心论点: {mc['核心论点']}")
+                        if mc.get('支撑证据'):
+                            context_parts.append(f"支撑证据: {mc['支撑证据']}")
+                    
+                    # OC标准详情
+                    if framework.get('OC_可选标准'):
+                        oc = framework['OC_可选标准']
+                        context_parts.append(f"\n【OC标准 - 可选】")
+                        selected_ocs = oc.get('选择的OC', [])
+                        context_parts.append(f"选择的OC: {', '.join(selected_ocs) if isinstance(selected_ocs, list) else selected_ocs}")
+                        for oc_key in ['OC1', 'OC2', 'OC3', 'OC4']:
+                            if oc.get(oc_key):
+                                oc_detail = oc[oc_key]
+                                if isinstance(oc_detail, dict) and oc_detail.get('核心论点'):
+                                    context_parts.append(f"{oc_key}: {oc_detail['核心论点']}")
+                    
+                    # 推荐信策略（如果是推荐信类型）
+                    if package_type.startswith('rl_') and framework.get('推荐信'):
+                        rl_strategy = framework['推荐信']
+                        context_parts.append(f"\n【推荐信策略】")
+                        for key, value in rl_strategy.items():
+                            if value and isinstance(value, dict):
+                                context_parts.append(f"{key}: {json.dumps(value, ensure_ascii=False)}")
         
         # 获取分类内容
         classification_ids = selected_inputs.get('classification_ids', [])
@@ -2611,17 +2656,22 @@ def generate_package_content(project_id, package_type):
         package_prompts = {
             "personal_statement": "你是一位专业的GTV签证个人陈述撰写专家。请根据提供的信息，撰写一份有说服力的个人陈述（英文），1000-1500词。",
             "cv_resume": "你是一位专业的简历优化专家。请根据提供的信息，生成一份符合GTV签证要求的专业简历（英文）。",
+            "recommendation_letters": "你是一位专业的推荐信撰写专家。请根据提供的信息，撰写一封GTV签证推荐信（英文），1-1.5页。推荐信应突出申请人在相关领域的卓越成就和贡献。",
             "rl_1": "你是一位专业的推荐信撰写专家。请撰写一封来自行业专家的GTV签证推荐信（英文），1-1.5页。",
             "rl_2": "你是一位专业的推荐信撰写专家。请撰写一封来自技术/学术专家的GTV签证推荐信（英文），1-1.5页。",
             "rl_3": "你是一位专业的推荐信撰写专家。请撰写一封来自商业合作伙伴的GTV签证推荐信（英文），1-1.5页。",
-            "evidence_portfolio": "你是一位GTV签证证据材料整理专家。请根据提供的信息，整理证据材料清单和说明。",
-            "cover_letter": "你是一位专业的签证申请信撰写专家。请撰写一封正式的GTV签证申请信（英文）。",
+            "evidence_portfolio": "你是一位GTV签证证据材料整理专家。请根据提供的信息，整理证据材料清单和说明（中英双语），包括每项证据的重要性和支撑论点。",
+            "cover_letter": "你是一位专业的签证申请信撰写专家。请撰写一封正式的GTV签证申请信（英文），简洁有力地概述申请人的资格和申请理由。",
             "endorsement_letter": "你是一位Tech Nation背书申请专家。请撰写背书申请材料。",
             "business_plan": "你是一位商业计划书撰写专家。请撰写创业者路径所需的商业计划书。",
             "supplementary": "你是一位签证材料整理专家。请整理补充材料说明。"
         }
         
-        system_prompt = package_prompts.get(package_type, "你是一位专业的签证材料撰写专家。")
+        # 使用自定义提示词或默认提示词
+        if custom_prompt and custom_prompt.strip():
+            system_prompt = custom_prompt
+        else:
+            system_prompt = package_prompts.get(package_type, "你是一位专业的签证材料撰写专家。")
         
         # 调用LLM
         llm_provider = os.getenv("LLM_PROVIDER", "ENNCLOUD").upper()
@@ -2696,8 +2746,8 @@ def generate_package_content(project_id, package_type):
         word_count = len(generated_content.split()) if generated_content else 0
         cursor.execute('''
             INSERT INTO document_versions 
-            (project_id, package_type, version, content, edit_type, edit_summary, editor, word_count)
-            VALUES (?, ?, ?, ?, 'ai_generate', 'AI生成内容', 'ai', ?)
+            (project_id, package_type, version, content, edit_type, edit_summary, editor, word_count, source_type)
+            VALUES (?, ?, ?, ?, 'ai_generate', 'AI生成内容', 'ai', ?, 'ai_generated')
         ''', (project_id, package_type, new_version, generated_content, word_count))
         
         # 更新当前内容
@@ -2899,6 +2949,281 @@ def rollback_package_version(project_id, package_type):
         
     except Exception as e:
         logger.error(f"回滚版本失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/packages/<package_type>/upload', methods=['POST'])
+def upload_package_document(project_id, package_type):
+    """上传文档并解析内容，创建新版本"""
+    import sqlite3
+    import tempfile
+    import os
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        # 检查是否有文件
+        if 'file' not in request.files:
+            return jsonify({"success": False, "error": "请上传文件"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"success": False, "error": "未选择文件"}), 400
+        
+        filename = file.filename
+        file_ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+        
+        # 验证文件类型
+        allowed_extensions = ['pdf', 'doc', 'docx', 'txt', 'md']
+        if file_ext not in allowed_extensions:
+            return jsonify({"success": False, "error": f"不支持的文件类型: {file_ext}"}), 400
+        
+        # 保存临时文件
+        with tempfile.NamedTemporaryFile(delete=False, suffix=f'.{file_ext}') as tmp_file:
+            file.save(tmp_file.name)
+            tmp_path = tmp_file.name
+        
+        try:
+            # 解析文件内容
+            content = ""
+            
+            if file_ext in ['txt', 'md']:
+                with open(tmp_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+            
+            elif file_ext == 'docx':
+                try:
+                    from docx import Document
+                    doc = Document(tmp_path)
+                    paragraphs = [para.text for para in doc.paragraphs]
+                    content = '\n\n'.join(paragraphs)
+                except ImportError:
+                    return jsonify({"success": False, "error": "服务器未安装 python-docx 库"}), 500
+            
+            elif file_ext == 'doc':
+                # 尝试使用 antiword 或其他工具
+                try:
+                    import subprocess
+                    result = subprocess.run(['antiword', tmp_path], capture_output=True, text=True)
+                    if result.returncode == 0:
+                        content = result.stdout
+                    else:
+                        return jsonify({"success": False, "error": "无法解析 .doc 文件，请转换为 .docx 格式"}), 400
+                except FileNotFoundError:
+                    return jsonify({"success": False, "error": "服务器无法解析 .doc 文件，请转换为 .docx 格式"}), 400
+            
+            elif file_ext == 'pdf':
+                try:
+                    import pdfplumber
+                    with pdfplumber.open(tmp_path) as pdf:
+                        pages_text = [page.extract_text() or '' for page in pdf.pages]
+                        content = '\n\n'.join(pages_text)
+                except ImportError:
+                    try:
+                        import PyPDF2
+                        with open(tmp_path, 'rb') as f:
+                            reader = PyPDF2.PdfReader(f)
+                            pages_text = [page.extract_text() or '' for page in reader.pages]
+                            content = '\n\n'.join(pages_text)
+                    except ImportError:
+                        return jsonify({"success": False, "error": "服务器未安装 PDF 解析库"}), 500
+            
+            if not content or not content.strip():
+                return jsonify({"success": False, "error": "无法从文件中提取内容"}), 400
+            
+            # 计算字数
+            word_count = len(content.split())
+            
+            # 获取当前版本号并创建新版本
+            conn = sqlite3.connect(db.db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT current_version FROM package_contents
+                WHERE project_id = ? AND package_type = ?
+            ''', (project_id, package_type))
+            
+            current_row = cursor.fetchone()
+            new_version = (current_row['current_version'] + 1) if current_row else 1
+            
+            # 插入版本记录
+            cursor.execute('''
+                INSERT INTO document_versions 
+                (project_id, package_type, version, content, edit_type, edit_summary, editor, word_count, source_type, source_file)
+                VALUES (?, ?, ?, ?, 'upload', ?, 'user', ?, 'uploaded', ?)
+            ''', (project_id, package_type, new_version, content, f"上传文件: {filename}", word_count, filename))
+            
+            # 更新或插入当前内容
+            if current_row:
+                cursor.execute('''
+                    UPDATE package_contents 
+                    SET current_version = ?, content = ?, last_edited_by = 'user', 
+                        ai_generated = 0, updated_at = CURRENT_TIMESTAMP
+                    WHERE project_id = ? AND package_type = ?
+                ''', (new_version, content, project_id, package_type))
+            else:
+                cursor.execute('''
+                    INSERT INTO package_contents 
+                    (project_id, package_type, current_version, content, status, last_edited_by, ai_generated)
+                    VALUES (?, ?, ?, ?, 'draft', 'user', 0)
+                ''', (project_id, package_type, new_version, content))
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info(f"文档上传成功: {project_id}/{package_type}, 版本 {new_version}")
+            
+            return jsonify({
+                "success": True,
+                "content": content,
+                "version": new_version,
+                "word_count": word_count,
+                "source_file": filename
+            })
+            
+        finally:
+            # 清理临时文件
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+        
+    except Exception as e:
+        logger.error(f"上传文档失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/packages/<package_type>/diff', methods=['GET'])
+def get_package_diff(project_id, package_type):
+    """获取两个版本之间的差异"""
+    import sqlite3
+    import difflib
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        v1 = request.args.get('v1', type=int)
+        v2 = request.args.get('v2', type=int)
+        
+        if not v1 or not v2:
+            return jsonify({"success": False, "error": "请指定 v1 和 v2 参数"}), 400
+        
+        conn = sqlite3.connect(db.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # 获取两个版本的内容
+        cursor.execute('''
+            SELECT version, content, edit_type, word_count, created_at, source_type, source_file
+            FROM document_versions
+            WHERE project_id = ? AND package_type = ? AND version IN (?, ?)
+        ''', (project_id, package_type, v1, v2))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        if len(rows) < 2:
+            return jsonify({"success": False, "error": "找不到指定的版本"}), 404
+        
+        # 整理版本信息
+        versions_data = {}
+        for row in rows:
+            versions_data[row['version']] = {
+                'version': row['version'],
+                'content': row['content'] or '',
+                'edit_type': row['edit_type'],
+                'word_count': row['word_count'],
+                'created_at': row['created_at'],
+                'source_type': row['source_type'] or row['edit_type'],
+                'source_file': row['source_file']
+            }
+        
+        v1_data = versions_data.get(v1, {'content': ''})
+        v2_data = versions_data.get(v2, {'content': ''})
+        
+        # 生成行级差异
+        v1_lines = v1_data['content'].split('\n')
+        v2_lines = v2_data['content'].split('\n')
+        
+        diff_result = []
+        matcher = difflib.SequenceMatcher(None, v1_lines, v2_lines)
+        
+        old_line_num = 0
+        new_line_num = 0
+        
+        for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+            if tag == 'equal':
+                for i in range(i2 - i1):
+                    old_line_num += 1
+                    new_line_num += 1
+                    diff_result.append({
+                        'type': 'equal',
+                        'content': v1_lines[i1 + i],
+                        'oldLineNum': old_line_num,
+                        'newLineNum': new_line_num
+                    })
+            elif tag == 'delete':
+                for i in range(i2 - i1):
+                    old_line_num += 1
+                    diff_result.append({
+                        'type': 'delete',
+                        'content': v1_lines[i1 + i],
+                        'oldLineNum': old_line_num
+                    })
+            elif tag == 'insert':
+                for j in range(j2 - j1):
+                    new_line_num += 1
+                    diff_result.append({
+                        'type': 'insert',
+                        'content': v2_lines[j1 + j],
+                        'newLineNum': new_line_num
+                    })
+            elif tag == 'replace':
+                for i in range(i2 - i1):
+                    old_line_num += 1
+                    diff_result.append({
+                        'type': 'delete',
+                        'content': v1_lines[i1 + i],
+                        'oldLineNum': old_line_num
+                    })
+                for j in range(j2 - j1):
+                    new_line_num += 1
+                    diff_result.append({
+                        'type': 'insert',
+                        'content': v2_lines[j1 + j],
+                        'newLineNum': new_line_num
+                    })
+        
+        return jsonify({
+            "success": True,
+            "diff": diff_result,
+            "v1_info": {
+                'version': v1,
+                'word_count': v1_data.get('word_count', 0),
+                'created_at': v1_data.get('created_at'),
+                'source_type': v1_data.get('source_type', 'manual')
+            },
+            "v2_info": {
+                'version': v2,
+                'word_count': v2_data.get('word_count', 0),
+                'created_at': v2_data.get('created_at'),
+                'source_type': v2_data.get('source_type', 'manual')
+            },
+            "v1_content": v1_data['content'],
+            "v2_content": v2_data['content']
+        })
+        
+    except Exception as e:
+        logger.error(f"获取版本差异失败: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -3373,4 +3698,1529 @@ def list_assessments():
         
     except Exception as e:
         logger.error(f"列出评估记录失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==================== AI 文案助手 API ====================
+
+@copywriting_bp.route('/assistant/skills', methods=['GET'])
+def list_assistant_skills():
+    """获取可用的 skills 列表"""
+    logger = _get_logger()
+    
+    try:
+        try:
+            from ace_gtv.services.claude_code_service import get_claude_code_service
+        except ImportError:
+            from services.claude_code_service import get_claude_code_service
+        
+        service = get_claude_code_service()
+        skills = service.list_skills()
+        
+        return jsonify({
+            "success": True,
+            "data": skills
+        })
+        
+    except Exception as e:
+        logger.error(f"获取 skills 列表失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/assistant/skills/<skill_name>/content', methods=['GET'])
+def get_skill_content(skill_name):
+    """获取指定 skill 的内容"""
+    logger = _get_logger()
+    
+    try:
+        try:
+            from ace_gtv.services.claude_code_service import get_claude_code_service
+        except ImportError:
+            from services.claude_code_service import get_claude_code_service
+        
+        service = get_claude_code_service()
+        skill_info = service.available_skills.get(skill_name)
+        
+        if not skill_info:
+            return jsonify({"success": False, "error": f"Skill not found: {skill_name}"}), 404
+        
+        # 读取 skill 内容
+        from pathlib import Path
+        skill_path = Path(skill_info.path)
+        if skill_path.exists():
+            content = skill_path.read_text(encoding='utf-8')
+            return jsonify({
+                "success": True,
+                "data": {
+                    "name": skill_info.name,
+                    "display_name": skill_info.display_name,
+                    "description": skill_info.description,
+                    "content": content
+                }
+            })
+        else:
+            return jsonify({"success": False, "error": "Skill file not found"}), 404
+        
+    except Exception as e:
+        logger.error(f"获取 skill 内容失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/assistant/commands', methods=['GET'])
+def list_assistant_commands():
+    """获取可用的斜杠命令列表"""
+    logger = _get_logger()
+    
+    try:
+        try:
+            from ace_gtv.services.command_scanner import get_command_scanner
+        except ImportError:
+            from services.command_scanner import get_command_scanner
+        
+        scanner = get_command_scanner()
+        project_path = request.args.get('project_path')
+        commands = scanner.list_commands(project_path)
+        
+        # 转换为可序列化的格式
+        commands_data = []
+        for cmd in commands:
+            commands_data.append({
+                "id": cmd.id,
+                "name": cmd.name,
+                "description": cmd.description,
+                "category": cmd.category,
+                "source": cmd.source,
+                "argument_hint": cmd.argument_hint
+            })
+        
+        return jsonify({
+            "success": True,
+            "data": commands_data
+        })
+        
+    except Exception as e:
+        logger.error(f"获取命令列表失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/assistant/commands/<command_name>/content', methods=['GET'])
+def get_command_content(command_name):
+    """获取指定命令的内容"""
+    logger = _get_logger()
+    
+    try:
+        try:
+            from ace_gtv.services.command_scanner import get_command_scanner
+        except ImportError:
+            from services.command_scanner import get_command_scanner
+        
+        scanner = get_command_scanner()
+        project_path = request.args.get('project_path')
+        command = scanner.get_command(command_name, project_path)
+        
+        if not command:
+            return jsonify({"success": False, "error": f"Command not found: {command_name}"}), 404
+        
+        content = scanner.get_command_content(command)
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "id": command.id,
+                "name": command.name,
+                "description": command.description,
+                "category": command.category,
+                "source": command.source,
+                "argument_hint": command.argument_hint,
+                "content": content
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"获取命令内容失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/assistant/memory', methods=['GET'])
+def get_memory_info():
+    """获取项目记忆文件信息"""
+    logger = _get_logger()
+    
+    try:
+        try:
+            from ace_gtv.services.memory_loader import get_memory_loader
+        except ImportError:
+            from services.memory_loader import get_memory_loader
+        
+        loader = get_memory_loader()
+        project_path = request.args.get('project_path')
+        memory_info = loader.get_memory_files(project_path)
+        
+        return jsonify({
+            "success": True,
+            "data": memory_info
+        })
+        
+    except Exception as e:
+        logger.error(f"获取记忆信息失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/assistant/status', methods=['GET'])
+def general_assistant_status():
+    """
+    获取 AI 助手服务状态（通用端点，不需要 project_id）
+    
+    返回：
+    - current_mode: 当前执行模式 (ask/agent/plan)
+    - available_modes: 可用模式列表
+    - cli_available: CLI 是否可用
+    - cli_path: CLI 路径
+    - skills_count: 可用技能数量
+    - llm_provider: API 模式使用的 LLM 提供商
+    """
+    try:
+        try:
+            from ace_gtv.services.claude_code_service import get_claude_code_service
+        except ImportError:
+            from services.claude_code_service import get_claude_code_service
+        
+        service = get_claude_code_service()
+        status = service.get_status()
+        
+        return jsonify({
+            "success": True,
+            "data": status
+        })
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/assistant/chat', methods=['POST'])
+def general_assistant_chat():
+    """
+    AI 助手对话 API（通用端点，不需要 project_id）
+    
+    支持流式响应（SSE）
+    """
+    logger = _get_logger()
+    
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        skill = data.get('skill')
+        stream = data.get('stream', True)
+        mode = data.get('mode', 'ask')
+        project_context = data.get('project_context', {})
+        
+        if not message:
+            return jsonify({"success": False, "error": "消息不能为空"}), 400
+        
+        # 构建上下文
+        context = {
+            **project_context,
+            "mode": mode
+        }
+        
+        # 如果请求流式响应
+        if stream:
+            from flask import Response
+            
+            def generate():
+                try:
+                    from ace_gtv.services.claude_code_service import get_claude_code_service
+                except ImportError:
+                    from services.claude_code_service import get_claude_code_service
+                
+                service = get_claude_code_service()
+                # 使用请求中的 mode 参数
+                current_mode = mode
+                
+                # 发送开始信号
+                yield f"data: {json.dumps({'type': 'start', 'mode': current_mode, 'skill': skill})}\n\n"
+                
+                for chunk in service.execute_with_skill(
+                    prompt=message,
+                    skill_name=skill,
+                    context=context,
+                    stream=True,
+                    mode=current_mode  # 传递 mode 参数
+                ):
+                    if chunk.startswith('['):
+                        yield f"data: {json.dumps({'type': 'log', 'content': chunk})}\n\n"
+                    else:
+                        yield f"data: {json.dumps({'type': 'content', 'content': chunk})}\n\n"
+                
+                yield f"data: {json.dumps({'type': 'done', 'skill': skill, 'mode': current_mode})}\n\n"
+            
+            return Response(
+                generate(),
+                mimetype='text/event-stream',
+                headers={
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
+                    'X-Accel-Buffering': 'no'
+                }
+            )
+        
+        # 非流式响应
+        try:
+            from ace_gtv.services.claude_code_service import get_claude_code_service
+        except ImportError:
+            from services.claude_code_service import get_claude_code_service
+        
+        service = get_claude_code_service()
+        logger.info(f"[助手对话] 非流式响应，mode={mode}, message长度={len(message)}")
+        
+        result_chunks = []
+        for chunk in service.execute_with_skill(
+            prompt=message,
+            skill_name=skill,
+            context=context,
+            stream=False,
+            mode=mode  # 传递 mode 参数
+        ):
+            result_chunks.append(chunk)
+            logger.debug(f"[助手对话] 接收 chunk: {len(chunk)} 字符")
+        
+        logger.info(f"[助手对话] 完成，共 {len(result_chunks)} 个 chunk，总长度 {sum(len(c) for c in result_chunks)}")
+        return jsonify({
+            "success": True,
+            "data": {
+                "content": "".join(result_chunks),
+                "skill": skill,
+                "mode": mode
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"助手对话失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/assistant/status', methods=['GET'])
+def assistant_status(project_id):
+    """
+    获取 AI 助手服务状态
+    
+    返回：
+    - execution_mode: 当前执行模式 (cli/api/auto)
+    - cli_available: CLI 是否可用
+    - cli_path: CLI 路径
+    - skills_count: 可用技能数量
+    - llm_provider: API 模式使用的 LLM 提供商
+    """
+    try:
+        try:
+            from ace_gtv.services.claude_code_service import get_claude_code_service
+        except ImportError:
+            from services.claude_code_service import get_claude_code_service
+        
+        service = get_claude_code_service()
+        status = service.get_status()
+        
+        return jsonify({
+            "success": True,
+            "data": status
+        })
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/assistant/mode', methods=['POST'])
+def set_assistant_mode(project_id):
+    """
+    设置 AI 助手执行模式
+    
+    请求体:
+    {
+        "mode": "ask" | "agent" | "plan"
+    }
+    
+    模式说明:
+    - ask: 快速问答模式，直接调用 AI API
+    - agent: 智能代理模式，使用 Claude CLI，支持复杂任务
+    - plan: 规划模式，分析需求并生成详细计划
+    
+    注意：此设置会修改环境变量，影响当前会话的所有后续请求
+    """
+    import os
+    
+    try:
+        data = request.get_json()
+        mode = data.get('mode', '').lower()
+        
+        valid_modes = ['ask', 'agent', 'plan', 'auto']
+        if mode not in valid_modes:
+            return jsonify({
+                "success": False,
+                "error": f"无效的模式: {mode}，可选值: {', '.join(valid_modes)}"
+            }), 400
+        
+        # 检查 agent 模式是否可用
+        try:
+            from ace_gtv.services.claude_code_service import get_claude_code_service
+        except ImportError:
+            from services.claude_code_service import get_claude_code_service
+        
+        service = get_claude_code_service()
+        
+        if mode == 'agent' and not service.is_cli_available():
+            return jsonify({
+                "success": False,
+                "error": "Agent 模式不可用：Claude CLI 未安装"
+            }), 400
+        
+        # 设置环境变量
+        os.environ['AI_EXECUTION_MODE'] = mode
+        
+        status = service.get_status()
+        
+        # 模式名称映射
+        mode_names = {
+            'ask': 'Ask（快速问答）',
+            'agent': 'Agent（智能代理）',
+            'plan': 'Plan（规划模式）',
+            'auto': 'Auto（自动选择）'
+        }
+        
+        return jsonify({
+            "success": True,
+            "message": f"已切换到 {mode_names.get(mode, mode)} 模式",
+            "data": status
+        })
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/assistant/chat', methods=['POST'])
+def assistant_chat(project_id):
+    """
+    AI 文案助手对话 API
+    
+    支持流式响应（SSE）
+    """
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        message = data.get('message', '')
+        skill = data.get('skill')  # 可选，手动指定的 skill
+        mode = data.get('mode', 'ask')  # 执行模式: ask/agent/plan
+        document_context = data.get('document_context')
+        active_document = data.get('active_document')
+        project_context = data.get('project_context', {})
+        conversation_history = data.get('conversation_history', [])
+        stream = data.get('stream', True)
+        
+        if not message:
+            return jsonify({"success": False, "error": "消息不能为空"}), 400
+        
+        # 获取项目信息
+        project_result = db.get_project(project_id)
+        client_name = ""
+        if project_result.get('success') and project_result.get('data'):
+            client_name = project_result['data'].get('client_name', '')
+        
+        # 自动检测 skill（如果未指定）
+        if not skill:
+            try:
+                from ace_gtv.services.skill_router import auto_detect_skill
+            except ImportError:
+                from services.skill_router import auto_detect_skill
+            skill = auto_detect_skill(message, {
+                "active_document": active_document,
+                "client_name": client_name
+            })
+            logger.info(f"自动检测 skill: {skill}")
+        
+        # 构建上下文
+        context = {
+            "project_id": project_id,
+            "client_name": client_name,
+            "active_document": active_document,
+            "document_context": document_context,
+            "project_context": project_context,
+            "conversation_history": conversation_history
+        }
+        
+        # 如果请求流式响应
+        if stream:
+            from flask import Response
+            
+            # 使用请求中的 mode 参数
+            exec_mode = mode  # 从请求参数获取
+            
+            def generate():
+                try:
+                    from ace_gtv.services.claude_code_service import get_claude_code_service
+                except ImportError:
+                    from services.claude_code_service import get_claude_code_service
+                
+                service = get_claude_code_service()
+                
+                # 发送开始信号，包含执行模式
+                yield f"data: {json.dumps({'type': 'start', 'mode': exec_mode, 'skill': skill})}\n\n"
+                
+                # 如果是 CLI 模式，发送日志信息
+                if exec_mode in ['agent', 'cli']:
+                    cli_path_log = f'[系统] 使用 Agent 模式执行，Claude CLI 路径: {service._cli_path}'
+                    yield f"data: {json.dumps({'type': 'log', 'content': cli_path_log})}\n\n"
+                    skill_name = skill or '自动检测'
+                    skill_log = f'[系统] 技能: {skill_name}'
+                    yield f"data: {json.dumps({'type': 'log', 'content': skill_log})}\n\n"
+                    yield f"data: {json.dumps({'type': 'log', 'content': '[系统] 正在执行...'})}\n\n"
+                
+                for chunk in service.execute_with_skill(
+                    prompt=message,
+                    skill_name=skill,
+                    context=context,
+                    stream=True,
+                    mode=exec_mode  # 传递 mode 参数
+                ):
+                    # 判断是日志还是内容
+                    if chunk.startswith('['):
+                        # 这是日志/状态信息
+                        yield f"data: {json.dumps({'type': 'log', 'content': chunk})}\n\n"
+                    else:
+                        # 这是实际内容
+                        yield f"data: {json.dumps({'type': 'content', 'content': chunk})}\n\n"
+                
+                # 发送完成信号
+                yield f"data: {json.dumps({'type': 'done', 'skill': skill, 'mode': exec_mode})}\n\n"
+            
+            return Response(
+                generate(),
+                mimetype='text/event-stream',
+                headers={
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
+                    'X-Accel-Buffering': 'no'
+                }
+            )
+        
+        # 非流式响应
+        try:
+            from ace_gtv.services.claude_code_service import get_claude_code_service
+        except ImportError:
+            from services.claude_code_service import get_claude_code_service
+        
+        service = get_claude_code_service()
+        
+        result_chunks = []
+        for chunk in service.execute_with_skill(
+            prompt=message,
+            skill_name=skill,
+            context=context,
+            stream=False,
+            mode=mode  # 传递 mode 参数
+        ):
+            result_chunks.append(chunk)
+        
+        return jsonify({
+            "success": True,
+            "message": "".join(result_chunks),
+            "skill": skill,
+            "mode": mode
+        })
+        
+    except Exception as e:
+        logger.error(f"助手对话失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/assistant/suggest', methods=['POST'])
+def assistant_suggest(project_id):
+    """
+    获取文档修改建议
+    
+    基于当前文档内容和用户需求，生成修改建议
+    """
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        document_type = data.get('document_type')
+        document_content = data.get('document_content', '')
+        user_request = data.get('request', '')
+        
+        if not document_type:
+            return jsonify({"success": False, "error": "文档类型不能为空"}), 400
+        
+        # 获取项目信息
+        project_result = db.get_project(project_id)
+        client_name = ""
+        if project_result.get('success') and project_result.get('data'):
+            client_name = project_result['data'].get('client_name', '')
+        
+        # 构建提示
+        prompt = f"""请分析以下{document_type}文档，并提供具体的修改建议。
+
+客户名称: {client_name}
+文档类型: {document_type}
+用户需求: {user_request or "请提供改进建议"}
+
+当前文档内容:
+{document_content[:3000]}
+
+请以 JSON 格式返回修改建议，包含以下字段:
+- suggestions: 建议列表，每个建议包含:
+  - type: "edit" | "add" | "delete"
+  - original_text: 原文（如适用）
+  - suggested_text: 建议内容
+  - reason: 修改理由
+"""
+        
+        try:
+            from ace_gtv.services.claude_code_service import get_claude_code_service
+        except ImportError:
+            from services.claude_code_service import get_claude_code_service
+        
+        service = get_claude_code_service()
+        
+        result_chunks = []
+        for chunk in service.execute_with_skill(
+            prompt=prompt,
+            skill_name="recommendations-generation",
+            context={"client_name": client_name, "active_document": document_type},
+            stream=False
+        ):
+            result_chunks.append(chunk)
+        
+        result_text = "".join(result_chunks)
+        
+        # 尝试解析 JSON
+        suggestions = []
+        try:
+            import re
+            json_match = re.search(r'\{[\s\S]*\}', result_text)
+            if json_match:
+                parsed = json.loads(json_match.group())
+                suggestions = parsed.get('suggestions', [])
+        except json.JSONDecodeError:
+            # 如果无法解析，返回原始文本作为单个建议
+            suggestions = [{
+                "type": "edit",
+                "suggested_text": result_text,
+                "reason": "AI 分析结果"
+            }]
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "suggestions": suggestions,
+                "raw_response": result_text
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"获取建议失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/assistant/apply-suggestion', methods=['POST'])
+def assistant_apply_suggestion(project_id):
+    """
+    应用建议到文档
+    
+    将 AI 建议的修改应用到指定文档
+    """
+    logger = _get_logger()
+    
+    try:
+        _init_services()
+        db = _services.get('db')
+        
+        if not db:
+            return jsonify({"success": False, "error": "服务未初始化"}), 500
+        
+        data = request.get_json()
+        document_type = data.get('document_type')
+        suggestion = data.get('suggestion', {})
+        
+        if not document_type or not suggestion:
+            return jsonify({"success": False, "error": "参数不完整"}), 400
+        
+        # 获取当前文档内容
+        package_result = db.get_package(project_id, document_type)
+        if not package_result.get('success'):
+            return jsonify({"success": False, "error": "获取文档失败"}), 404
+        
+        current_content = package_result.get('data', {}).get('content', '')
+        
+        # 应用建议
+        new_content = current_content
+        suggestion_type = suggestion.get('type', 'edit')
+        original_text = suggestion.get('original_text', '')
+        suggested_text = suggestion.get('suggested_text', '')
+        
+        if suggestion_type == 'edit' and original_text:
+            new_content = current_content.replace(original_text, suggested_text)
+        elif suggestion_type == 'add':
+            new_content = current_content + "\n\n" + suggested_text
+        elif suggestion_type == 'delete' and original_text:
+            new_content = current_content.replace(original_text, '')
+        
+        # 保存更新后的文档
+        update_result = db.update_package(project_id, document_type, {
+            'content': new_content
+        })
+        
+        if not update_result.get('success'):
+            return jsonify({"success": False, "error": "保存失败"}), 500
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "document_type": document_type,
+                "new_content": new_content,
+                "applied_suggestion": suggestion
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"应用建议失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ==================== Cloud CLI 管理 API ====================
+
+def _get_cloudcli_manager():
+    """获取 CloudCLI 管理器实例"""
+    if 'cloudcli_manager' not in _services:
+        try:
+            from services.cloudcli_manager import get_cloudcli_manager
+            _services['cloudcli_manager'] = get_cloudcli_manager()
+        except ImportError:
+            try:
+                from ace_gtv.services.cloudcli_manager import get_cloudcli_manager
+                _services['cloudcli_manager'] = get_cloudcli_manager()
+            except ImportError:
+                return None
+    return _services['cloudcli_manager']
+
+
+@copywriting_bp.route('/cloudcli/status', methods=['GET'])
+def cloudcli_status():
+    """
+    获取 Cloud CLI 服务状态
+    
+    返回:
+    {
+        "success": true,
+        "data": {
+            "status": "running" | "stopped" | "starting" | "error" | "not_installed",
+            "running": true | false,
+            "url": "http://localhost:3001",
+            "port": 3001,
+            "host": "localhost",
+            "auto_start": true,
+            "error": null | "error message",
+            "pid": 12345 | null
+        }
+    }
+    """
+    logger = _get_logger()
+    
+    try:
+        manager = _get_cloudcli_manager()
+        if manager is None:
+            return jsonify({
+                "success": False,
+                "error": "Cloud CLI 管理器未初始化"
+            }), 500
+        
+        status = manager.get_status()
+        return jsonify({
+            "success": True,
+            "data": status
+        })
+        
+    except Exception as e:
+        logger.error(f"获取 Cloud CLI 状态失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/cloudcli/start', methods=['POST'])
+def cloudcli_start():
+    """
+    启动 Cloud CLI 服务
+    
+    请求体（可选）:
+    {
+        "force": false  // 是否强制重启
+    }
+    
+    返回:
+    {
+        "success": true,
+        "data": {
+            "status": "running",
+            "url": "http://localhost:3001",
+            "message": "Cloud CLI 服务启动成功"
+        }
+    }
+    """
+    logger = _get_logger()
+    
+    try:
+        manager = _get_cloudcli_manager()
+        if manager is None:
+            return jsonify({
+                "success": False,
+                "error": "Cloud CLI 管理器未初始化"
+            }), 500
+        
+        data = request.get_json() or {}
+        force = data.get('force', False)
+        
+        result = manager.start(force=force)
+        
+        if result.get('success'):
+            return jsonify({
+                "success": True,
+                "data": result
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": result.get('error', '启动失败')
+            }), 500
+        
+    except Exception as e:
+        logger.error(f"启动 Cloud CLI 失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/cloudcli/stop', methods=['POST'])
+def cloudcli_stop():
+    """
+    停止 Cloud CLI 服务
+    
+    返回:
+    {
+        "success": true,
+        "data": {
+            "status": "stopped",
+            "message": "Cloud CLI 服务已停止"
+        }
+    }
+    """
+    logger = _get_logger()
+    
+    try:
+        manager = _get_cloudcli_manager()
+        if manager is None:
+            return jsonify({
+                "success": False,
+                "error": "Cloud CLI 管理器未初始化"
+            }), 500
+        
+        result = manager.stop()
+        
+        return jsonify({
+            "success": True,
+            "data": result
+        })
+        
+    except Exception as e:
+        logger.error(f"停止 Cloud CLI 失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/cloudcli/config', methods=['GET'])
+def cloudcli_config():
+    """
+    获取 Cloud CLI 配置信息
+    
+    返回:
+    {
+        "success": true,
+        "data": {
+            "port": 3001,
+            "host": "localhost",
+            "auto_start": true,
+            "startup_timeout": 30,
+            "health_check_interval": 5,
+            "cli_path": "/usr/local/bin/cloudcli",
+            "use_npx": false,
+            "installed": true
+        }
+    }
+    """
+    logger = _get_logger()
+    
+    try:
+        manager = _get_cloudcli_manager()
+        if manager is None:
+            return jsonify({
+                "success": False,
+                "error": "Cloud CLI 管理器未初始化"
+            }), 500
+        
+        config = manager.get_config()
+        return jsonify({
+            "success": True,
+            "data": config
+        })
+        
+    except Exception as e:
+        logger.error(f"获取 Cloud CLI 配置失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/cloudcli/ensure', methods=['POST'])
+def cloudcli_ensure():
+    """
+    确保 Cloud CLI 服务正在运行
+    如果配置了自动启动且服务未运行，将自动启动服务
+    
+    返回:
+    {
+        "success": true,
+        "data": {
+            "status": "running",
+            "url": "http://localhost:3001"
+        }
+    }
+    """
+    logger = _get_logger()
+    
+    try:
+        manager = _get_cloudcli_manager()
+        if manager is None:
+            return jsonify({
+                "success": False,
+                "error": "Cloud CLI 管理器未初始化"
+            }), 500
+        
+        result = manager.ensure_running()
+        
+        return jsonify({
+            "success": True,
+            "data": result
+        })
+        
+    except Exception as e:
+        logger.error(f"确保 Cloud CLI 运行失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ========== Claude Task API ==========
+
+def _get_task_service():
+    """获取 Claude Task 服务"""
+    if 'task_service' not in _services:
+        try:
+            from ace_gtv.services.claude_task_service import get_task_service
+        except ImportError:
+            from services.claude_task_service import get_task_service
+        _services['task_service'] = get_task_service()
+    return _services['task_service']
+
+
+def _get_workspace_service():
+    """获取项目工作空间服务"""
+    if 'workspace_service' not in _services:
+        try:
+            from ace_gtv.services.project_workspace_service import get_workspace_service
+        except ImportError:
+            from services.project_workspace_service import get_workspace_service
+        _services['workspace_service'] = get_workspace_service()
+    return _services['workspace_service']
+
+
+# ========== Project Workspace API ==========
+
+@copywriting_bp.route('/projects/<project_id>/workspace', methods=['GET'])
+def get_project_workspace(project_id):
+    """获取项目工作空间信息"""
+    logger = _get_logger()
+    
+    try:
+        service = _get_workspace_service()
+        info = service.get_workspace_info(project_id)
+        
+        return jsonify({
+            "success": True,
+            "data": info
+        })
+        
+    except Exception as e:
+        logger.error(f"获取工作空间信息失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/workspace', methods=['POST'])
+def prepare_project_workspace(project_id):
+    """
+    准备项目工作空间
+    
+    创建独立的工作目录，复制材料和技能文件
+    """
+    logger = _get_logger()
+    
+    try:
+        data = request.get_json() or {}
+        force = data.get('force', False)
+        copy_uploads = data.get('copy_uploads', True)
+        
+        # 获取项目信息
+        _init_services()
+        db = _services.get('db')
+        project_info = {}
+        
+        if db:
+            project_result = db.get_project(project_id)
+            if project_result.get('success') and project_result.get('data'):
+                project_info = project_result['data']
+        
+        # 准备工作空间
+        workspace_service = _get_workspace_service()
+        
+        if force:
+            workspace_service.cleanup_workspace(project_id)
+        
+        result = workspace_service.prepare_workspace(
+            project_id=project_id,
+            project_info=project_info,
+            copy_uploads=copy_uploads
+        )
+        
+        return jsonify({
+            "success": True,
+            "data": result,
+            "message": "工作空间已准备就绪"
+        })
+        
+    except Exception as e:
+        logger.error(f"准备工作空间失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/workspace', methods=['DELETE'])
+def cleanup_project_workspace(project_id):
+    """清理项目工作空间"""
+    logger = _get_logger()
+    
+    try:
+        service = _get_workspace_service()
+        result = service.cleanup_workspace(project_id)
+        
+        return jsonify({
+            "success": result,
+            "message": "工作空间已清理" if result else "工作空间不存在"
+        })
+        
+    except Exception as e:
+        logger.error(f"清理工作空间失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/projects/<project_id>/workspace/materials', methods=['POST'])
+def copy_materials_to_workspace(project_id):
+    """复制材料到工作空间"""
+    logger = _get_logger()
+    
+    try:
+        data = request.get_json() or {}
+        source_files = data.get('source_files', [])
+        
+        service = _get_workspace_service()
+        
+        # 确保工作空间存在
+        if not service.workspace_exists(project_id):
+            return jsonify({
+                "success": False,
+                "error": "工作空间不存在，请先创建工作空间"
+            }), 400
+        
+        result = service.copy_materials(
+            project_id=project_id,
+            source_files=source_files,
+            from_upload_dir=True
+        )
+        
+        return jsonify({
+            "success": True,
+            "data": result
+        })
+        
+    except Exception as e:
+        logger.error(f"复制材料失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ========== Claude Bridge API (旧版，保留兼容) ==========
+
+def _get_bridge_service():
+    """获取 Claude Bridge 服务"""
+    if 'bridge_service' not in _services:
+        try:
+            from ace_gtv.services.claude_bridge_service import get_bridge_service
+        except ImportError:
+            from services.claude_bridge_service import get_bridge_service
+        _services['bridge_service'] = get_bridge_service()
+    return _services['bridge_service']
+
+
+@copywriting_bp.route('/claude-bridge/sessions', methods=['POST'])
+def create_claude_session():
+    """
+    创建 Claude Code 会话
+    
+    启动一个常驻的 Claude Code 进程，支持双向通信
+    """
+    logger = _get_logger()
+    
+    try:
+        data = request.get_json() or {}
+        session_id = data.get('session_id', f"session_{int(time.time() * 1000)}")
+        cwd = data.get('cwd', os.getcwd())
+        permission_mode = data.get('permission_mode', 'default')
+        
+        bridge = _get_bridge_service()
+        session = bridge.create_session(
+            session_id=session_id,
+            cwd=cwd,
+            permission_mode=permission_mode
+        )
+        
+        return jsonify({
+            "success": True,
+            "data": bridge.get_session_status(session_id)
+        })
+        
+    except Exception as e:
+        logger.error(f"创建 Claude 会话失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/claude-bridge/sessions', methods=['GET'])
+def list_claude_sessions():
+    """列出所有 Claude Code 会话"""
+    logger = _get_logger()
+    
+    try:
+        bridge = _get_bridge_service()
+        sessions = bridge.list_sessions()
+        
+        return jsonify({
+            "success": True,
+            "data": sessions
+        })
+        
+    except Exception as e:
+        logger.error(f"获取会话列表失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/claude-bridge/sessions/<session_id>', methods=['GET'])
+def get_claude_session(session_id):
+    """获取会话状态"""
+    logger = _get_logger()
+    
+    try:
+        bridge = _get_bridge_service()
+        status = bridge.get_session_status(session_id)
+        
+        if not status:
+            return jsonify({"success": False, "error": "会话不存在"}), 404
+        
+        return jsonify({
+            "success": True,
+            "data": status
+        })
+        
+    except Exception as e:
+        logger.error(f"获取会话状态失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/claude-bridge/sessions/<session_id>', methods=['DELETE'])
+def close_claude_session(session_id):
+    """关闭会话"""
+    logger = _get_logger()
+    
+    try:
+        bridge = _get_bridge_service()
+        result = bridge.close_session(session_id)
+        
+        return jsonify({
+            "success": result,
+            "message": "会话已关闭" if result else "会话不存在"
+        })
+        
+    except Exception as e:
+        logger.error(f"关闭会话失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/claude-bridge/sessions/<session_id>/messages', methods=['POST'])
+def send_claude_message(session_id):
+    """
+    向 Claude 会话发送消息
+    
+    发送消息到常驻的 Claude Code 进程
+    支持发送空消息（用于回车键）
+    """
+    logger = _get_logger()
+    
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        # 允许空消息（用于发送回车）
+        
+        bridge = _get_bridge_service()
+        result = bridge.send_message(session_id, message)
+        
+        if not result:
+            return jsonify({"success": False, "error": "发送失败，会话可能已关闭"}), 400
+        
+        return jsonify({
+            "success": True,
+            "message": "消息已发送"
+        })
+        
+    except Exception as e:
+        logger.error(f"发送消息失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/claude-bridge/sessions/<session_id>/stream', methods=['GET'])
+def stream_claude_output(session_id):
+    """
+    流式获取 Claude 输出（SSE）
+    
+    实时推送 Claude Code 的输出到客户端
+    """
+    from flask import Response
+    logger = _get_logger()
+    
+    def generate():
+        bridge = _get_bridge_service()
+        timeout = request.args.get('timeout', 300, type=int)
+        
+        for output in bridge.stream_output(session_id, timeout=timeout):
+            yield f"data: {json.dumps(output, ensure_ascii=False)}\n\n"
+    
+    return Response(
+        generate(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        }
+    )
+
+
+@copywriting_bp.route('/claude-bridge/sessions/<session_id>/output', methods=['GET'])
+def get_claude_output(session_id):
+    """
+    获取 Claude 输出（轮询方式）
+    
+    非阻塞获取输出队列中的消息
+    """
+    logger = _get_logger()
+    
+    try:
+        bridge = _get_bridge_service()
+        timeout = request.args.get('timeout', 0.5, type=float)
+        max_messages = request.args.get('max', 10, type=int)
+        
+        messages = []
+        for _ in range(max_messages):
+            output = bridge.get_output(session_id, timeout=timeout)
+            if output:
+                messages.append(output)
+            else:
+                break
+        
+        return jsonify({
+            "success": True,
+            "data": messages,
+            "has_more": len(messages) == max_messages
+        })
+        
+    except Exception as e:
+        logger.error(f"获取输出失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/claude-bridge/sessions/<session_id>/full-output', methods=['GET'])
+def get_claude_full_output(session_id):
+    """
+    获取会话的完整输出
+    """
+    logger = _get_logger()
+    
+    try:
+        bridge = _get_bridge_service()
+        output = bridge.get_full_output(session_id)
+        
+        if output is None:
+            return jsonify({"success": False, "error": "会话不存在"}), 404
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "output": output,
+                "length": len(output)
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"获取完整输出失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/claude-bridge/sessions/<session_id>/clear', methods=['POST'])
+def clear_claude_output(session_id):
+    """
+    清空会话输出缓冲
+    """
+    logger = _get_logger()
+    
+    try:
+        bridge = _get_bridge_service()
+        result = bridge.clear_output_buffer(session_id)
+        
+        return jsonify({
+            "success": result,
+            "message": "输出已清空" if result else "会话不存在"
+        })
+        
+    except Exception as e:
+        logger.error(f"清空输出失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# 需要导入 time 模块
+import time
+
+
+# ========== Claude Task API (新版任务队列架构) ==========
+
+@copywriting_bp.route('/claude-tasks', methods=['POST'])
+def create_claude_task():
+    """
+    创建 Claude 任务
+    
+    请求体:
+    {
+        "prompt": "用户输入",
+        "cwd": "工作目录（可选）",
+        "async": true  // 是否异步执行
+    }
+    
+    异步模式：立即返回任务ID，后台执行，通过 SSE 获取输出
+    同步模式：等待执行完成后返回结果
+    """
+    logger = _get_logger()
+    
+    try:
+        data = request.get_json()
+        prompt = data.get('prompt', '')
+        cwd = data.get('cwd', os.getcwd())
+        async_mode = data.get('async', True)
+        
+        if not prompt:
+            return jsonify({"success": False, "error": "prompt 不能为空"}), 400
+        
+        service = _get_task_service()
+        task = service.create_task(
+            prompt=prompt,
+            cwd=cwd,
+            async_mode=async_mode
+        )
+        
+        if async_mode:
+            # 异步模式：立即返回任务信息
+            return jsonify({
+                "success": True,
+                "data": task.to_dict(),
+                "message": "任务已创建，使用 /claude-tasks/<task_id>/stream 获取实时输出"
+            })
+        else:
+            # 同步模式：等待完成后返回
+            return jsonify({
+                "success": True,
+                "data": {
+                    **task.to_dict(),
+                    "output": task.output
+                }
+            })
+        
+    except Exception as e:
+        logger.error(f"创建任务失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/claude-tasks', methods=['GET'])
+def list_claude_tasks():
+    """列出所有任务"""
+    logger = _get_logger()
+    
+    try:
+        limit = request.args.get('limit', 50, type=int)
+        service = _get_task_service()
+        tasks = service.list_tasks(limit=limit)
+        
+        return jsonify({
+            "success": True,
+            "data": tasks,
+            "count": len(tasks)
+        })
+        
+    except Exception as e:
+        logger.error(f"获取任务列表失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/claude-tasks/<task_id>', methods=['GET'])
+def get_claude_task(task_id):
+    """获取任务状态"""
+    logger = _get_logger()
+    
+    try:
+        service = _get_task_service()
+        status = service.get_task_status(task_id)
+        
+        if not status:
+            return jsonify({"success": False, "error": "任务不存在"}), 404
+        
+        return jsonify({
+            "success": True,
+            "data": status
+        })
+        
+    except Exception as e:
+        logger.error(f"获取任务状态失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/claude-tasks/<task_id>/output', methods=['GET'])
+def get_claude_task_output(task_id):
+    """获取任务完整输出"""
+    logger = _get_logger()
+    
+    try:
+        service = _get_task_service()
+        output = service.get_task_output(task_id)
+        
+        if output is None:
+            return jsonify({"success": False, "error": "任务不存在"}), 404
+        
+        # 清理 ANSI 转义序列（可选）
+        clean = request.args.get('clean', 'false').lower() == 'true'
+        if clean:
+            import re
+            output = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', output)
+            output = re.sub(r'\x1b\][^\x07]*\x07', '', output)
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "output": output,
+                "length": len(output)
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"获取任务输出失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/claude-tasks/<task_id>/stream', methods=['GET'])
+def stream_claude_task(task_id):
+    """
+    流式获取任务输出（SSE）
+    
+    实时推送 Claude 的输出到客户端
+    """
+    from flask import Response
+    logger = _get_logger()
+    
+    def generate():
+        service = _get_task_service()
+        timeout = request.args.get('timeout', 300, type=int)
+        
+        for message in service.stream_output(task_id, timeout=timeout):
+            yield f"data: {json.dumps(message, ensure_ascii=False)}\n\n"
+    
+    return Response(
+        generate(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        }
+    )
+
+
+@copywriting_bp.route('/claude-tasks/<task_id>/cancel', methods=['POST'])
+def cancel_claude_task(task_id):
+    """取消任务"""
+    logger = _get_logger()
+    
+    try:
+        service = _get_task_service()
+        result = service.cancel_task(task_id)
+        
+        return jsonify({
+            "success": result,
+            "message": "任务已取消" if result else "无法取消任务"
+        })
+        
+    except Exception as e:
+        logger.error(f"取消任务失败: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@copywriting_bp.route('/claude-tasks/cleanup', methods=['POST'])
+def cleanup_claude_tasks():
+    """清理旧任务"""
+    logger = _get_logger()
+    
+    try:
+        data = request.get_json() or {}
+        max_age = data.get('max_age_seconds', 3600)
+        
+        service = _get_task_service()
+        count = service.cleanup_old_tasks(max_age_seconds=max_age)
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "cleaned": count
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"清理任务失败: {e}")
         return jsonify({"success": False, "error": str(e)}), 500

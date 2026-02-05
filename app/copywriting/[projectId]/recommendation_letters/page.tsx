@@ -39,10 +39,15 @@ import {
   Building,
   Briefcase,
   UserCheck,
+  Upload,
+  History,
+  GitCompare,
+  Settings,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import ReactMarkdown from 'react-markdown'
+import { DocumentUpload, VersionManager, DiffViewer } from "@/components/copywriting"
 
 // 推荐信类型定义
 const LETTER_TYPES = [
@@ -122,6 +127,11 @@ export default function RecommendationLettersPage() {
   const [success, setSuccess] = useState("")
   const [activeTab, setActiveTab] = useState("edit")
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false)
+  
+  // 新增：对话框状态
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [versionManagerOpen, setVersionManagerOpen] = useState(false)
+  const [diffViewerOpen, setDiffViewerOpen] = useState(false)
 
   // API调用
   const apiCall = async (path: string, options: RequestInit = {}) => {
@@ -365,6 +375,26 @@ export default function RecommendationLettersPage() {
           </div>
           
           <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => router.push(`/copywriting/${projectId}/prompts?type=${activeLetterKey}`)}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              提示词
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setUploadDialogOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              上传
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setVersionManagerOpen(true)}>
+              <History className="h-4 w-4 mr-2" />
+              版本
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setDiffViewerOpen(true)}>
+              <GitCompare className="h-4 w-4 mr-2" />
+              对比
+            </Button>
             <Button variant="outline" size="sm" onClick={handleCopy} disabled={!editingContent}>
               <Copy className="h-4 w-4 mr-2" />
               复制
@@ -696,6 +726,47 @@ export default function RecommendationLettersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* 文档上传 */}
+      <DocumentUpload
+        projectId={projectId}
+        packageType={activeLetterKey}
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        title={`上传${currentLetter?.name}`}
+        onUploadSuccess={(data) => {
+          setEditingContent(data.content)
+          loadAllLetters()
+          setUploadDialogOpen(false)
+        }}
+      />
+      
+      {/* 版本管理 */}
+      <VersionManager
+        projectId={projectId}
+        packageType={activeLetterKey}
+        currentVersion={currentContent?.current_version}
+        open={versionManagerOpen}
+        onOpenChange={setVersionManagerOpen}
+        onVersionSelect={(version) => {
+          setEditingContent(version.content)
+        }}
+        onRollback={() => {
+          loadAllLetters()
+        }}
+        onCompare={(v1, v2) => {
+          setVersionManagerOpen(false)
+          setDiffViewerOpen(true)
+        }}
+      />
+      
+      {/* 版本对比 */}
+      <DiffViewer
+        projectId={projectId}
+        packageType={activeLetterKey}
+        open={diffViewerOpen}
+        onOpenChange={setDiffViewerOpen}
+      />
       
       <Footer />
     </div>

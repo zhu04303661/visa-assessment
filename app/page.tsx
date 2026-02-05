@@ -1,6 +1,6 @@
 "use client"
 
-import { Hero } from "@/components/hero"
+import { HeroAnimated } from "@/components/hero-animated"
 import { ServicesSection } from "@/components/services-section"
 import { CompanyValues } from "@/components/company-values"
 import { AboutSection } from "@/components/about-section"
@@ -12,7 +12,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen">
       <Navbar />
-      <Hero />
+      <HeroAnimated />
       <CompanyValues />
       <ServicesSection />
       <AboutSection />

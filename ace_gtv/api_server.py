@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
+from flask_socketio import SocketIO
 
 # 加载环境变量
 try:
@@ -115,7 +116,16 @@ except Exception as e:
 
 # 创建Flask应用
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+# 创建 SocketIO 实例（支持 WebSocket 终端）
+socketio = SocketIO(
+    app,
+    cors_allowed_origins="*",
+    async_mode='threading',
+    logger=False,
+    engineio_logger=False,
+)
 
 # 配置上传文件夹
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
@@ -135,6 +145,17 @@ try:
     logger.info("✅ 文案系统路由注册成功 (/api/*)")
 except ImportError as e:
     logger.warning(f"⚠️ 文案系统路由导入失败: {e}")
+    
+# 注册终端路由
+TERMINAL_ROUTES_AVAILABLE = False
+try:
+    from api.terminal_routes import terminal_bp, register_terminal_events
+    app.register_blueprint(terminal_bp)
+    register_terminal_events(socketio)
+    TERMINAL_ROUTES_AVAILABLE = True
+    logger.info("✅ 终端 WebSocket 路由注册成功 (/terminal)")
+except ImportError as e:
+    logger.warning(f"⚠️ 终端路由导入失败: {e}")
 
 # 全局Agent实例（不使用类型提示以避免导入失败时的NameError）
 scoring_agent = None
@@ -898,9 +919,11 @@ if __name__ == '__main__':
     print("")
     print("=" * 60)
     
-    app.run(
+    socketio.run(
+        app,
         host='0.0.0.0',
         port=port,
         debug=debug,
         use_reloader=debug,
+        allow_unsafe_werkzeug=True,
     )

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Rocket, GraduationCap, Briefcase, FileText, ArrowRight, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 import { useLanguage } from "@/lib/i18n"
+import { ScrollReveal, StaggerContainer, StaggerItem } from "@/components/animations"
+import { motion } from "framer-motion"
 
 export function ServicesSection() {
   const { t, language } = useLanguage()
@@ -64,7 +66,7 @@ export function ServicesSection() {
   return (
     <section className="py-20 md:py-32 bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto px-4">
-        <div className="mb-16 text-center">
+        <ScrollReveal className="mb-16 text-center">
           <h2 className="mb-4 text-balance text-3xl font-bold tracking-tight text-foreground md:text-4xl lg:text-5xl">
             {language === "en" ? "Our Services" : "我们的服务"}
           </h2>
@@ -73,48 +75,67 @@ export function ServicesSection() {
               ? "Professional UK immigration services tailored to your needs. We provide the most professional, efficient, and secure services. From startup visas to global talent visas, we provide comprehensive support for your UK immigration journey."
               : "专业的英国移民服务，量身定制您的需求。我们提供最专业、最高效、最安全的服务。从创业签证到全球人才签证，我们为您的英国移民之路提供全方位支持。"}
           </p>
-        </div>
+        </ScrollReveal>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-          {services.map((service) => {
+        <StaggerContainer className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+          {services.map((service, serviceIndex) => {
             const Icon = service.icon
             return (
-              <Card
-                key={service.title}
-                className={`group relative overflow-hidden border-border/50 transition-all hover:border-primary/50 hover:shadow-xl ${
-                  service.featured ? "md:col-span-2 lg:col-span-1" : ""
-                }`}
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${service.color} opacity-0 transition-opacity group-hover:opacity-5`} />
-                <CardHeader>
-                  <div className={`mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br ${service.color} text-white shadow-lg`}>
-                    <Icon className="h-7 w-7" />
-                  </div>
-                  <CardTitle className="text-2xl">{service.title}</CardTitle>
-                  <CardDescription className="text-base leading-relaxed mt-2">
-                    {service.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="mb-6 space-y-2">
-                    {service.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button asChild className="w-full group/btn" variant={service.featured ? "default" : "outline"}>
-                    <Link href={service.href}>
-                      {language === "en" ? "Learn More" : "了解更多"}
-                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <StaggerItem key={service.title}>
+                <motion.div
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                  className="h-full"
+                >
+                  <Card
+                    className={`group relative overflow-hidden border-border/50 transition-all hover:border-primary/50 hover:shadow-xl h-full ${
+                      service.featured ? "md:col-span-2 lg:col-span-1" : ""
+                    }`}
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${service.color} opacity-0 transition-opacity group-hover:opacity-5`} />
+                    <CardHeader>
+                      <motion.div 
+                        className={`mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br ${service.color} text-white shadow-lg`}
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <Icon className="h-7 w-7" />
+                      </motion.div>
+                      <CardTitle className="text-2xl">{service.title}</CardTitle>
+                      <CardDescription className="text-base leading-relaxed mt-2">
+                        {service.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="mb-6 space-y-2">
+                        {service.features.map((feature, index) => (
+                          <motion.li 
+                            key={index} 
+                            className="flex items-center gap-2 text-sm text-muted-foreground"
+                            initial={{ opacity: 0, x: -10 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            viewport={{ once: true }}
+                          >
+                            <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                            <span>{feature}</span>
+                          </motion.li>
+                        ))}
+                      </ul>
+                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button asChild className="w-full group/btn" variant={service.featured ? "default" : "outline"}>
+                          <Link href={service.href}>
+                            {language === "en" ? "Learn More" : "了解更多"}
+                            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+                          </Link>
+                        </Button>
+                      </motion.div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </StaggerItem>
             )
           })}
-        </div>
+        </StaggerContainer>
       </div>
     </section>
   )

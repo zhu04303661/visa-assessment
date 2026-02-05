@@ -28,9 +28,21 @@ import {
   ChevronRight,
   RefreshCw,
   Eye,
+  Upload,
+  History,
+  GitCompare,
+  Settings,
+  MoreHorizontal,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import { DocumentUpload, VersionManager, DiffViewer } from "@/components/copywriting"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 // 材料包类型定义
 const PACKAGE_TYPES = [
@@ -131,6 +143,12 @@ export default function GenerationOverviewPage() {
   const [generatingPackage, setGeneratingPackage] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  
+  // 新增：对话框状态
+  const [activePackageType, setActivePackageType] = useState<string | null>(null)
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [versionManagerOpen, setVersionManagerOpen] = useState(false)
+  const [diffViewerOpen, setDiffViewerOpen] = useState(false)
 
   // API调用
   const apiCall = async (path: string, options: RequestInit = {}) => {
@@ -214,24 +232,49 @@ export default function GenerationOverviewPage() {
       setGenerating(true)
       setError("")
       
-      const requiredPackages = PACKAGE_TYPES.filter(p => p.required && !packageStatuses[p.type]?.content)
+      // 获取所有必需的包（不管是否已有内容，都重新生成）
+      const requiredPackages = PACKAGE_TYPES.filter(p => p.required)
+      console.log("一键生成所有: 需要生成的包", requiredPackages.map(p => p.type))
+      
+      if (requiredPackages.length === 0) {
+        setError("没有需要生成的材料")
+        return
+      }
+      
+      let successCount = 0
+      let failCount = 0
       
       for (const pkg of requiredPackages) {
+        console.log(`正在生成: ${pkg.type}...`)
         setGeneratingPackage(pkg.type)
         try {
-          await apiCall(`/api/projects/${projectId}/packages/${pkg.type}/generate`, {
+          const result = await apiCall(`/api/projects/${projectId}/packages/${pkg.type}/generate`, {
             method: 'POST',
             body: JSON.stringify({})
           })
+          console.log(`生成 ${pkg.type} 结果:`, result)
+          if (result.success) {
+            successCount++
+          } else {
+            console.error(`生成 ${pkg.type} 失败:`, result.error)
+            failCount++
+          }
         } catch (err) {
-          console.error(`生成 ${pkg.type} 失败`)
+          console.error(`生成 ${pkg.type} 异常:`, err)
+          failCount++
         }
       }
       
-      setSuccess("批量生成完成")
+      console.log(`批量生成完成: ${successCount} 成功, ${failCount} 失败`)
+      if (failCount === 0) {
+        setSuccess(`批量生成完成，共生成 ${successCount} 个材料`)
+      } else {
+        setSuccess(`批量生成完成：${successCount} 成功，${failCount} 失败`)
+      }
       loadPackageStatuses()
-      setTimeout(() => setSuccess(""), 3000)
+      setTimeout(() => setSuccess(""), 5000)
     } catch (err) {
+      console.error("批量生成失败:", err)
       setError("批量生成失败")
     } finally {
       setGenerating(false)
@@ -344,6 +387,14 @@ export default function GenerationOverviewPage() {
               )}
               一键生成所有
             </Button>
+            <Button 
+              variant="default" 
+              className="bg-purple-600 hover:bg-purple-700"
+              onClick={() => router.push(`/copywriting/${projectId}/assistant`)}
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              AI 文案助手
+            </Button>
           </div>
         </div>
         
@@ -441,22 +492,67 @@ export default function GenerationOverviewPage() {
                 </CardContent>
                 
                 <CardFooter className="pt-2 flex justify-between">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleGenerate(pkg.type)
-                    }}
-                    disabled={isGenerating}
-                  >
-                    {isGenerating ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                    ) : (
-                      <Sparkles className="h-4 w-4 mr-1" />
-                    )}
-                    {status?.content ? '重新生成' : '生成'}
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleGenerate(pkg.type)
+                      }}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 mr-1" />
+                      )}
+                      {status?.content ? '重新生成' : '生成'}
+                    </Button>
+                    
+                    {/* 更多操作下拉菜单 */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => {
+                          router.push(`/copywriting/${projectId}/prompts?type=${pkg.type}`)
+                        }}>
+                          <Settings className="h-4 w-4 mr-2" />
+                          提示词管理
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setActivePackageType(pkg.type)
+                          setUploadDialogOpen(true)
+                        }}>
+                          <Upload className="h-4 w-4 mr-2" />
+                          上传文档
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setActivePackageType(pkg.type)
+                          setVersionManagerOpen(true)
+                        }}>
+                          <History className="h-4 w-4 mr-2" />
+                          版本历史
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setActivePackageType(pkg.type)
+                          setDiffViewerOpen(true)
+                        }}>
+                          <GitCompare className="h-4 w-4 mr-2" />
+                          版本对比
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                   <Button variant="ghost" size="sm">
                     <Eye className="h-4 w-4 mr-1" />
                     查看
@@ -482,6 +578,49 @@ export default function GenerationOverviewPage() {
           </CardContent>
         </Card>
       </main>
+      
+      {/* 文档上传 */}
+      {activePackageType && (
+        <DocumentUpload
+          projectId={projectId}
+          packageType={activePackageType}
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          title={`上传${PACKAGE_TYPES.find(p => p.type === activePackageType)?.name}`}
+          onUploadSuccess={() => {
+            loadPackageStatuses()
+            setUploadDialogOpen(false)
+          }}
+        />
+      )}
+      
+      {/* 版本管理 */}
+      {activePackageType && (
+        <VersionManager
+          projectId={projectId}
+          packageType={activePackageType}
+          currentVersion={packageStatuses[activePackageType]?.current_version}
+          open={versionManagerOpen}
+          onOpenChange={setVersionManagerOpen}
+          onRollback={() => {
+            loadPackageStatuses()
+          }}
+          onCompare={() => {
+            setVersionManagerOpen(false)
+            setDiffViewerOpen(true)
+          }}
+        />
+      )}
+      
+      {/* 版本对比 */}
+      {activePackageType && (
+        <DiffViewer
+          projectId={projectId}
+          packageType={activePackageType}
+          open={diffViewerOpen}
+          onOpenChange={setDiffViewerOpen}
+        />
+      )}
       
       <Footer />
     </div>

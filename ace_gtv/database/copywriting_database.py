@@ -427,6 +427,22 @@ class CopywritingDatabase:
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_uploaded_files_project ON uploaded_files (project_id)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_uploaded_files_user ON uploaded_files (user_id)')
                 
+                # ==================== 数据库迁移 ====================
+                # 为 document_versions 表添加新字段（如果不存在）
+                try:
+                    cursor.execute("PRAGMA table_info(document_versions)")
+                    columns = [col[1] for col in cursor.fetchall()]
+                    
+                    if 'source_type' not in columns:
+                        cursor.execute("ALTER TABLE document_versions ADD COLUMN source_type TEXT DEFAULT 'manual'")
+                        logger.info("已添加 document_versions.source_type 字段")
+                    
+                    if 'source_file' not in columns:
+                        cursor.execute("ALTER TABLE document_versions ADD COLUMN source_file TEXT")
+                        logger.info("已添加 document_versions.source_file 字段")
+                except Exception as e:
+                    logger.warning(f"字段迁移检查时出错（可忽略）: {e}")
+                
                 conn.commit()
                 logger.info("数据库表结构初始化完成")
                 

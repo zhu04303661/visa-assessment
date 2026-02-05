@@ -813,10 +813,7 @@ export default function FrameworkPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  fetchPrompts()
-                  setPromptsDialogOpen(true)
-                }}
+                onClick={() => router.push(`/copywriting/${projectId}/prompts`)}
               >
                 <Settings className="h-4 w-4 mr-2" />
                 提示词管理

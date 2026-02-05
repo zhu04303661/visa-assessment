@@ -5,7 +5,10 @@ const COPYWRITING_API_URL = process.env.COPYWRITING_API_URL || 'http://localhost
 async function proxyRequest(request: NextRequest, pathSegments: string[]) {
   const method = request.method
   const searchParams = request.nextUrl.searchParams.toString()
-  const path = '/' + pathSegments.join('/')
+  // 前端调用已经包含 /api/ 前缀，直接使用
+  const rawPath = pathSegments.join('/')
+  // 如果路径已经以 api/ 开头，不要重复添加
+  const path = rawPath.startsWith('api/') ? `/${rawPath}` : `/api/${rawPath}`
   const url = `${COPYWRITING_API_URL}${path}${searchParams ? `?${searchParams}` : ''}`
 
   try {
@@ -31,15 +34,29 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
       body,
     })
 
-    // 检查响应类型，如果是文件下载或预览则直接返回二进制流
+    // 检查响应类型
     const responseContentType = response.headers.get('content-type') || ''
+    
+    // 流式响应（SSE）：直接透传
+    if (responseContentType.includes('text/event-stream')) {
+      return new Response(response.body, {
+        status: response.status,
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*',
+        },
+      })
+    }
+    
+    // 文件下载或预览：直接返回二进制流
     if (responseContentType.includes('application/zip') || 
         responseContentType.includes('application/octet-stream') ||
         responseContentType.includes('application/pdf') ||
         responseContentType.includes('application/msword') ||
         responseContentType.includes('application/vnd.openxmlformats') ||
         responseContentType.includes('image/')) {
-      // 文件下载/预览：直接返回二进制流
       const arrayBuffer = await response.arrayBuffer()
       const uint8Array = new Uint8Array(arrayBuffer)
       
