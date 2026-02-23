@@ -1,78 +1,84 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# =====================================================
+# GTV 签证评估系统 .gitignore
+# =====================================================
 
-# dependencies
-/node_modules
+# === 依赖 ===
+/node_modules/
 
-# next.js
+# === Next.js 构建产物 ===
 /.next/
 /out/
+/build/
 
-# production
-/build
-
-# debug
+# === 调试日志 ===
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+nohup.out
 
-# env files
+# === 环境变量 ===
 .env*
 !.env.example
 
-# vercel
-.vercel
+# === Vercel ===
+.vercel/
 
-# Python
+# === Python ===
 *.pyc
 __pycache__/
 .venv/
 venv/
 *.egg-info/
+ace_gtv/.venv_new/
 
-# typescript
+# === TypeScript ===
 *.tsbuildinfo
 next-env.d.ts
 
-# PID files
+# === PID 文件 ===
 *.pid
-.api_server.pid
-.copywriting_api.pid
-.gtv_api.pid
-.backend.pid
-.frontend.pid
 
-# Database files
+# === 数据库 ===
 *.db
 *.db-journal
 *.db.bak*
-assessments.db
-copywriting.db
-copywriting.db.bak*
-copywriting.db.empty.bak
-ace_gtv/assessments.db*
-ace_gtv/test.db
-ace_gtv/copywriting.db
 
-# Logs
-*.log
+# === 日志目录 ===
+/logs/
 ace_gtv/logs/
 
-# Data and upload directories
+# === 运行时数据目录 ===
+/uploads/
+/resumes/
+/reports/
+/personal_kb/
+/minio-data/
 ace_gtv/data/
 ace_gtv/resumes/
 ace_gtv/personal_kb/
 ace_gtv/uploads/
 ace_gtv/copywriting_projects/
 ace_gtv/success_cases/
+ace_gtv/assessments/
 
-# Backup directories
+# === 二进制/大文件 ===
+mc
+minio
+payload.so
+*.so
+
+# === Docker ===
+.dockerignore
+
+# === 备份目录 ===
 bak/
 
-# Playwright test screenshots
+# === Playwright ===
 .playwright-mcp/
 
-# Office documents (client files)
+# === 办公文档（客户文件）===
 *.xlsx
 *.xls
 *.xmind
@@ -82,28 +88,21 @@ bak/
 *.ppt
 *.pptx
 
-# Test files
+# === 测试文件 ===
 test-*.html
 test-*.js
 
-# Misc
+# === 杂项 ===
 *.txt
 !requirements.txt
-!README.txt
 
-# Runtime data directories
-personal_kb/
-success_cases/
-ace_gtv/assessments/
-
-# IDE configurations (keep .claude/skills)
+# === IDE ===
 .cursor/worktrees.json
 
-# JSON files (except public knowledge base)
+# === JSON（保留必要配置）===
 *.json
 !package.json
-!package-lock.json
 !tsconfig.json
-!tailwind.config.json
-!public/*.json
 !components.json
+!public/*.json
+!ecosystem.config.js

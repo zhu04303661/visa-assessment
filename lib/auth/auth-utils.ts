@@ -91,8 +91,13 @@ export function isValidPassword(password: string): { valid: boolean; message?: s
 }
 
 /**
- * 获取后端 API 基础 URL
+ * 获取后端 API 基础 URL（服务端调用后端时使用）
+ * 优先 BACKEND_API_URL，其次 NEXT_PUBLIC_API_URL（与前端一致），最后默认 localhost:5005
  */
 export function getBackendUrl(): string {
-  return process.env.BACKEND_API_URL || 'http://localhost:5005'
+  return (
+    process.env.BACKEND_API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    'http://localhost:5005'
+  ).replace(/\/$/, '')
 }

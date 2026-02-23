@@ -1,0 +1,49 @@
+[Unit]
+Description=GTV评估系统统一后端服务
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/xichi/workspace/visa-assessment
+ExecStart=/bin/bash /home/xichi/workspace/visa-assessment/start_backend_optimized.sh --log-level=INFO --port=5005
+ExecReload=/bin/kill -HUP $MAINPID
+
+# 进程配置
+Restart=always
+RestartSec=30
+StartLimitInterval=600
+StartLimitBurst=5
+
+# 资源限制
+MemoryLimit=2G
+CPUQuota=100%
+TasksMax=500
+
+# 目录配置
+LogsDirectory=gtv-backend
+RuntimeDirectory=gtv-backend
+StateDirectory=gtv-backend
+
+# 环境配置
+Environment=PYTHONPATH=/home/xichi/workspace/visa-assessment
+Environment=LOG_LEVEL=INFO
+Environment=PIP_NO_CACHE_DIR=1
+
+# 日志管理
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gtv-backend
+
+# 安全配置
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/xichi/workspace/visa-assessment/ace_gtv/logs
+ReadWritePaths=/tmp
+
+[Install]
+WantedBy=multi-user.target

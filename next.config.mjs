@@ -1,3 +1,8 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -5,6 +10,11 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+  },
+  // 避免 Turbopack 追踪 venv/.venv 等符号链接导致构建失败（Next 16 已移至根级）
+  outputFileTracingRoot: path.join(__dirname),
+  outputFileTracingExcludes: {
+    '*': ['**/venv/**', '**/.venv/**', '**/ace_gtv/**'],
   },
   // 确保静态资源正确加载
   compress: true,

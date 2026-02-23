@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // 验证 JWT Token
     const payload = await verifyToken(token)
-    if (!payload) {
+    if (!payload || !payload.sub) {
       // Token 无效，清除 cookie
       const res = NextResponse.json({
         success: true,
@@ -25,9 +25,12 @@ export async function GET(request: NextRequest) {
         user: null,
         session: null,
       })
+      const isHttps =
+        request.headers.get('x-forwarded-proto') === 'https' ||
+        (typeof request.nextUrl?.protocol === 'string' && request.nextUrl.protocol === 'https:')
       res.cookies.set('auth_token', '', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isHttps,
         sameSite: 'lax',
         maxAge: 0,
         path: '/',
@@ -35,42 +38,60 @@ export async function GET(request: NextRequest) {
       return res
     }
 
-    // 调用后端验证会话并获取用户信息
     const backendUrl = getBackendUrl()
+
+    // 优先用 user-by-id 拉取用户（不依赖后端会话表，登录后立即生效）
+    const userResponse = await fetch(`${backendUrl}/api/auth/user-by-id`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: payload.sub }),
+    })
+    const userResult = await userResponse.json()
+
+    if (userResult.success && userResult.user) {
+      return NextResponse.json({
+        success: true,
+        authenticated: true,
+        user: userResult.user,
+        session: { id: payload.sub, user_id: payload.sub, expires_at: payload.exp },
+      })
+    }
+
+    // 兼容：若 user-by-id 失败则尝试原有 validate-session
     const response = await fetch(`${backendUrl}/api/auth/validate-session`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token }),
     })
-
     const result = await response.json()
 
-    if (!result.success || !result.valid) {
-      // 会话无效，清除 cookie
-      const res = NextResponse.json({
+    if (result.success && result.valid && result.user) {
+      return NextResponse.json({
         success: true,
-        authenticated: false,
-        user: null,
-        session: null,
+        authenticated: true,
+        user: result.user,
+        session: result.session,
       })
-      res.cookies.set('auth_token', '', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 0,
-        path: '/',
-      })
-      return res
     }
 
-    return NextResponse.json({
+    // 会话无效，清除 cookie
+    const res = NextResponse.json({
       success: true,
-      authenticated: true,
-      user: result.user,
-      session: result.session,
+      authenticated: false,
+      user: null,
+      session: null,
     })
+    const isHttps =
+      request.headers.get('x-forwarded-proto') === 'https' ||
+      (typeof request.nextUrl?.protocol === 'string' && request.nextUrl.protocol === 'https:')
+    res.cookies.set('auth_token', '', {
+      httpOnly: true,
+      secure: isHttps,
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    })
+    return res
   } catch (error) {
     console.error('获取会话错误:', error)
     return NextResponse.json(

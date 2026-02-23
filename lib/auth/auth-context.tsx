@@ -64,7 +64,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ email, password }),
       })
 
-      const result = await response.json()
+      const contentType = response.headers.get('content-type') || ''
+      const isJson = contentType.includes('application/json')
+
+      if (!isJson) {
+        const text = await response.text()
+        console.error('登录接口返回非 JSON:', response.status, text.slice(0, 300))
+        return {
+          error: {
+            message: response.ok
+              ? '登录响应格式异常，请稍后重试'
+              : `请求失败(${response.status})，请检查网络或联系管理员`,
+          },
+        }
+      }
+
+      let result: { success?: boolean; error?: string }
+      try {
+        result = await response.json()
+      } catch {
+        return { error: { message: '登录响应解析失败，请稍后重试' } }
+      }
 
       if (!result.success) {
         return { error: { message: result.error || '登录失败' } }
@@ -74,8 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await loadSession()
       return { error: null }
     } catch (error) {
+      const message = error instanceof Error ? error.message : '登录时发生错误'
       console.error('登录错误:', error)
-      return { error: { message: '登录时发生错误' } }
+      return { error: { message: message || '登录时发生错误' } }
     }
   }
 

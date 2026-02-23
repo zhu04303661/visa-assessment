@@ -29,10 +29,12 @@ export async function POST(request: NextRequest) {
       message: '退出登录成功',
     })
 
-    // 清除 cookie
+    const isHttps =
+      request.headers.get('x-forwarded-proto') === 'https' ||
+      (typeof request.nextUrl?.protocol === 'string' && request.nextUrl.protocol === 'https:')
     res.cookies.set('auth_token', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isHttps,
       sameSite: 'lax',
       maxAge: 0,
       path: '/',

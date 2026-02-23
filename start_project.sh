@@ -275,26 +275,31 @@ start_backend() {
 
     cd "$ROOT_DIR/ace_gtv"
 
+    # 使用项目根目录的 copywriting.db，确保与前端/已注册用户一致
+    export COPYWRITING_DB_PATH="${ROOT_DIR}/copywriting.db"
+
     # 创建必要目录
     mkdir -p logs uploads copywriting_projects success_cases
 
-    # 设置环境变量
-    export PORT="$API_PORT"
+    # 设置环境变量（不 export PORT 以免覆盖前端端口，后端通过 pm2 行内传入）
     export LOG_LEVEL="$LOG_LEVEL"
     export DEBUG="true"
 
+    PYTHON_BIN="${ROOT_DIR}/.venv/bin/python3"
+    [ ! -x "$PYTHON_BIN" ] && PYTHON_BIN="python3"
+
     if [ "$NO_BACKGROUND" = true ]; then
-        # 前台运行
+        # 前台运行（通过 env 传入 PORT，不改变当前 shell 的 PORT）
         log "后端服务将在前台运行..."
-        python3 api_server.py &
+        env PORT="$API_PORT" LOG_LEVEL="$LOG_LEVEL" DEBUG="true" COPYWRITING_DB_PATH="$ROOT_DIR/copywriting.db" "$PYTHON_BIN" api_server.py &
         BACKEND_PID=$!
         echo "$BACKEND_PID" > "$ROOT_DIR/.backend.pid"
     else
-        # 后台运行
-        if pm2 list | grep -q "backend"; then
+        # 后台运行：使用虚拟环境 Python，确保依赖可用
+        if pm2 list 2>/dev/null | grep -q "backend"; then
             pm2 restart backend --update-env
         else
-            pm2 start --name backend api_server.py
+            COPYWRITING_DB_PATH="$ROOT_DIR/copywriting.db" PORT="$API_PORT" LOG_LEVEL="$LOG_LEVEL" DEBUG="true" pm2 start api_server.py --name backend --interpreter "$PYTHON_BIN" --cwd "$ROOT_DIR/ace_gtv" --max-memory-restart 2G
         fi
         success "后端API服务已通过PM2启动"
     fi
@@ -304,7 +309,7 @@ start_backend() {
     # 等待服务启动
     sleep 3
 
-    # 健康检查
+    # 健康检查（使用 API_PORT，不依赖 PORT）
     if curl -s --max-time 5 "http://localhost:${API_PORT}/health" | grep -q "healthy"; then
         success "后端服务启动成功 (端口: $API_PORT)"
     else
@@ -322,10 +327,10 @@ start_frontend() {
     export NEXT_PUBLIC_API_URL="http://localhost:$API_PORT"
 
     # 生产模式：先构建再启动（除非跳过构建）
+    # Next.js 生产构建需存在 .next/BUILD_ID，仅据此判断是否可跳过构建
     if [ "$MODE" = "production" ] && [ "$SKIP_BUILD" = false ]; then
-        # 检查是否已有构建产物
-        if [ -d ".next/static" ] && [ -n "$(ls -A .next/static 2>/dev/null)" ]; then
-            log "检测到现有构建产物，跳过构建"
+        if [ -f ".next/BUILD_ID" ] && [ -d ".next/static" ] && [ -n "$(ls -A .next/static 2>/dev/null)" ]; then
+            log "检测到有效生产构建产物，跳过构建"
         else
             log "构建生产版本..."
             if command -v pnpm >/dev/null 2>&1; then
@@ -341,14 +346,14 @@ start_frontend() {
 
     # 验证生产模式下的构建产物
     if [ "$MODE" = "production" ]; then
-        if [ ! -d ".next/static" ] || [ -z "$(ls -A .next/static 2>/dev/null)" ]; then
-            error "未找到构建产物，请先运行构建"
-            log "执行构建..."
+        if [ ! -f ".next/BUILD_ID" ] || [ ! -d ".next/static" ] || [ -z "$(ls -A .next/static 2>/dev/null)" ]; then
+            error "未找到有效构建产物，执行构建..."
             if command -v pnpm >/dev/null 2>&1; then
                 pnpm run build
             else
                 npm run build
             fi
+            success "构建完成"
         fi
         # 检查 CSS 文件是否存在
         CSS_COUNT=$(find .next/static -name "*.css" 2>/dev/null | wc -l)
@@ -385,11 +390,11 @@ start_frontend() {
         FRONTEND_PID=$!
         echo "$FRONTEND_PID" > "$ROOT_DIR/.frontend.pid"
     else
-        # 后台运行（使用 PM2）
+        # 后台运行（使用 PM2），明确工作目录与内存重启限制
         if [ "$MODE" = "production" ]; then
             # 生产模式
             pm2 delete frontend 2>/dev/null || true
-            pm2 start --name frontend "pnpm run start"
+            NODE_ENV=production PORT="$PORT" NEXT_PUBLIC_API_URL="http://localhost:$API_PORT" BACKEND_API_URL="http://localhost:$API_PORT" pm2 start "pnpm run start" --name frontend --cwd "$ROOT_DIR" --max-memory-restart 1G
         else
             # 开发模式
             if command -v pnpm >/dev/null 2>&1; then
@@ -398,7 +403,7 @@ start_frontend() {
                 CMD="npm run dev"
             fi
             pm2 delete frontend 2>/dev/null || true
-            pm2 start --name frontend "$CMD"
+            NODE_ENV=development PORT="$PORT" NEXT_PUBLIC_API_URL="http://localhost:$API_PORT" BACKEND_API_URL="http://localhost:$API_PORT" pm2 start "$CMD" --name frontend --cwd "$ROOT_DIR" --max-memory-restart 1G
         fi
         success "前端服务已通过 PM2 启动"
     fi
