@@ -24,10 +24,12 @@ import {
   Monitor, Smartphone, Tablet, Trash2, MousePointerClick,
   LayoutDashboard, Server, Cpu, Clock, Wifi, WifiOff,
   Database, ChevronDown, ChevronUp, Play, Zap,
+  CalendarDays, TrendingUp, X,
 } from "lucide-react"
 import {
-  Area, AreaChart, Bar, BarChart as ReBarChart, CartesianGrid,
-  Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Bar, BarChart as ReBarChart, CartesianGrid, Cell,
+  ComposedChart, Legend, Line, Pie, PieChart,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts"
 import { useAuth, type UserRole } from "@/lib/auth/auth-context"
 import { AuthDialog } from "@/components/auth-dialog"
@@ -211,7 +213,6 @@ export default function AdminPage() {
   const [stats, setStats] = useState<VisitorStats | null>(null)
   const [statsLoading, setStatsLoading] = useState(false)
   const [statsError, setStatsError] = useState(false)
-  const [statsDays, setStatsDays] = useState("30")
 
   // --- visitor logs ---
   const [visitorLogs, setVisitorLogs] = useState<VisitorLog[]>([])
@@ -234,6 +235,10 @@ export default function AdminPage() {
   const [pageTrends, setPageTrends] = useState<PageTrendRow[]>([])
   const [dwellStats, setDwellStats] = useState<DwellStatRow[]>([])
   const [trendsLoading, setTrendsLoading] = useState(false)
+  const [trendRange, setTrendRange] = useState<"week" | "month" | "all" | "custom">("month")
+  const [customDateFrom, setCustomDateFrom] = useState("")
+  const [customDateTo, setCustomDateTo] = useState("")
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   // --- health ---
   const [healthLoading, setHealthLoading] = useState(false)
@@ -245,6 +250,19 @@ export default function AdminPage() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [testResults, setTestResults] = useState<Map<string, EndpointTestResult>>(new Map())
   const [testingAll, setTestingAll] = useState(false)
+
+  const statsDays = (() => {
+    if (trendRange === "week") return "7"
+    if (trendRange === "month") return "30"
+    if (trendRange === "all") return "3650"
+    if (trendRange === "custom" && customDateFrom) {
+      const from = new Date(customDateFrom)
+      const to = customDateTo ? new Date(customDateTo) : new Date()
+      const diff = Math.ceil((to.getTime() - from.getTime()) / 86400000)
+      return String(Math.max(1, diff))
+    }
+    return "30"
+  })()
 
   useEffect(() => {
     if (error || success) {
@@ -570,21 +588,40 @@ export default function AdminPage() {
 
           {/* ===== TAB: 访问概览 ===== */}
           <TabsContent value="overview">
-            <div className="mb-4 flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">统计范围：</span>
-              <Select value={statsDays} onValueChange={setStatsDays}>
-                <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">最近7天</SelectItem>
-                  <SelectItem value="30">最近30天</SelectItem>
-                  <SelectItem value="90">最近90天</SelectItem>
-                  <SelectItem value="365">最近一年</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="sm" onClick={loadStats}><RefreshCw className="h-4 w-4" /></Button>
+            {/* 时间范围选择器 */}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">时间范围：</span>
+              <div className="flex rounded-lg border overflow-hidden">
+                {([
+                  { key: "week", label: "周" },
+                  { key: "month", label: "月" },
+                  { key: "all", label: "全部" },
+                  { key: "custom", label: "自定义" },
+                ] as const).map(item => (
+                  <button key={item.key}
+                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${trendRange === item.key ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    onClick={() => { setTrendRange(item.key); setSelectedDate(null) }}
+                  >{item.label}</button>
+                ))}
+              </div>
+              {trendRange === "custom" && (
+                <div className="flex items-center gap-1.5">
+                  <Input type="date" value={customDateFrom} onChange={e => setCustomDateFrom(e.target.value)} className="w-36 h-8 text-xs" />
+                  <span className="text-xs text-muted-foreground">至</span>
+                  <Input type="date" value={customDateTo} onChange={e => setCustomDateTo(e.target.value)} className="w-36 h-8 text-xs" />
+                </div>
+              )}
+              {selectedDate && (
+                <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setSelectedDate(null)}>
+                  <CalendarDays className="h-3 w-3" /> {selectedDate} <X className="h-3 w-3" />
+                </Badge>
+              )}
+              <Button variant="outline" size="sm" onClick={() => { loadStats(); loadPageTrends() }}><RefreshCw className="h-4 w-4" /></Button>
             </div>
+
             {stats ? (
               <>
+                {/* 概览数字卡 */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                   {[
                     { label: "总访问", val: stats.overview.total_visits },
@@ -598,68 +635,98 @@ export default function AdminPage() {
                     </CardContent></Card>
                   ))}
                 </div>
-                {/* 每日访问趋势 AreaChart */}
-                <Card className="mb-6">
-                  <CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4" /> 每日访问趋势</CardTitle></CardHeader>
-                  <CardContent>
-                    {stats.daily_visits.length > 0 ? (
-                      <ResponsiveContainer width="100%" height={260}>
-                        <AreaChart data={stats.daily_visits}>
-                          <defs>
-                            <linearGradient id="visitGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                          <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v: string) => v.slice(5)} />
-                          <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                          <Tooltip labelFormatter={(v: string) => `日期: ${v}`} />
-                          <Area type="monotone" dataKey="count" name="访问量" stroke="#6366f1" fillOpacity={1} fill="url(#visitGrad)" />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    ) : <p className="text-muted-foreground text-center py-4">暂无数据</p>}
-                  </CardContent>
-                </Card>
 
-                {/* 页面流量趋势 LineChart */}
+                {/* 流量趋势组合图 */}
                 <Card className="mb-6">
-                  <CardHeader><CardTitle className="text-base flex items-center gap-2"><Eye className="h-4 w-4" /> 页面流量趋势 (Top 5)</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4" />
+                      {selectedDate ? `${selectedDate} 页面流量分布` : `流量趋势 — ${({ week: "最近 7 天", month: "最近 30 天", all: "全部", custom: customDateFrom ? `${customDateFrom} 至 ${customDateTo || "今天"}` : "自定义" } as Record<string, string>)[trendRange]}`}
+                    </CardTitle>
+                    {!selectedDate && stats.daily_visits.length > 0 && (
+                      <CardDescription className="text-xs">点击图表上的日期柱可查看该日页面流量详情</CardDescription>
+                    )}
+                  </CardHeader>
                   <CardContent>
-                    {trendsLoading ? (
+                    {(statsLoading || trendsLoading) ? (
                       <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
-                    ) : pageTrends.length > 0 ? (() => {
+                    ) : selectedDate ? (() => {
+                      const dayRows = pageTrends.filter(r => r.date === selectedDate)
+                      if (dayRows.length === 0) return <p className="text-muted-foreground text-center py-4">该日暂无页面访问数据</p>
+                      const sorted = [...dayRows].sort((a, b) => b.visits - a.visits)
+                      const pieData = sorted.slice(0, 8).map((r, i) => ({ name: shortPath(r.path), value: r.visits, fill: CHART_COLORS[i % CHART_COLORS.length] }))
+                      const rest = sorted.slice(8).reduce((s, r) => s + r.visits, 0)
+                      if (rest > 0) pieData.push({ name: "其他", value: rest, fill: "#94a3b8" })
+                      const totalDay = sorted.reduce((s, r) => s + r.visits, 0)
+                      return (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <ResponsiveContainer width="100%" height={280}>
+                            <PieChart>
+                              <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={{ strokeWidth: 1 }}>
+                                {pieData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                              </Pie>
+                              <Tooltip formatter={(v: number) => [v, "访问量"]} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                          <div>
+                            <div className="text-sm font-medium mb-3">当日总访问：<span className="text-lg font-bold">{totalDay}</span></div>
+                            <div className="space-y-1.5">
+                              {sorted.map((r, i) => (
+                                <div key={i} className="flex items-center gap-2">
+                                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: i < 8 ? CHART_COLORS[i % CHART_COLORS.length] : "#94a3b8" }} />
+                                  <code className="text-xs truncate flex-1">{r.path}</code>
+                                  <span className="text-sm font-medium tabular-nums">{r.visits}</span>
+                                  <span className="text-[10px] text-muted-foreground w-10 text-right">{(r.visits / totalDay * 100).toFixed(1)}%</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })() : stats.daily_visits.length > 0 ? (() => {
                       const pathCounts = new Map<string, number>()
                       pageTrends.forEach(r => pathCounts.set(r.path, (pathCounts.get(r.path) || 0) + r.visits))
                       const top5 = [...pathCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => e[0])
 
                       const dateMap = new Map<string, Record<string, number>>()
+                      stats.daily_visits.forEach(d => {
+                        dateMap.set(d.date, { total: d.count })
+                      })
                       pageTrends.filter(r => top5.includes(r.path)).forEach(r => {
-                        if (!dateMap.has(r.date)) dateMap.set(r.date, {})
+                        if (!dateMap.has(r.date)) dateMap.set(r.date, { total: 0 })
                         dateMap.get(r.date)![r.path] = r.visits
                       })
-                      const chartData = [...dateMap.entries()].sort().map(([date, paths]) => ({ date, ...paths }))
+                      const chartData = [...dateMap.entries()].sort().map(([date, vals]) => ({ date, ...vals }))
 
                       return (
-                        <ResponsiveContainer width="100%" height={300}>
-                          <LineChart data={chartData}>
+                        <ResponsiveContainer width="100%" height={340}>
+                          <ComposedChart data={chartData} onClick={(e) => {
+                            if (e?.activeLabel) setSelectedDate(e.activeLabel as string)
+                          }}>
+                            <defs>
+                              <linearGradient id="visitGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15}/>
+                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                             <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v: string) => v.slice(5)} />
                             <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                            <Tooltip labelFormatter={(v: string) => `日期: ${v}`} />
-                            <Legend formatter={(v: string) => shortPath(v)} />
+                            <Tooltip labelFormatter={(v: string) => `日期: ${v}`} contentStyle={{ fontSize: 12 }} />
+                            <Legend formatter={(v: string) => v === "total" ? "总访问量" : shortPath(v)} />
+                            <Bar dataKey="total" name="total" fill="url(#visitGrad)" stroke="#6366f1" strokeWidth={1} barSize={trendRange === "week" ? 24 : trendRange === "month" ? 12 : 6} opacity={0.7} />
                             {top5.map((p, i) => (
                               <Line key={p} type="monotone" dataKey={p} name={p} stroke={CHART_COLORS[i]} strokeWidth={2} dot={false} />
                             ))}
-                          </LineChart>
+                          </ComposedChart>
                         </ResponsiveContainer>
                       )
-                    })() : <p className="text-muted-foreground text-center py-4">暂无页面趋势数据</p>}
+                    })() : <p className="text-muted-foreground text-center py-4">暂无数据</p>}
                   </CardContent>
                 </Card>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* 页面平均停留时间 BarChart */}
+                  {/* 页面平均停留时间 */}
                   <Card>
                     <CardHeader><CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4" /> 页面平均停留时间</CardTitle></CardHeader>
                     <CardContent>
