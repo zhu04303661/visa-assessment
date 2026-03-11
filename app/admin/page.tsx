@@ -25,6 +25,10 @@ import {
   LayoutDashboard, Server, Cpu, Clock, Wifi, WifiOff,
   Database, ChevronDown, ChevronUp, Play, Zap,
 } from "lucide-react"
+import {
+  Area, AreaChart, Bar, BarChart as ReBarChart, CartesianGrid,
+  Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from "recharts"
 import { useAuth, type UserRole } from "@/lib/auth/auth-context"
 import { AuthDialog } from "@/components/auth-dialog"
 import { LogIn } from "lucide-react"
@@ -74,6 +78,9 @@ interface EndpointTestResult {
   latency?: number; statusCode?: number; method: string
 }
 
+interface PageTrendRow { date: string; path: string; visits: number }
+interface DwellStatRow { path: string; avg_duration_ms: number; visits: number }
+
 // ==================== Constants ====================
 
 const TRACKING_API = "/api/copywriting/api/tracking"
@@ -104,6 +111,13 @@ const METHOD_COLORS: Record<string, string> = {
   PUT: "bg-amber-100 text-amber-700 border-amber-300",
   PATCH: "bg-orange-100 text-orange-700 border-orange-300",
   DELETE: "bg-red-100 text-red-700 border-red-300",
+}
+
+const CHART_COLORS = ["#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16"]
+
+function shortPath(p: string) {
+  if (p === "/") return "首页"
+  return p.replace(/^\//, "").replace(/\//g, " / ").slice(0, 24) || p
 }
 
 // ==================== Helpers ====================
@@ -216,6 +230,11 @@ export default function AdminPage() {
   const [activityActionFilter, setActivityActionFilter] = useState("")
   const [activitiesLoading, setActivitiesLoading] = useState(false)
 
+  // --- page trends & dwell ---
+  const [pageTrends, setPageTrends] = useState<PageTrendRow[]>([])
+  const [dwellStats, setDwellStats] = useState<DwellStatRow[]>([])
+  const [trendsLoading, setTrendsLoading] = useState(false)
+
   // --- health ---
   const [healthLoading, setHealthLoading] = useState(false)
   const [healthData, setHealthData] = useState<HealthData | null>(null)
@@ -294,6 +313,19 @@ export default function AdminPage() {
     finally { setActivitiesLoading(false) }
   }, [activityPage, activityActionFilter])
 
+  const loadPageTrends = useCallback(async () => {
+    try {
+      setTrendsLoading(true)
+      const res = await fetch(`${TRACKING_API}/page-trends?days=${statsDays}`)
+      const data = await res.json()
+      if (data.success) {
+        setPageTrends(data.trends || [])
+        setDwellStats(data.dwell_stats || [])
+      }
+    } catch (e) { console.error("加载页面趋势失败:", e) }
+    finally { setTrendsLoading(false) }
+  }, [statsDays])
+
   const checkHealth = useCallback(async () => {
     setHealthLoading(true)
     setHealthError(null)
@@ -349,8 +381,8 @@ export default function AdminPage() {
 
   // --- initial + tab-driven loads ---
   useEffect(() => {
-    if (profile && isAdmin()) { loadUsers(); loadStats() }
-  }, [profile, isAdmin, loadUsers, loadStats])
+    if (profile && isAdmin()) { loadUsers(); loadStats(); loadPageTrends() }
+  }, [profile, isAdmin, loadUsers, loadStats, loadPageTrends])
 
   useEffect(() => { if (activeTab === "visitors") loadVisitorLogs() }, [activeTab, loadVisitorLogs])
   useEffect(() => { if (activeTab === "activities") loadActivityLogs() }, [activeTab, loadActivityLogs])
@@ -566,23 +598,92 @@ export default function AdminPage() {
                     </CardContent></Card>
                   ))}
                 </div>
+                {/* 每日访问趋势 AreaChart */}
+                <Card className="mb-6">
+                  <CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4" /> 每日访问趋势</CardTitle></CardHeader>
+                  <CardContent>
+                    {stats.daily_visits.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={260}>
+                        <AreaChart data={stats.daily_visits}>
+                          <defs>
+                            <linearGradient id="visitGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v: string) => v.slice(5)} />
+                          <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                          <Tooltip labelFormatter={(v: string) => `日期: ${v}`} />
+                          <Area type="monotone" dataKey="count" name="访问量" stroke="#6366f1" fillOpacity={1} fill="url(#visitGrad)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : <p className="text-muted-foreground text-center py-4">暂无数据</p>}
+                  </CardContent>
+                </Card>
+
+                {/* 页面流量趋势 LineChart */}
+                <Card className="mb-6">
+                  <CardHeader><CardTitle className="text-base flex items-center gap-2"><Eye className="h-4 w-4" /> 页面流量趋势 (Top 5)</CardTitle></CardHeader>
+                  <CardContent>
+                    {trendsLoading ? (
+                      <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+                    ) : pageTrends.length > 0 ? (() => {
+                      const pathCounts = new Map<string, number>()
+                      pageTrends.forEach(r => pathCounts.set(r.path, (pathCounts.get(r.path) || 0) + r.visits))
+                      const top5 = [...pathCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => e[0])
+
+                      const dateMap = new Map<string, Record<string, number>>()
+                      pageTrends.filter(r => top5.includes(r.path)).forEach(r => {
+                        if (!dateMap.has(r.date)) dateMap.set(r.date, {})
+                        dateMap.get(r.date)![r.path] = r.visits
+                      })
+                      const chartData = [...dateMap.entries()].sort().map(([date, paths]) => ({ date, ...paths }))
+
+                      return (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <LineChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                            <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v: string) => v.slice(5)} />
+                            <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                            <Tooltip labelFormatter={(v: string) => `日期: ${v}`} />
+                            <Legend formatter={(v: string) => shortPath(v)} />
+                            {top5.map((p, i) => (
+                              <Line key={p} type="monotone" dataKey={p} name={p} stroke={CHART_COLORS[i]} strokeWidth={2} dot={false} />
+                            ))}
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )
+                    })() : <p className="text-muted-foreground text-center py-4">暂无页面趋势数据</p>}
+                  </CardContent>
+                </Card>
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* 页面平均停留时间 BarChart */}
                   <Card>
-                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><Activity className="h-4 w-4" /> 每日访问趋势</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4" /> 页面平均停留时间</CardTitle></CardHeader>
                     <CardContent>
-                      {stats.daily_visits.length > 0 ? (
-                        <div className="space-y-1">{stats.daily_visits.slice(-14).map((d, i) => {
-                          const max = Math.max(...stats.daily_visits.map(x => x.count))
-                          const w = max > 0 ? (d.count / max) * 100 : 0
-                          return (<div key={i} className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground w-16 shrink-0">{d.date.slice(5)}</span>
-                            <div className="flex-1 bg-muted rounded-full h-3.5 overflow-hidden"><div className="h-full bg-primary/70 rounded-full" style={{ width: `${w}%` }} /></div>
-                            <span className="text-xs font-medium w-8 text-right">{d.count}</span>
-                          </div>)
-                        })}</div>
-                      ) : <p className="text-muted-foreground text-center py-4">暂无数据</p>}
+                      {trendsLoading ? (
+                        <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+                      ) : dwellStats.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={Math.max(200, dwellStats.length * 32)}>
+                          <ReBarChart data={dwellStats.map(d => ({
+                            path: shortPath(d.path),
+                            seconds: Math.round(d.avg_duration_ms / 1000),
+                            visits: d.visits,
+                          }))} layout="vertical" margin={{ left: 10, right: 20 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                            <XAxis type="number" tick={{ fontSize: 11 }} unit="s" />
+                            <YAxis dataKey="path" type="category" tick={{ fontSize: 11 }} width={110} />
+                            <Tooltip formatter={(v: number) => [`${v}s`, "平均停留"]} />
+                            <Bar dataKey="seconds" name="平均停留(s)" fill="#10b981" radius={[0, 4, 4, 0]} />
+                          </ReBarChart>
+                        </ResponsiveContainer>
+                      ) : <p className="text-muted-foreground text-center py-4">暂无停留时间数据</p>}
                     </CardContent>
                   </Card>
+
+                  {/* 热门页面 */}
                   <Card>
                     <CardHeader><CardTitle className="text-base flex items-center gap-2"><Eye className="h-4 w-4" /> 热门页面</CardTitle></CardHeader>
                     <CardContent>
@@ -594,6 +695,8 @@ export default function AdminPage() {
                       )) : <p className="text-muted-foreground text-center py-4">暂无数据</p>}
                     </CardContent>
                   </Card>
+
+                  {/* 活跃IP */}
                   <Card>
                     <CardHeader><CardTitle className="text-base flex items-center gap-2"><Globe className="h-4 w-4" /> 活跃IP</CardTitle></CardHeader>
                     <CardContent>
@@ -605,6 +708,8 @@ export default function AdminPage() {
                       )) : <p className="text-muted-foreground text-center py-4">暂无数据</p>}
                     </CardContent>
                   </Card>
+
+                  {/* 热门操作 */}
                   <Card>
                     <CardHeader><CardTitle className="text-base flex items-center gap-2"><MousePointerClick className="h-4 w-4" /> 热门操作</CardTitle></CardHeader>
                     <CardContent>

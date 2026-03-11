@@ -487,6 +487,15 @@ class CopywritingDatabase:
                         logger.info("已添加 document_versions.source_file 字段")
                 except Exception as e:
                     logger.warning(f"字段迁移检查时出错（可忽略）: {e}")
+
+                try:
+                    cursor.execute("PRAGMA table_info(visitor_logs)")
+                    vl_columns = [col[1] for col in cursor.fetchall()]
+                    if 'duration_ms' not in vl_columns:
+                        cursor.execute("ALTER TABLE visitor_logs ADD COLUMN duration_ms INTEGER")
+                        logger.info("已添加 visitor_logs.duration_ms 字段")
+                except Exception as e:
+                    logger.warning(f"visitor_logs 迁移检查时出错（可忽略）: {e}")
                 
                 conn.commit()
                 logger.info("数据库表结构初始化完成")
@@ -2745,6 +2754,66 @@ class CopywritingDatabase:
                 'overview': {'total_visits': 0, 'unique_ips': 0, 'unique_users': 0, 'unique_sessions': 0},
                 'top_pages': [], 'daily_visits': [], 'top_ips': [], 'top_actions': []
             }
+
+    def update_visit_duration(self, visit_id: str, duration_ms: int) -> bool:
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "UPDATE visitor_logs SET duration_ms = ? WHERE id = ?",
+                    (duration_ms, visit_id)
+                )
+                conn.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            logger.error(f"更新停留时间失败: {e}")
+            return False
+
+    def get_page_trends(self, days: int = 30) -> List[Dict[str, Any]]:
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                time_filter = f"-{days} days"
+                cursor.execute('''
+                    SELECT DATE(created_at) as day, path, COUNT(*) as visits
+                    FROM visitor_logs
+                    WHERE created_at >= datetime('now', 'localtime', ?)
+                      AND path NOT LIKE '/api/%'
+                    GROUP BY day, path
+                    ORDER BY day, visits DESC
+                ''', (time_filter,))
+                return [{'date': r[0], 'path': r[1], 'visits': r[2]} for r in cursor.fetchall()]
+        except Exception as e:
+            logger.error(f"获取页面趋势失败: {e}")
+            return []
+
+    def get_page_dwell_stats(self, days: int = 30) -> List[Dict[str, Any]]:
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                time_filter = f"-{days} days"
+                cursor.execute('''
+                    SELECT path,
+                           CAST(AVG(duration_ms) AS INTEGER) as avg_duration_ms,
+                           CAST(MIN(duration_ms) AS INTEGER) as min_duration_ms,
+                           CAST(MAX(duration_ms) AS INTEGER) as max_duration_ms,
+                           COUNT(*) as visits
+                    FROM visitor_logs
+                    WHERE duration_ms > 0 AND duration_ms < 3600000
+                      AND path NOT LIKE '/api/%'
+                      AND created_at >= datetime('now', 'localtime', ?)
+                    GROUP BY path
+                    ORDER BY visits DESC
+                    LIMIT 15
+                ''', (time_filter,))
+                return [{
+                    'path': r[0], 'avg_duration_ms': r[1],
+                    'min_duration_ms': r[2], 'max_duration_ms': r[3],
+                    'visits': r[4]
+                } for r in cursor.fetchall()]
+        except Exception as e:
+            logger.error(f"获取页面停留统计失败: {e}")
+            return []
 
     def cleanup_old_logs(self, days: int = 90) -> Dict[str, int]:
         try:

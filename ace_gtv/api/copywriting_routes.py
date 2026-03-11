@@ -5344,6 +5344,37 @@ def get_tracking_stats():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@copywriting_bp.route('/tracking/page-trends', methods=['GET'])
+def get_page_trends():
+    """获取按页面分组的每日访问趋势"""
+    try:
+        db = _tracking_db()
+        days = request.args.get('days', 30, type=int)
+        trends = db.get_page_trends(days=days)
+        dwell = db.get_page_dwell_stats(days=days)
+        return jsonify({'success': True, 'trends': trends, 'dwell_stats': dwell})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@copywriting_bp.route('/tracking/duration', methods=['POST'])
+def update_visit_duration():
+    """上报页面停留时间"""
+    logger = _get_logger()
+    try:
+        data = request.get_json() or {}
+        visit_id = data.get('visit_id')
+        duration_ms = data.get('duration_ms')
+        if not visit_id or duration_ms is None:
+            return jsonify({'success': False, 'error': 'visit_id and duration_ms required'}), 400
+        db = _tracking_db()
+        ok = db.update_visit_duration(visit_id, int(duration_ms))
+        return jsonify({'success': ok})
+    except Exception as e:
+        logger.error(f"更新停留时间失败: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @copywriting_bp.route('/tracking/cleanup', methods=['POST'])
 def cleanup_tracking_logs():
     """清理旧日志"""

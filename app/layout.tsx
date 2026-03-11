@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { LanguageProvider } from "@/lib/i18n"
 import { AuthProvider } from "@/lib/auth/auth-context"
+import { PageTracker } from "@/components/page-tracker"
 import { Suspense } from "react"
 
 export const metadata: Metadata = {
@@ -25,7 +26,10 @@ export default function RootLayout({
         {/* Wrapped children with LanguageProvider and Suspense boundary */}
         <Suspense fallback={<div>Loading...</div>}>
           <LanguageProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <PageTracker />
+              {children}
+            </AuthProvider>
           </LanguageProvider>
         </Suspense>
         <Analytics />
