@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,6 +26,8 @@ import {
   Database, ChevronDown, ChevronUp, Play, Zap,
 } from "lucide-react"
 import { useAuth, type UserRole } from "@/lib/auth/auth-context"
+import { AuthDialog } from "@/components/auth-dialog"
+import { LogIn } from "lucide-react"
 
 // ==================== Types ====================
 
@@ -176,8 +177,8 @@ function buildProxyPath(backendPath: string): string {
 // ==================== Page ====================
 
 export default function AdminPage() {
-  const router = useRouter()
   const { user, profile, loading: authLoading, isAdmin } = useAuth()
+  const [showLoginDialog, setShowLoginDialog] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
@@ -225,13 +226,6 @@ export default function AdminPage() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [testResults, setTestResults] = useState<Map<string, EndpointTestResult>>(new Map())
   const [testingAll, setTestingAll] = useState(false)
-
-  // --- auth guard ---
-  useEffect(() => {
-    if (!authLoading && (!user || !profile || !isAdmin())) {
-      router.push("/")
-    }
-  }, [user, profile, authLoading, isAdmin, router])
 
   useEffect(() => {
     if (error || success) {
@@ -305,7 +299,7 @@ export default function AdminPage() {
     setHealthError(null)
     const t0 = Date.now()
     try {
-      const res = await fetch(`${BACKEND_PROXY}/health`, { cache: "no-store" })
+      const res = await fetch("/api/backend-health", { cache: "no-store" })
       setHealthLatency(Date.now() - t0)
       if (res.ok) { setHealthData(await res.json()); setHealthError(null) }
       else { setHealthError(`HTTP ${res.status}: ${res.statusText}`); setHealthData(null) }
@@ -423,12 +417,6 @@ export default function AdminPage() {
     super_admin: users.filter((u) => u.role === "super_admin").length,
   }
 
-  // ==================== Guard ====================
-
-  if (authLoading || !isAdmin()) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
-  }
-
   // ==================== Render Helpers ====================
 
   const routeGroups = healthData?.route_groups ?? {}
@@ -446,6 +434,52 @@ export default function AdminPage() {
   })()
 
   // ==================== Render ====================
+
+  if (authLoading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
+  }
+
+  if (!user || !profile) {
+    return (
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <LogIn className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle>需要登录</CardTitle>
+              <CardDescription>请登录管理员账号以访问管理控制台</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <Button onClick={() => setShowLoginDialog(true)} className="w-full">登录</Button>
+              <Button variant="outline" onClick={() => window.location.href = "/"} className="w-full">返回首页</Button>
+            </CardContent>
+          </Card>
+        </div>
+        <AuthDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} defaultMode="login" />
+      </>
+    )
+  }
+
+  if (!isAdmin()) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
+              <Shield className="h-6 w-6 text-destructive" />
+            </div>
+            <CardTitle>访问被拒绝</CardTitle>
+            <CardDescription>您需要管理员权限才能访问此页面</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={() => window.location.href = "/"} className="w-full">返回首页</Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 md:p-6">
