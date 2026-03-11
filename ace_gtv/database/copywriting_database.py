@@ -400,6 +400,44 @@ class CopywritingDatabase:
                         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
                     )
                 ''')
+
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS visitor_logs (
+                        id TEXT PRIMARY KEY,
+                        user_id TEXT,
+                        ip_address TEXT,
+                        user_agent TEXT,
+                        referer TEXT,
+                        path TEXT NOT NULL,
+                        method TEXT DEFAULT 'GET',
+                        status_code INTEGER,
+                        country TEXT,
+                        city TEXT,
+                        device_type TEXT,
+                        browser TEXT,
+                        os TEXT,
+                        session_id TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+                    )
+                ''')
+
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS activity_logs (
+                        id TEXT PRIMARY KEY,
+                        user_id TEXT,
+                        session_id TEXT,
+                        ip_address TEXT,
+                        action TEXT NOT NULL,
+                        category TEXT DEFAULT 'general',
+                        target TEXT,
+                        target_id TEXT,
+                        details TEXT,
+                        path TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+                    )
+                ''')
                 
                 # 创建索引
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_projects_status ON projects (status)')
@@ -426,6 +464,13 @@ class CopywritingDatabase:
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_uploaded_files_assessment ON uploaded_files (assessment_id)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_uploaded_files_project ON uploaded_files (project_id)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_uploaded_files_user ON uploaded_files (user_id)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_visitor_logs_ip ON visitor_logs (ip_address)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_visitor_logs_user ON visitor_logs (user_id)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_visitor_logs_created ON visitor_logs (created_at)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_visitor_logs_path ON visitor_logs (path)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_activity_logs_user ON activity_logs (user_id)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON activity_logs (action)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_activity_logs_created ON activity_logs (created_at)')
                 
                 # ==================== 数据库迁移 ====================
                 # 为 document_versions 表添加新字段（如果不存在）
@@ -2485,6 +2530,236 @@ class CopywritingDatabase:
         except Exception as e:
             logger.error(f"列出评估结果失败: {e}")
             return []
+
+    # ==================== 访客 & 活动日志 ====================
+
+    def log_visitor(self, visitor_id: str, path: str, **kwargs) -> bool:
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                cursor.execute('''
+                    INSERT INTO visitor_logs
+                    (id, user_id, ip_address, user_agent, referer, path, method,
+                     status_code, country, city, device_type, browser, os, session_id, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    visitor_id, kwargs.get('user_id'), kwargs.get('ip_address'),
+                    kwargs.get('user_agent'), kwargs.get('referer'), path,
+                    kwargs.get('method', 'GET'), kwargs.get('status_code'),
+                    kwargs.get('country'), kwargs.get('city'),
+                    kwargs.get('device_type'), kwargs.get('browser'),
+                    kwargs.get('os'), kwargs.get('session_id'), now
+                ))
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"记录访客日志失败: {e}")
+            return False
+
+    def log_activity(self, activity_id: str, action: str, **kwargs) -> bool:
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                details = kwargs.get('details')
+                if details and isinstance(details, dict):
+                    import json as _json
+                    details = _json.dumps(details, ensure_ascii=False)
+                cursor.execute('''
+                    INSERT INTO activity_logs
+                    (id, user_id, session_id, ip_address, action, category,
+                     target, target_id, details, path, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    activity_id, kwargs.get('user_id'), kwargs.get('session_id'),
+                    kwargs.get('ip_address'), action, kwargs.get('category', 'general'),
+                    kwargs.get('target'), kwargs.get('target_id'),
+                    details, kwargs.get('path'), now
+                ))
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"记录活动日志失败: {e}")
+            return False
+
+    def log_activities_batch(self, activities: list) -> int:
+        count = 0
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                for act in activities:
+                    try:
+                        details = act.get('details')
+                        if details and isinstance(details, dict):
+                            import json as _json
+                            details = _json.dumps(details, ensure_ascii=False)
+                        cursor.execute('''
+                            INSERT INTO activity_logs
+                            (id, user_id, session_id, ip_address, action, category,
+                             target, target_id, details, path, created_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (
+                            act.get('id', str(uuid.uuid4())),
+                            act.get('user_id'), act.get('session_id'),
+                            act.get('ip_address'), act.get('action', 'unknown'),
+                            act.get('category', 'general'), act.get('target'),
+                            act.get('target_id'), details, act.get('path'), now
+                        ))
+                        count += 1
+                    except Exception as e:
+                        logger.warning(f"批量记录活动日志单条失败: {e}")
+                conn.commit()
+        except Exception as e:
+            logger.error(f"批量记录活动日志失败: {e}")
+        return count
+
+    def get_visitor_logs(self, page: int = 1, page_size: int = 50,
+                         ip: str = None, path: str = None, user_id: str = None) -> Dict[str, Any]:
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                where, params = [], []
+                if ip:
+                    where.append("v.ip_address LIKE ?"); params.append(f"%{ip}%")
+                if path:
+                    where.append("v.path LIKE ?"); params.append(f"%{path}%")
+                if user_id:
+                    where.append("v.user_id = ?"); params.append(user_id)
+                where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+
+                cursor.execute(f"SELECT COUNT(*) FROM visitor_logs v {where_sql}", params)
+                total = cursor.fetchone()[0]
+
+                offset = (page - 1) * page_size
+                cursor.execute(f'''
+                    SELECT v.*, u.email as user_email, u.full_name as user_name
+                    FROM visitor_logs v
+                    LEFT JOIN users u ON v.user_id = u.id
+                    {where_sql}
+                    ORDER BY v.created_at DESC
+                    LIMIT ? OFFSET ?
+                ''', params + [page_size, offset])
+                cols = [d[0] for d in cursor.description]
+                logs = [dict(zip(cols, row)) for row in cursor.fetchall()]
+                return {
+                    'logs': logs, 'total': total, 'page': page,
+                    'page_size': page_size, 'total_pages': max(1, -(-total // page_size))
+                }
+        except Exception as e:
+            logger.error(f"获取访客日志失败: {e}")
+            return {'logs': [], 'total': 0, 'page': 1, 'page_size': page_size, 'total_pages': 1}
+
+    def get_activity_logs(self, page: int = 1, page_size: int = 50,
+                          action: str = None, user_id: str = None) -> Dict[str, Any]:
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                where, params = [], []
+                if action:
+                    where.append("a.action = ?"); params.append(action)
+                if user_id:
+                    where.append("a.user_id = ?"); params.append(user_id)
+                where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+
+                cursor.execute(f"SELECT COUNT(*) FROM activity_logs a {where_sql}", params)
+                total = cursor.fetchone()[0]
+
+                offset = (page - 1) * page_size
+                cursor.execute(f'''
+                    SELECT a.*, u.email as user_email, u.full_name as user_name
+                    FROM activity_logs a
+                    LEFT JOIN users u ON a.user_id = u.id
+                    {where_sql}
+                    ORDER BY a.created_at DESC
+                    LIMIT ? OFFSET ?
+                ''', params + [page_size, offset])
+                cols = [d[0] for d in cursor.description]
+                logs = [dict(zip(cols, row)) for row in cursor.fetchall()]
+                return {
+                    'logs': logs, 'total': total, 'page': page,
+                    'page_size': page_size, 'total_pages': max(1, -(-total // page_size))
+                }
+        except Exception as e:
+            logger.error(f"获取活动日志失败: {e}")
+            return {'logs': [], 'total': 0, 'page': 1, 'page_size': page_size, 'total_pages': 1}
+
+    def get_visitor_stats(self, days: int = 30) -> Dict[str, Any]:
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                time_filter = f"-{days} days"
+
+                cursor.execute('''
+                    SELECT COUNT(*) as total_visits,
+                           COUNT(DISTINCT ip_address) as unique_ips,
+                           COUNT(DISTINCT user_id) as unique_users,
+                           COUNT(DISTINCT session_id) as unique_sessions
+                    FROM visitor_logs
+                    WHERE created_at >= datetime('now', 'localtime', ?)
+                ''', (time_filter,))
+                row = cursor.fetchone()
+                overview = {
+                    'total_visits': row[0], 'unique_ips': row[1],
+                    'unique_users': row[2], 'unique_sessions': row[3]
+                }
+
+                cursor.execute('''
+                    SELECT path, COUNT(*) as cnt FROM visitor_logs
+                    WHERE created_at >= datetime('now', 'localtime', ?)
+                    GROUP BY path ORDER BY cnt DESC LIMIT 20
+                ''', (time_filter,))
+                top_pages = [{'path': r[0], 'count': r[1]} for r in cursor.fetchall()]
+
+                cursor.execute('''
+                    SELECT DATE(created_at) as day, COUNT(*) as cnt FROM visitor_logs
+                    WHERE created_at >= datetime('now', 'localtime', ?)
+                    GROUP BY day ORDER BY day
+                ''', (time_filter,))
+                daily_visits = [{'date': r[0], 'count': r[1]} for r in cursor.fetchall()]
+
+                cursor.execute('''
+                    SELECT ip_address, COUNT(*) as cnt, MAX(created_at) as last_visit
+                    FROM visitor_logs
+                    WHERE created_at >= datetime('now', 'localtime', ?)
+                    GROUP BY ip_address ORDER BY cnt DESC LIMIT 20
+                ''', (time_filter,))
+                top_ips = [{'ip': r[0], 'count': r[1], 'last_visit': r[2]} for r in cursor.fetchall()]
+
+                cursor.execute('''
+                    SELECT action, COUNT(*) as cnt FROM activity_logs
+                    WHERE created_at >= datetime('now', 'localtime', ?)
+                    GROUP BY action ORDER BY cnt DESC LIMIT 20
+                ''', (time_filter,))
+                top_actions = [{'action': r[0], 'count': r[1]} for r in cursor.fetchall()]
+
+                return {
+                    'overview': overview, 'top_pages': top_pages,
+                    'daily_visits': daily_visits, 'top_ips': top_ips,
+                    'top_actions': top_actions
+                }
+        except Exception as e:
+            logger.error(f"获取访客统计失败: {e}")
+            return {
+                'overview': {'total_visits': 0, 'unique_ips': 0, 'unique_users': 0, 'unique_sessions': 0},
+                'top_pages': [], 'daily_visits': [], 'top_ips': [], 'top_actions': []
+            }
+
+    def cleanup_old_logs(self, days: int = 90) -> Dict[str, int]:
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                time_filter = f"-{days} days"
+                cursor.execute("DELETE FROM visitor_logs WHERE created_at < datetime('now', 'localtime', ?)", (time_filter,))
+                visitor_cleaned = cursor.rowcount
+                cursor.execute("DELETE FROM activity_logs WHERE created_at < datetime('now', 'localtime', ?)", (time_filter,))
+                activity_cleaned = cursor.rowcount
+                conn.commit()
+                return {'visitor_logs_cleaned': visitor_cleaned, 'activity_logs_cleaned': activity_cleaned}
+        except Exception as e:
+            logger.error(f"清理旧日志失败: {e}")
+            return {'visitor_logs_cleaned': 0, 'activity_logs_cleaned': 0}
 
 
 # 测试代码

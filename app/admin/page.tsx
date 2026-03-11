@@ -194,6 +194,8 @@ export default function AdminPage() {
 
   // --- visitor stats ---
   const [stats, setStats] = useState<VisitorStats | null>(null)
+  const [statsLoading, setStatsLoading] = useState(false)
+  const [statsError, setStatsError] = useState(false)
   const [statsDays, setStatsDays] = useState("30")
 
   // --- visitor logs ---
@@ -253,10 +255,18 @@ export default function AdminPage() {
 
   const loadStats = useCallback(async () => {
     try {
+      setStatsLoading(true)
+      setStatsError(false)
       const res = await fetch(`${TRACKING_API}/stats?days=${statsDays}`)
       const data = await res.json()
       if (data.success) setStats(data.stats)
-    } catch (e) { console.error("加载统计失败:", e) }
+      else setStatsError(true)
+    } catch (e) {
+      console.error("加载统计失败:", e)
+      setStatsError(true)
+    } finally {
+      setStatsLoading(false)
+    }
   }, [statsDays])
 
   const loadVisitorLogs = useCallback(async () => {
@@ -569,6 +579,12 @@ export default function AdminPage() {
                   </Card>
                 </div>
               </>
+            ) : statsError ? (
+              <div className="text-center py-12">
+                <AlertCircle className="h-8 w-8 mx-auto mb-2 text-red-400" />
+                <p className="text-muted-foreground mb-3">加载统计数据失败</p>
+                <Button variant="outline" size="sm" onClick={loadStats}><RefreshCw className="h-4 w-4 mr-1.5" /> 重试</Button>
+              </div>
             ) : (
               <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2" /><p className="text-muted-foreground">加载中...</p></div>
             )}

@@ -5224,3 +5224,130 @@ def cleanup_claude_tasks():
     except Exception as e:
         logger.error(f"清理任务失败: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ============================================================================
+# 访客追踪 & 活动日志
+# ============================================================================
+
+@copywriting_bp.route('/tracking/visit', methods=['POST'])
+def track_visit():
+    """记录页面访问"""
+    logger = _get_logger()
+    try:
+        data = request.get_json() or {}
+        db = _get_db()
+        import uuid as _uuid
+        visitor_id = str(_uuid.uuid4())
+
+        ip = data.get('ip_address') or request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or request.headers.get('X-Real-IP') or request.remote_addr
+
+        db.log_visitor(
+            visitor_id=visitor_id,
+            path=data.get('path', '/'),
+            user_id=data.get('user_id'),
+            ip_address=ip,
+            user_agent=data.get('user_agent', ''),
+            referer=data.get('referer', ''),
+            method=data.get('method', 'GET'),
+            status_code=data.get('status_code'),
+            device_type=data.get('device_type'),
+            browser=data.get('browser'),
+            os=data.get('os'),
+            session_id=data.get('session_id'),
+        )
+        return jsonify({'success': True, 'id': visitor_id})
+    except Exception as e:
+        logger.error(f"记录访问失败: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@copywriting_bp.route('/tracking/activity', methods=['POST'])
+def track_activity():
+    """记录用户活动（单条或批量）"""
+    logger = _get_logger()
+    try:
+        data = request.get_json() or {}
+        db = _get_db()
+        import uuid as _uuid
+
+        if 'events' in data and isinstance(data['events'], list):
+            for evt in data['events']:
+                if 'id' not in evt:
+                    evt['id'] = str(_uuid.uuid4())
+            count = db.log_activities_batch(data['events'])
+            return jsonify({'success': True, 'recorded': count})
+
+        activity_id = str(_uuid.uuid4())
+        db.log_activity(
+            activity_id=activity_id,
+            action=data.get('action', 'unknown'),
+            user_id=data.get('user_id'),
+            session_id=data.get('session_id'),
+            ip_address=data.get('ip_address'),
+            category=data.get('category', 'general'),
+            target=data.get('target'),
+            target_id=data.get('target_id'),
+            details=data.get('details'),
+            path=data.get('path'),
+        )
+        return jsonify({'success': True, 'id': activity_id})
+    except Exception as e:
+        logger.error(f"记录活动失败: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@copywriting_bp.route('/tracking/visitors', methods=['GET'])
+def get_visitors():
+    """获取访客日志列表"""
+    try:
+        db = _get_db()
+        page = request.args.get('page', 1, type=int)
+        page_size = request.args.get('page_size', 50, type=int)
+        ip = request.args.get('ip')
+        path = request.args.get('path')
+        user_id = request.args.get('user_id')
+        result = db.get_visitor_logs(page=page, page_size=page_size, ip=ip, path=path, user_id=user_id)
+        return jsonify({'success': True, **result})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@copywriting_bp.route('/tracking/activities', methods=['GET'])
+def get_activities():
+    """获取活动日志列表"""
+    try:
+        db = _get_db()
+        page = request.args.get('page', 1, type=int)
+        page_size = request.args.get('page_size', 50, type=int)
+        action = request.args.get('action')
+        user_id = request.args.get('user_id')
+        result = db.get_activity_logs(page=page, page_size=page_size, action=action, user_id=user_id)
+        return jsonify({'success': True, **result})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@copywriting_bp.route('/tracking/stats', methods=['GET'])
+def get_tracking_stats():
+    """获取访客统计数据"""
+    try:
+        db = _get_db()
+        days = request.args.get('days', 30, type=int)
+        stats = db.get_visitor_stats(days=days)
+        return jsonify({'success': True, 'stats': stats})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@copywriting_bp.route('/tracking/cleanup', methods=['POST'])
+def cleanup_tracking_logs():
+    """清理旧日志"""
+    try:
+        db = _get_db()
+        data = request.get_json() or {}
+        days = data.get('days', 90)
+        result = db.cleanup_old_logs(days=days)
+        return jsonify({'success': True, **result})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
