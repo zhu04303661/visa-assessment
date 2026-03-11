@@ -7,34 +7,10 @@ import { useLanguage } from "@/lib/i18n"
 import OpenClawChatUI from "@/components/openclaw-chat-ui"
 import { Navbar } from "@/components/navbar"
 import { AuthGuard } from "@/components/auth-guard"
-import { MessageCircle, Globe, Maximize2, Minimize2 } from "lucide-react"
-import { useState } from "react"
+import { MessageCircle, Globe } from "lucide-react"
 
 export default function ChatAssessmentPage() {
   const { language } = useLanguage()
-  const [isFullscreen, setIsFullscreen] = useState(false)
-
-  if (isFullscreen) {
-    return (
-      <AuthGuard requireAuth={true}>
-        <div className="fixed inset-0 z-50 bg-background flex flex-col">
-          <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
-            <div className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-primary" />
-              <span className="font-medium">{language === "en" ? "AI Immigration Consultation" : "AI移民咨询"}</span>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => setIsFullscreen(false)} className="gap-1.5">
-              <Minimize2 className="h-4 w-4" />
-              {language === "en" ? "Exit Fullscreen" : "退出全屏"}
-            </Button>
-          </div>
-          <div className="flex-1 min-h-0">
-            <OpenClawChatUI />
-          </div>
-        </div>
-      </AuthGuard>
-    )
-  }
 
   return (
     <AuthGuard requireAuth={true}>
@@ -60,12 +36,6 @@ export default function ChatAssessmentPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <Card className="h-[600px] flex flex-col min-h-0 shadow-lg">
-                <div className="flex items-center justify-end px-3 pt-2">
-                  <Button variant="ghost" size="sm" onClick={() => setIsFullscreen(true)} className="gap-1.5 text-muted-foreground hover:text-foreground">
-                    <Maximize2 className="h-4 w-4" />
-                    {language === "en" ? "Fullscreen" : "全屏"}
-                  </Button>
-                </div>
                 <CardContent className="flex-1 p-0 min-h-0">
                   <OpenClawChatUI />
                 </CardContent>

@@ -4,12 +4,15 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { useLanguage } from "@/lib/i18n"
 import {
   Bot, User, Loader2, Send, Cog, Globe, Square, Zap, Shield,
-  FileText, GraduationCap, Briefcase, Plane, Building2, Scale
+  FileText, GraduationCap, Briefcase, Plane, Building2, Scale,
+  Maximize2, Minimize2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { OpenClawClient } from "@/lib/openclaw-client"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 interface Message {
   id: string
@@ -63,6 +66,7 @@ export default function OpenClawChatUI() {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "disconnected">("disconnected")
   const [activeToolCalls, setActiveToolCalls] = useState<Array<{ name: string; input: string }>>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -243,15 +247,28 @@ export default function OpenClawChatUI() {
       : (language === "en" ? "Offline" : "离线")
 
   return (
-    <div className="h-full flex flex-col">
+    <div className={`flex flex-col ${isFullscreen ? "fixed inset-0 z-50 bg-background" : "h-full"}`}>
       {/* Header status bar */}
       <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-b">
         <div className={`w-2 h-2 rounded-full ${statusColor}`} />
         <span className="text-sm text-muted-foreground">{statusText}</span>
-        <Badge variant="outline" className="ml-auto text-xs">
-          <Globe className="w-3 h-3 mr-1" />
-          OpenClaw
-        </Badge>
+        <div className="ml-auto flex items-center gap-1.5">
+          <Badge variant="outline" className="text-xs">
+            <Globe className="w-3 h-3 mr-1" />
+            OpenClaw
+          </Badge>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            title={isFullscreen
+              ? (language === "en" ? "Exit Fullscreen" : "退出全屏")
+              : (language === "en" ? "Fullscreen" : "全屏")}
+          >
+            {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+          </Button>
+        </div>
       </div>
 
       {/* Messages area */}
@@ -306,8 +323,16 @@ export default function OpenClawChatUI() {
                     : "bg-gray-50 dark:bg-gray-800 text-foreground border"
                 }`}
               >
-                <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-                  {message.content || (message.isStreaming ? "" : "")}
+                <div className="break-words text-sm leading-relaxed">
+                  {message.role === "assistant" && message.content ? (
+                    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1.5 prose-headings:my-2 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-table:my-2 prose-pre:my-2 prose-hr:my-3 prose-blockquote:my-2">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <span className="whitespace-pre-wrap">{message.content}</span>
+                  )}
                   {message.isStreaming && !message.content && (
                     <span className="inline-flex items-center gap-1">
                       <Loader2 className="h-3 w-3 animate-spin" />
