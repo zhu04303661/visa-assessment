@@ -5230,13 +5230,17 @@ def cleanup_claude_tasks():
 # 访客追踪 & 活动日志
 # ============================================================================
 
+def _tracking_db():
+    _init_services()
+    return _services['db']
+
 @copywriting_bp.route('/tracking/visit', methods=['POST'])
 def track_visit():
     """记录页面访问"""
     logger = _get_logger()
     try:
         data = request.get_json() or {}
-        db = _get_db()
+        db = _tracking_db()
         import uuid as _uuid
         visitor_id = str(_uuid.uuid4())
 
@@ -5268,7 +5272,7 @@ def track_activity():
     logger = _get_logger()
     try:
         data = request.get_json() or {}
-        db = _get_db()
+        db = _tracking_db()
         import uuid as _uuid
 
         if 'events' in data and isinstance(data['events'], list):
@@ -5301,7 +5305,7 @@ def track_activity():
 def get_visitors():
     """获取访客日志列表"""
     try:
-        db = _get_db()
+        db = _tracking_db()
         page = request.args.get('page', 1, type=int)
         page_size = request.args.get('page_size', 50, type=int)
         ip = request.args.get('ip')
@@ -5317,7 +5321,7 @@ def get_visitors():
 def get_activities():
     """获取活动日志列表"""
     try:
-        db = _get_db()
+        db = _tracking_db()
         page = request.args.get('page', 1, type=int)
         page_size = request.args.get('page_size', 50, type=int)
         action = request.args.get('action')
@@ -5332,7 +5336,7 @@ def get_activities():
 def get_tracking_stats():
     """获取访客统计数据"""
     try:
-        db = _get_db()
+        db = _tracking_db()
         days = request.args.get('days', 30, type=int)
         stats = db.get_visitor_stats(days=days)
         return jsonify({'success': True, 'stats': stats})
@@ -5344,7 +5348,7 @@ def get_tracking_stats():
 def cleanup_tracking_logs():
     """清理旧日志"""
     try:
-        db = _get_db()
+        db = _tracking_db()
         data = request.get_json() or {}
         days = data.get('days', 90)
         result = db.cleanup_old_logs(days=days)
