@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react"
+import { AuthGuard } from "@/components/auth-guard"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -2544,15 +2545,20 @@ function MaterialCollectionContent() {
   )
 }
 
-// 导出带 Suspense 包装的组件，以正确处理 useSearchParams
 export default function MaterialCollectionPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    }>
-      <MaterialCollectionContent />
-    </Suspense>
+    <AuthGuard
+      requireAuth={true}
+      allowedRoles={['admin', 'super_admin']}
+      unauthorizedMessage="材料收集功能仅对管理员开放，请联系管理员获取访问权限。"
+    >
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      }>
+        <MaterialCollectionContent />
+      </Suspense>
+    </AuthGuard>
   )
 }

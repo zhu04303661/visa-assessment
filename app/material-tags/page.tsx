@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { AuthGuard } from '@/components/auth-guard'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
@@ -96,7 +97,7 @@ async function apiCall(endpoint: string, options?: RequestInit) {
   return response.json()
 }
 
-export default function MaterialTagsPage() {
+function MaterialTagsContent() {
   const [categories, setCategories] = useState<Categories>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -853,5 +854,17 @@ export default function MaterialTagsPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+export default function MaterialTagsPage() {
+  return (
+    <AuthGuard
+      requireAuth={true}
+      allowedRoles={['admin', 'super_admin']}
+      unauthorizedMessage="材料标签管理功能仅对管理员开放，请联系管理员获取访问权限。"
+    >
+      <MaterialTagsContent />
+    </AuthGuard>
   )
 }
