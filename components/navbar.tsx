@@ -41,12 +41,12 @@ export function Navbar() {
         { href: "/assessment", label: language === "en" ? "Eligibility Assessment" : "资格评估", icon: FileCheck },
       ]
     },
-    // AI 文案
+    // CaseCenter
     aiCopywriting: {
-      label: language === "en" ? "AI Copywriting" : "AI文案",
+      label: "CaseCenter",
       icon: Wand2,
       items: [
-        { href: "/copywriting", label: language === "en" ? "AI Copywriting" : "AI文案", icon: Wand2 },
+        { href: "/copywriting", label: "CaseCenter", icon: Wand2 },
         { href: "/material-collection", label: language === "en" ? "Material Collection" : "材料收集", icon: ClipboardList },
         { href: "/material-tags", label: language === "en" ? "Tag Settings" : "标签设置", icon: Tags },
         { href: "/health", label: language === "en" ? "Service Status" : "服务状态", icon: Activity },
@@ -169,7 +169,7 @@ export function Navbar() {
                 className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted rounded-md"
               >
                 <Wand2 className="h-4 w-4" />
-                {language === "en" ? "AI Copywriting" : "AI文案"}
+                {"CaseCenter"}
               </Link>
             )}
 

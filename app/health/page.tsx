@@ -31,10 +31,14 @@ interface ServiceStatus {
 
 interface HealthData {
   status: string
-  message: string
+  message?: string
   timestamp: string
-  services: Record<string, string>
-  endpoints: Record<string, string>
+  services?: Record<string, string>
+  endpoints?: Record<string, string>
+  // copywriting API format
+  components?: Record<string, boolean>
+  service?: string
+  database?: string
 }
 
 interface EndpointStatus {
@@ -91,9 +95,10 @@ export default function HealthPage() {
 
   // 检查各个端点
   const checkEndpoints = useCallback(async () => {
-    if (!backendHealth?.endpoints) return
+    if (!backendHealth) return
     
-    const endpoints = Object.entries(backendHealth.endpoints).map(([name, path]) => ({
+    const endpointEntries = backendHealth.endpoints ? Object.entries(backendHealth.endpoints) : []
+    const endpoints = endpointEntries.map(([name, path]) => ({
       name,
       path: path.replace('/*', '').replace('/*/extraction/*', '/test/extraction/status').replace('/*/framework/*', '/test/framework')
     }))
@@ -298,7 +303,7 @@ export default function HealthPage() {
               {backendHealth && (
                 <>
                   <div className="text-sm text-muted-foreground mb-4">
-                    {backendHealth.message}
+                    {backendHealth.message || backendHealth.service || 'Service is running'}
                   </div>
                   
                   <Separator className="my-4" />
@@ -310,7 +315,7 @@ export default function HealthPage() {
                       服务组件
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {Object.entries(backendHealth.services).map(([name, status]) => (
+                      {backendHealth.services && Object.entries(backendHealth.services).map(([name, status]) => (
                         <div 
                           key={name}
                           className={`p-3 rounded-lg border ${getStatusColor(status)}`}
@@ -326,33 +331,51 @@ export default function HealthPage() {
                           </div>
                         </div>
                       ))}
-                    </div>
-                  </div>
-                  
-                  {/* API端点 */}
-                  <div>
-                    <h3 className="font-medium mb-3 flex items-center gap-2">
-                      <Activity className="h-4 w-4" />
-                      API端点
-                    </h3>
-                    <div className="space-y-2">
-                      {Object.entries(backendHealth.endpoints).map(([name, path]) => (
+                      {backendHealth.components && Object.entries(backendHealth.components).map(([name, active]) => (
                         <div 
                           key={name}
-                          className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                          className={`p-3 rounded-lg border ${getStatusColor(active ? 'healthy' : 'unhealthy')}`}
                         >
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="font-mono text-xs">
-                              {name}
-                            </Badge>
-                            <code className="text-sm text-muted-foreground">
-                              {path}
-                            </code>
+                            {getStatusIcon(active ? 'healthy' : 'unhealthy')}
+                            <span className="font-medium capitalize">
+                              {name.replace('_', ' ')}
+                            </span>
+                          </div>
+                          <div className="text-xs mt-1 opacity-75">
+                            {active ? 'enabled' : 'disabled'}
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
+                  
+                  {/* API端点 */}
+                  {backendHealth.endpoints && Object.keys(backendHealth.endpoints).length > 0 && (
+                    <div>
+                      <h3 className="font-medium mb-3 flex items-center gap-2">
+                        <Activity className="h-4 w-4" />
+                        API端点
+                      </h3>
+                      <div className="space-y-2">
+                        {Object.entries(backendHealth.endpoints).map(([name, path]) => (
+                          <div 
+                            key={name}
+                            className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="font-mono text-xs">
+                                {name}
+                              </Badge>
+                              <code className="text-sm text-muted-foreground">
+                                {path}
+                              </code>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </CardContent>

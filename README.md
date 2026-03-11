@@ -430,3 +430,6 @@ MIT License
 
 nohup ./start_frontend.sh > frontend.log 2>&1 &
 nohup bash start_backend.sh &
+
+
+./start_project.sh
