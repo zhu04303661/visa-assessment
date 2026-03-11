@@ -18,7 +18,7 @@ NC='\033[0m'
 
 # 默认配置
 MODE="production"   # 默认生产模式
-PORT=80             # 前端端口 - 生产环境使用80端口
+PORT=3000           # 前端端口 - Nginx反代后使用3000端口
 API_PORT=5005       # 后端端口
 SKIP_DEPS=false
 LOG_LEVEL="INFO"

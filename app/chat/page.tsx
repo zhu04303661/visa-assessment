@@ -16,8 +16,8 @@ export default function ChatAssessmentPage() {
     <AuthGuard requireAuth={true}>
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <Navbar />
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-6xl mx-auto">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-medium text-primary">
               <MessageCircle className="h-4 w-4" />
@@ -33,9 +33,9 @@ export default function ChatAssessmentPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Card className="h-[600px] flex flex-col min-h-0 shadow-lg">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-3">
+              <Card className="h-[calc(100vh-280px)] min-h-[500px] flex flex-col shadow-lg">
                 <CardContent className="flex-1 p-0 min-h-0">
                   <OpenClawChatUI />
                 </CardContent>

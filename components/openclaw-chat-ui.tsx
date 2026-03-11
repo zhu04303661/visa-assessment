@@ -56,7 +56,9 @@ const OC_PORT = process.env.NEXT_PUBLIC_OPENCLAW_GATEWAY_PORT || "18789"
 const OC_TOKEN = process.env.NEXT_PUBLIC_OPENCLAW_GATEWAY_TOKEN || ""
 
 const GATEWAY_URL = typeof window !== "undefined"
-  ? `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.hostname === "localhost" ? "127.0.0.1" : window.location.hostname}:${OC_PORT}`
+  ? window.location.protocol === "https:"
+    ? `wss://${window.location.host}/ws/openclaw`
+    : `ws://${window.location.hostname === "localhost" ? "127.0.0.1" : window.location.hostname}:${OC_PORT}`
   : `ws://127.0.0.1:${OC_PORT}`
 
 const GATEWAY_TOKEN = OC_TOKEN
