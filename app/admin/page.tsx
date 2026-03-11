@@ -259,11 +259,15 @@ export default function AdminPage() {
       setStatsError(false)
       const res = await fetch(`${TRACKING_API}/stats?days=${statsDays}`)
       const data = await res.json()
-      if (data.success) setStats(data.stats)
-      else setStatsError(true)
+      if (data.success && data.stats) setStats(data.stats)
+      else {
+        setStatsError(true)
+        setStats({ overview: { total_visits: 0, unique_ips: 0, unique_users: 0, unique_sessions: 0 }, top_pages: [], daily_visits: [], top_ips: [], top_actions: [] })
+      }
     } catch (e) {
       console.error("加载统计失败:", e)
       setStatsError(true)
+      setStats({ overview: { total_visits: 0, unique_ips: 0, unique_users: 0, unique_sessions: 0 }, top_pages: [], daily_visits: [], top_ips: [], top_actions: [] })
     } finally {
       setStatsLoading(false)
     }
@@ -278,7 +282,8 @@ export default function AdminPage() {
       const res = await fetch(`${TRACKING_API}/visitors?${params}`)
       const data = await res.json()
       if (data.success) { setVisitorLogs(data.logs); setVisitorTotal(data.total); setVisitorTotalPages(data.total_pages) }
-    } catch (e) { setError(`加载访客日志失败: ${e}`) }
+      else { setVisitorLogs([]); setVisitorTotal(0); setVisitorTotalPages(1) }
+    } catch (e) { console.error("加载访客日志失败:", e); setVisitorLogs([]); setVisitorTotal(0); setVisitorTotalPages(1) }
     finally { setVisitorsLoading(false) }
   }, [visitorPage, visitorIpFilter, visitorPathFilter])
 
@@ -290,7 +295,8 @@ export default function AdminPage() {
       const res = await fetch(`${TRACKING_API}/activities?${params}`)
       const data = await res.json()
       if (data.success) { setActivityLogs(data.logs); setActivityTotal(data.total); setActivityTotalPages(data.total_pages) }
-    } catch (e) { setError(`加载活动日志失败: ${e}`) }
+      else { setActivityLogs([]); setActivityTotal(0); setActivityTotalPages(1) }
+    } catch (e) { console.error("加载活动日志失败:", e); setActivityLogs([]); setActivityTotal(0); setActivityTotalPages(1) }
     finally { setActivitiesLoading(false) }
   }, [activityPage, activityActionFilter])
 
