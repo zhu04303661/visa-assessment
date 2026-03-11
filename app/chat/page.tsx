@@ -4,26 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/lib/i18n"
-import ACEChatUIComponent from "@/components/ace-chat-ui"
+import OpenClawChatUI from "@/components/openclaw-chat-ui"
 import { Navbar } from "@/components/navbar"
 import { AuthGuard } from "@/components/auth-guard"
-import { MessageCircle, Sparkles } from "lucide-react"
-import { useState } from "react"
-
-interface AssessmentData {
-  name?: string
-  field?: string
-  experience?: string
-  education?: string
-  achievements?: string[]
-  currentScore?: number
-  pathway?: string
-}
+import { MessageCircle, Globe } from "lucide-react"
 
 export default function ChatAssessmentPage() {
-  const { t, language } = useLanguage()
-  const [assessmentData, setAssessmentData] = useState<AssessmentData>({})
-  const [isAssessmentComplete, setIsAssessmentComplete] = useState(false)
+  const { language } = useLanguage()
 
   return (
     <AuthGuard requireAuth={true}>
@@ -47,106 +34,42 @@ export default function ChatAssessmentPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* 聊天区域 */}
             <div className="lg:col-span-2">
               <Card className="h-[600px] flex flex-col min-h-0 shadow-lg">
-                <CardContent className="flex-1 p-0">
-                  <ACEChatUIComponent />
+                <CardContent className="flex-1 p-0 min-h-0">
+                  <OpenClawChatUI />
                 </CardContent>
               </Card>
             </div>
 
-            {/* 咨询信息侧边栏 */}
             <div className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    {language === "en" ? "Consultation Info" : "咨询信息"}
+                    <Globe className="h-5 w-5 text-emerald-500" />
+                    {language === "en" ? "AI Consultant" : "AI移民顾问"}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {assessmentData.name && (
-                    <div>
-                      <span className="text-sm font-medium text-muted-foreground">
-                        {language === "en" ? "Name" : "姓名"}:
-                      </span>
-                      <p className="text-sm text-foreground mt-1">{assessmentData.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {language === "en"
+                      ? "Powered by OpenClaw AI Agent with real-time skills and tools. Ask about any UK visa type, application process, or immigration strategy."
+                      : "基于OpenClaw AI Agent驱动，具备实时技能和工具调用能力。可以咨询任何英国签证类型、申请流程或移民策略。"}
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">GTV签证</Badge>
+                      <Badge variant="outline" className="text-xs">工作签证</Badge>
+                      <Badge variant="outline" className="text-xs">学生签证</Badge>
                     </div>
-                  )}
-                  {assessmentData.field && (
-                    <div>
-                      <span className="text-sm font-medium text-muted-foreground">
-                        {language === "en" ? "Field" : "领域"}:
-                      </span>
-                      <Badge variant="secondary" className="ml-2 mt-1">
-                        {assessmentData.field}
-                      </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">创业签证</Badge>
+                      <Badge variant="outline" className="text-xs">永居规划</Badge>
+                      <Badge variant="outline" className="text-xs">材料指导</Badge>
                     </div>
-                  )}
-                  {assessmentData.currentScore && (
-                    <div>
-                      <span className="text-sm font-medium text-muted-foreground">
-                        {language === "en" ? "Eligibility Score" : "资格评分"}:
-                      </span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="w-full bg-muted rounded-full h-2">
-                          <div
-                            className="bg-primary h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${assessmentData.currentScore}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium text-foreground">
-                          {assessmentData.currentScore}/100
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  {assessmentData.pathway && (
-                    <div>
-                      <span className="text-sm font-medium text-muted-foreground">
-                        {language === "en" ? "Recommended Pathway" : "推荐路径"}:
-                      </span>
-                      <Badge 
-                        variant={assessmentData.pathway.includes("Exceptional Talent") ? "default" : "secondary"}
-                        className="ml-2 mt-1"
-                      >
-                        {assessmentData.pathway}
-                      </Badge>
-                    </div>
-                  )}
-                  {!assessmentData.name && !assessmentData.field && (
-                    <p className="text-sm text-muted-foreground">
-                      {language === "en"
-                        ? "Start chatting to begin your consultation. Our AI will help assess your eligibility and answer your questions."
-                        : "开始聊天以开始您的咨询。我们的AI将帮助评估您的资格并回答您的问题。"}
-                    </p>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
-
-              {isAssessmentComplete && (
-                <Card className="border-green-200 bg-green-50 dark:bg-green-950">
-                  <CardHeader>
-                    <CardTitle className="text-lg text-green-600 dark:text-green-400">
-                      {language === "en" ? "Consultation Complete" : "咨询完成"}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      {language === "en"
-                        ? "Your consultation is complete. View your full assessment report for detailed recommendations."
-                        : "您的咨询已完成。查看完整评估报告以获取详细建议。"}
-                    </p>
-                    <Button 
-                      onClick={() => window.location.href = '/results'}
-                      className="w-full"
-                    >
-                      {language === "en" ? "View Full Report" : "查看完整报告"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
 
               <Card>
                 <CardHeader>
@@ -155,19 +78,12 @@ export default function ChatAssessmentPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button 
+                  <Button
                     onClick={() => window.location.href = '/assessment'}
                     variant="outline"
                     className="w-full"
                   >
-                    {language === "en" ? "Start GTV Assessment" : "开始GTV评估"}
-                  </Button>
-                  <Button 
-                    onClick={() => window.location.reload()}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {language === "en" ? "New Consultation" : "新咨询"}
+                    {language === "en" ? "Full Assessment Form" : "完整评估表"}
                   </Button>
                 </CardContent>
               </Card>
