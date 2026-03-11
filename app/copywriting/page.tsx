@@ -1958,7 +1958,7 @@ export default function CopywritingPage() {
     <AuthGuard
       requireAuth={true}
       allowedRoles={['admin', 'super_admin']}
-      unauthorizedMessage="AI文案功能仅对管理员开放，请联系管理员获取访问权限。"
+      unauthorizedMessage="文案功能仅对管理员开放，请联系管理员获取访问权限。"
     >
       <Suspense fallback={
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
