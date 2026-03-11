@@ -83,6 +83,15 @@ interface EndpointTestResult {
 interface PageTrendRow { date: string; path: string; visits: number }
 interface DwellStatRow { path: string; avg_duration_ms: number; visits: number }
 
+interface LogTableStats {
+  count: number; max_rows: number; usage_percent: number
+  oldest?: string | null; newest?: string | null
+}
+interface LogStats {
+  visitor_logs: LogTableStats; activity_logs: LogTableStats
+  retention_days: number; db_size_mb: number; auto_cleanup_interval: number
+}
+
 // ==================== Constants ====================
 
 const TRACKING_API = "/api/copywriting/api/tracking"
@@ -240,6 +249,10 @@ export default function AdminPage() {
   const [customDateTo, setCustomDateTo] = useState("")
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
+  // --- log stats ---
+  const [logStats, setLogStats] = useState<LogStats | null>(null)
+  const [logStatsLoading, setLogStatsLoading] = useState(false)
+
   // --- health ---
   const [healthLoading, setHealthLoading] = useState(false)
   const [healthData, setHealthData] = useState<HealthData | null>(null)
@@ -344,6 +357,19 @@ export default function AdminPage() {
     finally { setTrendsLoading(false) }
   }, [statsDays])
 
+  const loadLogStats = useCallback(async () => {
+    try {
+      setLogStatsLoading(true)
+      const res = await fetch(`${TRACKING_API}/log-stats`)
+      const data = await res.json()
+      if (data.success) {
+        const { success: _, ...rest } = data
+        setLogStats(rest as LogStats)
+      }
+    } catch (e) { console.error("加载日志统计失败:", e) }
+    finally { setLogStatsLoading(false) }
+  }, [])
+
   const checkHealth = useCallback(async () => {
     setHealthLoading(true)
     setHealthError(null)
@@ -399,8 +425,8 @@ export default function AdminPage() {
 
   // --- initial + tab-driven loads ---
   useEffect(() => {
-    if (profile && isAdmin()) { loadUsers(); loadStats(); loadPageTrends() }
-  }, [profile, isAdmin, loadUsers, loadStats, loadPageTrends])
+    if (profile && isAdmin()) { loadUsers(); loadStats(); loadPageTrends(); loadLogStats() }
+  }, [profile, isAdmin, loadUsers, loadStats, loadPageTrends, loadLogStats])
 
   useEffect(() => { if (activeTab === "visitors") loadVisitorLogs() }, [activeTab, loadVisitorLogs])
   useEffect(() => { if (activeTab === "activities") loadActivityLogs() }, [activeTab, loadActivityLogs])
@@ -790,6 +816,74 @@ export default function AdminPage() {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* 日志容量与自动清理 */}
+                <Card className="mt-6">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center gap-2"><Database className="h-4 w-4" /> 日志容量</CardTitle>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={loadLogStats} disabled={logStatsLoading}>
+                          <RefreshCw className={`h-3.5 w-3.5 mr-1 ${logStatsLoading ? "animate-spin" : ""}`} /> 刷新
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={async () => {
+                          try {
+                            const res = await fetch(`${TRACKING_API}/auto-cleanup`, { method: "POST" })
+                            const data = await res.json()
+                            if (data.success) {
+                              const msg = data.visitor_cleaned + data.activity_cleaned > 0
+                                ? `已清理 ${data.visitor_cleaned} 条访客 + ${data.activity_cleaned} 条活动日志`
+                                : "当前无需清理"
+                              setSuccess(msg)
+                              loadLogStats(); loadStats()
+                            }
+                          } catch (e) { setError(`清理失败: ${e}`) }
+                        }}>
+                          <Trash2 className="h-3.5 w-3.5 mr-1" /> 立即清理
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {logStats ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {[
+                            { label: "访客日志", data: logStats.visitor_logs, color: "#6366f1" },
+                            { label: "活动日志", data: logStats.activity_logs, color: "#10b981" },
+                          ].map(item => (
+                            <div key={item.label} className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="font-medium">{item.label}</span>
+                                <span className="text-muted-foreground">{item.data.count.toLocaleString()} / {item.data.max_rows.toLocaleString()}</span>
+                              </div>
+                              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                <div className="h-full rounded-full transition-all" style={{
+                                  width: `${Math.min(100, item.data.usage_percent)}%`,
+                                  backgroundColor: item.data.usage_percent > 80 ? "#ef4444" : item.data.usage_percent > 50 ? "#f59e0b" : item.color,
+                                }} />
+                              </div>
+                              <div className="flex justify-between text-[10px] text-muted-foreground">
+                                <span>{item.data.usage_percent}% 已用</span>
+                                {item.data.oldest && <span>最早: {fmtDay(item.data.oldest)}</span>}
+                              </div>
+                            </div>
+                          ))}
+                          <div className="space-y-2">
+                            <div className="text-sm font-medium">清理策略</div>
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              <p>保留天数：<span className="font-medium text-foreground">{logStats.retention_days} 天</span></p>
+                              <p>自动检查：每 <span className="font-medium text-foreground">{logStats.auto_cleanup_interval}</span> 次写入</p>
+                              <p>数据库大小：<span className="font-medium text-foreground">{logStats.db_size_mb} MB</span></p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : logStatsLoading ? (
+                      <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                    ) : <p className="text-muted-foreground text-center py-4">暂无数据</p>}
+                  </CardContent>
+                </Card>
               </>
             ) : statsError ? (
               <div className="text-center py-12">

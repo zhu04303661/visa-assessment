@@ -5386,3 +5386,25 @@ def cleanup_tracking_logs():
         return jsonify({'success': True, **result})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@copywriting_bp.route('/tracking/log-stats', methods=['GET'])
+def get_log_stats():
+    """获取日志表容量统计（行数、上限、时间范围、数据库大小）"""
+    try:
+        db = _tracking_db()
+        stats = db.get_log_stats()
+        return jsonify({'success': True, **stats})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@copywriting_bp.route('/tracking/auto-cleanup', methods=['POST'])
+def trigger_auto_cleanup():
+    """手动触发自动清理（按保留天数 + 行数上限双重策略）"""
+    try:
+        db = _tracking_db()
+        result = db.auto_cleanup_logs()
+        return jsonify({'success': True, **result})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500

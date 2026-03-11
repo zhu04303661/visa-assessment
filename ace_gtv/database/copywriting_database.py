@@ -2561,6 +2561,7 @@ class CopywritingDatabase:
                     kwargs.get('os'), kwargs.get('session_id'), now
                 ))
                 conn.commit()
+                self._maybe_auto_cleanup()
                 return True
         except Exception as e:
             logger.error(f"记录访客日志失败: {e}")
@@ -2587,6 +2588,7 @@ class CopywritingDatabase:
                     details, kwargs.get('path'), now
                 ))
                 conn.commit()
+                self._maybe_auto_cleanup()
                 return True
         except Exception as e:
             logger.error(f"记录活动日志失败: {e}")
@@ -2815,6 +2817,14 @@ class CopywritingDatabase:
             logger.error(f"获取页面停留统计失败: {e}")
             return []
 
+    # 日志保障策略配置
+    LOG_RETENTION_DAYS = 90           # 默认保留天数
+    LOG_MAX_ROWS_VISITOR = 100000     # visitor_logs 行数上限
+    LOG_MAX_ROWS_ACTIVITY = 200000    # activity_logs 行数上限
+    LOG_CLEANUP_CHECK_INTERVAL = 100  # 每 N 次写入触发一次检查
+
+    _log_write_counter = 0            # 写入计数器（类变量，跨实例共享）
+
     def cleanup_old_logs(self, days: int = 90) -> Dict[str, int]:
         try:
             with self._get_connection() as conn:
@@ -2829,6 +2839,131 @@ class CopywritingDatabase:
         except Exception as e:
             logger.error(f"清理旧日志失败: {e}")
             return {'visitor_logs_cleaned': 0, 'activity_logs_cleaned': 0}
+
+    def auto_cleanup_logs(self) -> Dict[str, Any]:
+        """自动滚动清理：按保留天数 + 行数上限双重策略"""
+        result = {'visitor_cleaned': 0, 'activity_cleaned': 0, 'triggered_by': []}
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+
+                # 策略 1：清理超过保留天数的记录
+                time_filter = f"-{self.LOG_RETENTION_DAYS} days"
+                cursor.execute(
+                    "DELETE FROM visitor_logs WHERE created_at < datetime('now', 'localtime', ?)",
+                    (time_filter,)
+                )
+                aged_v = cursor.rowcount
+                cursor.execute(
+                    "DELETE FROM activity_logs WHERE created_at < datetime('now', 'localtime', ?)",
+                    (time_filter,)
+                )
+                aged_a = cursor.rowcount
+                if aged_v > 0 or aged_a > 0:
+                    result['triggered_by'].append('retention_days')
+                result['visitor_cleaned'] += aged_v
+                result['activity_cleaned'] += aged_a
+
+                # 策略 2：超过行数上限时删除最旧的记录
+                cursor.execute("SELECT COUNT(*) FROM visitor_logs")
+                v_count = cursor.fetchone()[0]
+                if v_count > self.LOG_MAX_ROWS_VISITOR:
+                    overflow = v_count - self.LOG_MAX_ROWS_VISITOR
+                    cursor.execute('''
+                        DELETE FROM visitor_logs WHERE id IN (
+                            SELECT id FROM visitor_logs ORDER BY created_at ASC LIMIT ?
+                        )
+                    ''', (overflow,))
+                    result['visitor_cleaned'] += cursor.rowcount
+                    result['triggered_by'].append('visitor_row_limit')
+
+                cursor.execute("SELECT COUNT(*) FROM activity_logs")
+                a_count = cursor.fetchone()[0]
+                if a_count > self.LOG_MAX_ROWS_ACTIVITY:
+                    overflow = a_count - self.LOG_MAX_ROWS_ACTIVITY
+                    cursor.execute('''
+                        DELETE FROM activity_logs WHERE id IN (
+                            SELECT id FROM activity_logs ORDER BY created_at ASC LIMIT ?
+                        )
+                    ''', (overflow,))
+                    result['activity_cleaned'] += cursor.rowcount
+                    result['triggered_by'].append('activity_row_limit')
+
+                if result['visitor_cleaned'] > 0 or result['activity_cleaned'] > 0:
+                    conn.commit()
+                    logger.info(
+                        f"自动清理日志: visitor={result['visitor_cleaned']}, "
+                        f"activity={result['activity_cleaned']}, "
+                        f"triggers={result['triggered_by']}"
+                    )
+
+                return result
+        except Exception as e:
+            logger.error(f"自动清理日志失败: {e}")
+            return result
+
+    def _maybe_auto_cleanup(self):
+        """每 N 次写入触发一次自动清理检查"""
+        CopywritingDatabase._log_write_counter += 1
+        if CopywritingDatabase._log_write_counter >= self.LOG_CLEANUP_CHECK_INTERVAL:
+            CopywritingDatabase._log_write_counter = 0
+            try:
+                self.auto_cleanup_logs()
+            except Exception as e:
+                logger.warning(f"写时自动清理触发失败: {e}")
+
+    def get_log_stats(self) -> Dict[str, Any]:
+        """获取日志表容量统计"""
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+
+                cursor.execute("SELECT COUNT(*) FROM visitor_logs")
+                v_count = cursor.fetchone()[0]
+                cursor.execute("SELECT MIN(created_at), MAX(created_at) FROM visitor_logs")
+                v_range = cursor.fetchone()
+
+                cursor.execute("SELECT COUNT(*) FROM activity_logs")
+                a_count = cursor.fetchone()[0]
+                cursor.execute("SELECT MIN(created_at), MAX(created_at) FROM activity_logs")
+                a_range = cursor.fetchone()
+
+                # SQLite 数据库文件大小
+                db_size_bytes = 0
+                try:
+                    import os
+                    db_size_bytes = os.path.getsize(self.db_path)
+                except Exception:
+                    pass
+
+                return {
+                    'visitor_logs': {
+                        'count': v_count,
+                        'max_rows': self.LOG_MAX_ROWS_VISITOR,
+                        'usage_percent': round(v_count / self.LOG_MAX_ROWS_VISITOR * 100, 1),
+                        'oldest': v_range[0] if v_range else None,
+                        'newest': v_range[1] if v_range else None,
+                    },
+                    'activity_logs': {
+                        'count': a_count,
+                        'max_rows': self.LOG_MAX_ROWS_ACTIVITY,
+                        'usage_percent': round(a_count / self.LOG_MAX_ROWS_ACTIVITY * 100, 1),
+                        'oldest': a_range[0] if a_range else None,
+                        'newest': a_range[1] if a_range else None,
+                    },
+                    'retention_days': self.LOG_RETENTION_DAYS,
+                    'db_size_mb': round(db_size_bytes / 1048576, 2),
+                    'auto_cleanup_interval': self.LOG_CLEANUP_CHECK_INTERVAL,
+                }
+        except Exception as e:
+            logger.error(f"获取日志统计失败: {e}")
+            return {
+                'visitor_logs': {'count': 0, 'max_rows': self.LOG_MAX_ROWS_VISITOR, 'usage_percent': 0},
+                'activity_logs': {'count': 0, 'max_rows': self.LOG_MAX_ROWS_ACTIVITY, 'usage_percent': 0},
+                'retention_days': self.LOG_RETENTION_DAYS,
+                'db_size_mb': 0,
+                'auto_cleanup_interval': self.LOG_CLEANUP_CHECK_INTERVAL,
+            }
 
 
 # 测试代码
