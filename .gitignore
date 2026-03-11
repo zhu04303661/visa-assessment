@@ -75,6 +75,9 @@ payload.so
 # === 备份目录 ===
 bak/
 
+# === 项目工作区（用户申请材料）===
+project_workspaces/
+
 # === Playwright ===
 .playwright-mcp/
 
