@@ -33,14 +33,14 @@ export function AssessmentCTA() {
               </h2>
               <p className="mb-8 text-pretty text-lg text-muted-foreground md:text-xl">{t("cta.subtitle")}</p>
 
-              <div className="mb-10 flex flex-col items-center gap-3 text-left sm:mx-auto sm:max-w-md">
+              <ul className="mb-10 flex flex-col items-center gap-3 text-left sm:mx-auto sm:max-w-md">
                 {benefits.map((benefit) => (
-                  <div key={benefit} className="flex items-center gap-3 text-foreground">
+                  <li key={benefit} className="flex items-center gap-3 text-foreground">
                     <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary" />
                     <span>{benefit}</span>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
                 <Button asChild size="lg" className="group text-base">
@@ -67,7 +67,7 @@ export function AssessmentCTA() {
                 <Button asChild size="lg" variant="secondary" className="group text-base">
                   <Link href="/admin">
                     <Settings className="mr-2 h-5 w-5" />
-                    知识库管理
+                    {language === "en" ? "Knowledge Base" : "知识库管理"}
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>

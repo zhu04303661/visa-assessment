@@ -16,14 +16,11 @@ const nextConfig = {
   outputFileTracingExcludes: {
     '*': ['**/venv/**', '**/.venv/**', '**/ace_gtv/**'],
   },
-  // 确保静态资源正确加载
+  trailingSlash: false,
   compress: true,
   poweredByHeader: false,
-  // 生产环境优化
   productionBrowserSourceMaps: false,
-  // 静态资源配置
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : undefined,
-  // 添加安全头部，但确保不阻止样式加载和文件预览
   async headers() {
     return [
       {

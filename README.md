@@ -195,6 +195,64 @@ Edit `app/globals.css` to customize:
 - Typography
 - Component styles
 
+### SEO Optimization
+
+The project has been fully optimized for search engines. Below is the complete list of SEO features:
+
+#### Global Metadata (`app/layout.tsx`)
+
+- `metadataBase` configured for production domain
+- `title.template` for consistent page titles across all routes
+- `keywords`: bilingual keywords for target search terms
+- `authors`, `creator`, `publisher`: company branding
+- `robots`: index/follow with googleBot directives
+- `openGraph`: type, locale, siteName, images
+- `twitter`: summary_large_image card
+- `alternates.canonical`: canonical URL
+- `icons`: favicon + apple-icon
+- `manifest`: Web Manifest link
+
+#### Page-Level Metadata
+
+Each route has its own nested `layout.tsx` exporting page-specific `title`, `description`, `openGraph`, and `canonical`. Private pages are set to `noindex`.
+
+#### Sitemap & Robots
+
+- **`app/sitemap.ts`** — generates `/sitemap.xml` with public routes, priorities, and change frequencies
+- **`app/robots.ts`** — generates `/robots.txt` with appropriate allow/disallow rules
+
+#### Structured Data (JSON-LD)
+
+- **`components/structured-data.tsx`** — schema.org types injected into `<head>`:
+  - `Organization` — company info, service area
+  - `WebSite` — site metadata
+  - `ProfessionalService` — service catalog
+
+#### Dynamic Image Generation
+
+- **`app/icon.tsx`** — 32x32 favicon
+- **`app/apple-icon.tsx`** — 180x180 Apple touch icon
+- **`app/opengraph-image.tsx`** — 1200x630 OG image for social sharing
+
+#### Web Manifest
+
+- **`app/manifest.ts`** — generates `/manifest.webmanifest` with app name, theme color, icons
+
+#### Semantic HTML
+
+- Semantic tags (`<section>`, `<nav>`, `<footer>`) used throughout
+- Proper heading hierarchy: h1 → h2 → h3
+- List content uses `<ul>`/`<li>`
+- Images include `alt` attributes
+- Root layout sets appropriate `lang` attribute
+
+#### Next.js Config
+
+- `trailingSlash: false` for consistent URLs
+- `poweredByHeader: false` to hide server info
+- `compress: true` for response compression
+- Static asset long-term caching enabled
+
 ### Troubleshooting
 
 **Issue**: AI returns "I'm sorry, I can't assist with that"
@@ -406,6 +464,64 @@ gtv-visa-assessment/
 - 字体排版
 - 组件样式
 
+### SEO 搜索引擎优化
+
+项目已完成全站搜索引擎优化，以下是完整的 SEO 配置清单：
+
+#### 全局元数据（`app/layout.tsx`）
+
+- `metadataBase`：配置生产环境域名
+- `title.template`：子页面标题自动拼接模板
+- `keywords`：中英双语目标关键词
+- `authors`、`creator`、`publisher`：公司品牌信息
+- `robots`：index/follow + googleBot 指令
+- `openGraph`：类型、locale、站点名称、分享图片
+- `twitter`：summary_large_image 卡片
+- `alternates.canonical`：规范化 URL
+- `icons`：favicon + apple-icon
+- `manifest`：Web Manifest 链接
+
+#### 页面级元数据
+
+每个路由都有独立的嵌套 `layout.tsx` 导出页面专属的 title、description、openGraph 和 canonical。私密页面设置为 `noindex`。
+
+#### Sitemap 与 Robots
+
+- **`app/sitemap.ts`** — 生成 `/sitemap.xml`，包含公开路由、优先级和更新频率
+- **`app/robots.ts`** — 生成 `/robots.txt`，配置适当的 allow/disallow 规则
+
+#### 结构化数据（JSON-LD）
+
+- **`components/structured-data.tsx`** — schema.org 类型注入 `<head>`：
+  - `Organization` — 公司信息、服务区域
+  - `WebSite` — 站点元数据
+  - `ProfessionalService` — 服务目录
+
+#### 动态图片生成
+
+- **`app/icon.tsx`** — 32x32 favicon
+- **`app/apple-icon.tsx`** — 180x180 Apple 触摸图标
+- **`app/opengraph-image.tsx`** — 1200x630 社交分享 OG 图片
+
+#### Web Manifest
+
+- **`app/manifest.ts`** — 生成 `/manifest.webmanifest`，包含应用名称、主题色、图标
+
+#### 语义化 HTML
+
+- 组件使用 `<section>`、`<nav>`、`<footer>` 等语义标签
+- 正确的标题层级：h1 → h2 → h3
+- 列表内容使用 `<ul>`/`<li>`
+- 图片包含 `alt` 属性
+- 根布局设置适当的 `lang` 属性
+
+#### Next.js 配置
+
+- `trailingSlash: false`：保持 URL 一致性
+- `poweredByHeader: false`：隐藏服务器信息
+- `compress: true`：响应压缩
+- 静态资源长期缓存已启用
+
 ### 常见问题
 
 **问题**：AI 返回 "I'm sorry, I can't assist with that"
@@ -424,12 +540,3 @@ MIT License
 ### 支持
 
 如有问题或疑问，请在 GitHub 上提交 issue。
-# visa-assessment
-
-
-
-nohup ./start_frontend.sh > frontend.log 2>&1 &
-nohup bash start_backend.sh &
-
-
-./start_project.sh

@@ -100,7 +100,7 @@ export function ServicesSection() {
                       >
                         <Icon className="h-7 w-7" />
                       </motion.div>
-                      <CardTitle className="text-2xl">{service.title}</CardTitle>
+                      <CardTitle asChild><h3 className="text-2xl font-semibold leading-none tracking-tight">{service.title}</h3></CardTitle>
                       <CardDescription className="text-base leading-relaxed mt-2">
                         {service.description}
                       </CardDescription>
