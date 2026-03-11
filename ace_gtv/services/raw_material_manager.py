@@ -980,6 +980,14 @@ class RawMaterialManager:
                     cursor.execute('ALTER TABLE material_files ADD COLUMN storage_type TEXT DEFAULT "local"')
                 except:
                     pass
+                try:
+                    cursor.execute('ALTER TABLE material_files ADD COLUMN source_path TEXT')
+                except:
+                    pass
+                try:
+                    cursor.execute('ALTER TABLE material_files ADD COLUMN file_md5 TEXT')
+                except:
+                    pass
                 
                 # 采集表单数据表
                 cursor.execute('''
@@ -1108,7 +1116,9 @@ class RawMaterialManager:
                         "uploaded_at": row["uploaded_at"],
                         "storage_type": row["storage_type"] if "storage_type" in row.keys() else "local",
                         "object_bucket": row["object_bucket"] if "object_bucket" in row.keys() else None,
-                        "object_key": row["object_key"] if "object_key" in row.keys() else None
+                        "object_key": row["object_key"] if "object_key" in row.keys() else None,
+                        "source_path": row["source_path"] if "source_path" in row.keys() else "",
+                        "file_md5": row["file_md5"] if "file_md5" in row.keys() else None
                     })
                 
                 # 构建完整的状态数据
@@ -1282,7 +1292,7 @@ class RawMaterialManager:
     def upload_material_bytes(self, project_id: str, category_id: str, item_id: str,
                               file_data: Union[bytes, BinaryIO], file_name: str, 
                               file_size: int = 0, file_type: str = None, 
-                              description: str = None) -> Dict[str, Any]:
+                              description: str = None, source_path: str = None) -> Dict[str, Any]:
         """
         使用统一文件存储接口上传文件
         
@@ -1315,9 +1325,6 @@ class RawMaterialManager:
                     else:
                         description = f"未识别分类: {original_category_id}/{original_item_id}"
                 
-                # 使用统一存储接口上传文件
-                storage = get_file_storage()
-                
                 # 处理文件数据
                 if isinstance(file_data, bytes):
                     content = file_data
@@ -1326,6 +1333,29 @@ class RawMaterialManager:
                     content = file_data.read()
                 
                 file_size = len(content)
+                
+                # 计算 MD5 用于去重
+                import hashlib
+                md5_hash = hashlib.md5(content).hexdigest()
+                
+                # 检查同项目下是否已存在相同内容的文件
+                cursor.execute(
+                    'SELECT id, file_name, category_id, item_id FROM material_files WHERE project_id = ? AND file_md5 = ?',
+                    (project_id, md5_hash)
+                )
+                existing = cursor.fetchone()
+                if existing:
+                    logger.info(f"⏭️ 文件去重: '{file_name}' 与已有文件 '{existing['file_name']}' (id={existing['id']}) 内容相同，跳过上传")
+                    return {
+                        "success": True,
+                        "duplicate": True,
+                        "file_id": existing["id"],
+                        "message": f"文件与已有的「{existing['file_name']}」内容相同，已跳过",
+                        "existing_file": existing["file_name"]
+                    }
+                
+                # 使用统一存储接口上传文件
+                storage = get_file_storage()
                 
                 # 构建子文件夹路径
                 subfolder = f"{category_id}/{item_id}"
@@ -1349,14 +1379,14 @@ class RawMaterialManager:
                 
                 logger.info(f"✅ 文件已上传 ({storage_type}): {file_info.file_path}")
                 
-                # 记录文件
+                # 记录文件（含 MD5）
                 cursor.execute('''
                     INSERT INTO material_files 
                     (project_id, category_id, item_id, file_name, file_path, file_size, file_type, description, 
-                     object_bucket, object_key, minio_url, storage_type)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     object_bucket, object_key, minio_url, storage_type, source_path, file_md5)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (project_id, category_id, item_id, file_name, local_file_path or "", file_size, file_type, description,
-                      object_bucket, object_key, minio_url, storage_type))
+                      object_bucket, object_key, minio_url, storage_type, source_path or "", md5_hash))
                 
                 file_id = cursor.lastrowid
                 

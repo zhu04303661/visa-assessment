@@ -65,6 +65,7 @@ import {
   FolderArchive,
   Filter,
   ExternalLink,
+  Folder,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -126,6 +127,20 @@ interface MaterialFile {
   file_type: string
   description?: string
   uploaded_at: string
+  source_path?: string
+}
+
+interface FileWithPath {
+  file: File
+  relativePath: string
+}
+
+interface TreeNode {
+  name: string
+  fullPath: string
+  isFolder: boolean
+  children: TreeNode[]
+  file?: MaterialFile
 }
 
 interface MaterialCategory {
@@ -241,8 +256,9 @@ function MaterialCollectionContent() {
   
   // 批量上传
   const [batchUploadOpen, setBatchUploadOpen] = useState(false)
-  const [batchFiles, setBatchFiles] = useState<File[]>([])
+  const [batchFiles, setBatchFiles] = useState<FileWithPath[]>([])
   const [batchUploading, setBatchUploading] = useState(false)
+  const folderInputRef = useRef<HTMLInputElement>(null)
   const [uploadResults, setUploadResults] = useState<{filename: string; status: string; category?: string; message?: string}[]>([])
   const [showResults, setShowResults] = useState(false)
   
@@ -258,6 +274,7 @@ function MaterialCollectionContent() {
   // 已上传文件列表（用于手动打标签）
   const [uploadedFiles, setUploadedFiles] = useState<MaterialFile[]>([])
   const [showFileManager, setShowFileManager] = useState(false)
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   // 支持多标签：每个文件可以有多个分类标签
   const [fileTagging, setFileTagging] = useState<{[fileId: number]: {categoryId: string; itemId: string}[]}>({})
   const [savingTagFileId, setSavingTagFileId] = useState<number | null>(null) // 正在保存哪个文件的标签
@@ -798,10 +815,105 @@ function MaterialCollectionContent() {
     setTimeout(() => downloadAllTemplates(), 500)
   }
 
-  // 处理批量文件选择
+  // 处理批量文件选择（普通文件）
   const handleBatchFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    setBatchFiles(prev => [...prev, ...files])
+    const withPaths: FileWithPath[] = files.map(f => ({
+      file: f,
+      relativePath: f.name
+    }))
+    setBatchFiles(prev => [...prev, ...withPaths])
+  }
+
+  // 需要过滤的系统文件
+  const isSystemFile = (name: string): boolean => {
+    const lower = name.toLowerCase()
+    const systemFiles = ['desktop.ini', 'thumbs.db', '.ds_store', '.gitkeep', '.gitignore']
+    return lower.startsWith('.') || systemFiles.includes(lower)
+  }
+
+  // 处理文件夹选择（webkitdirectory）
+  const handleFolderSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const withPaths: FileWithPath[] = files
+      .filter(f => !isSystemFile(f.name))
+      .map(f => ({
+        file: f,
+        relativePath: f.webkitRelativePath || f.name
+      }))
+    setBatchFiles(prev => [...prev, ...withPaths])
+  }
+
+  // 递归遍历 FileSystemEntry 获取所有文件
+  const traverseFileSystemEntry = async (entry: FileSystemEntry, basePath: string = ''): Promise<FileWithPath[]> => {
+    const results: FileWithPath[] = []
+    if (entry.isFile) {
+      const fileEntry = entry as FileSystemFileEntry
+      const file = await new Promise<File>((resolve, reject) => {
+        fileEntry.file(resolve, reject)
+      })
+      if (!isSystemFile(file.name)) {
+        results.push({
+          file,
+          relativePath: basePath ? `${basePath}/${file.name}` : file.name
+        })
+      }
+    } else if (entry.isDirectory) {
+      const dirEntry = entry as FileSystemDirectoryEntry
+      const reader = dirEntry.createReader()
+      const entries = await new Promise<FileSystemEntry[]>((resolve, reject) => {
+        const allEntries: FileSystemEntry[] = []
+        const readBatch = () => {
+          reader.readEntries((batch) => {
+            if (batch.length === 0) {
+              resolve(allEntries)
+            } else {
+              allEntries.push(...batch)
+              readBatch()
+            }
+          }, reject)
+        }
+        readBatch()
+      })
+      const newBase = basePath ? `${basePath}/${entry.name}` : entry.name
+      for (const child of entries) {
+        const childFiles = await traverseFileSystemEntry(child, newBase)
+        results.push(...childFiles)
+      }
+    }
+    return results
+  }
+
+  // 处理拖放（支持文件夹）
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const items = e.dataTransfer.items
+    if (!items) return
+
+    const allFiles: FileWithPath[] = []
+    const promises: Promise<void>[] = []
+
+    for (let i = 0; i < items.length; i++) {
+      const entry = items[i].webkitGetAsEntry?.()
+      if (entry) {
+        promises.push(
+          traverseFileSystemEntry(entry).then(files => {
+            allFiles.push(...files)
+          })
+        )
+      }
+    }
+
+    await Promise.all(promises)
+    if (allFiles.length > 0) {
+      setBatchFiles(prev => [...prev, ...allFiles])
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
   }
 
   // 移除批量文件
@@ -809,9 +921,10 @@ function MaterialCollectionContent() {
     setBatchFiles(prev => prev.filter((_, i) => i !== index))
   }
 
-  // 智能识别文件类型
-  const guessFileCategory = (filename: string): { categoryId: string; itemId: string } | null => {
+  // 智能识别文件类型（支持通过目录路径增强识别）
+  const guessFileCategory = (filename: string, relativePath?: string): { categoryId: string; itemId: string } | null => {
     const lowerName = filename.toLowerCase()
+    const lowerPath = (relativePath || '').toLowerCase()
     
     // 简历相关
     if (lowerName.includes('简历') || lowerName.includes('cv') || lowerName.includes('resume')) {
@@ -879,15 +992,39 @@ function MaterialCollectionContent() {
       return { categoryId: 'folder_4', itemId: 'achievement_awards' }
     }
     
+    // 基于目录路径的推断
+    if (lowerPath) {
+      if (lowerPath.includes('基础材料') || lowerPath.includes('个人') || lowerPath.includes('basic')) {
+        return { categoryId: 'folder_1', itemId: 'other_docs' }
+      }
+      if (lowerPath.includes('工作') || lowerPath.includes('employment') || lowerPath.includes('work')) {
+        return { categoryId: 'folder_2', itemId: 'income_proof' }
+      }
+      if (lowerPath.includes('推荐') || lowerPath.includes('recommend')) {
+        return { categoryId: 'folder_3', itemId: 'recommender_1_contribution_form' }
+      }
+      if (lowerPath.includes('贡献') || lowerPath.includes('contribution') || lowerPath.includes('成就')) {
+        return { categoryId: 'folder_4', itemId: 'publications' }
+      }
+      if (lowerPath.includes('媒体') || lowerPath.includes('media') || lowerPath.includes('报道')) {
+        return { categoryId: 'folder_5', itemId: 'project_form' }
+      }
+      if (lowerPath.includes('学术') || lowerPath.includes('academic')) {
+        return { categoryId: 'folder_6', itemId: 'recommender_1_resume' }
+      }
+    }
+    
     return null
   }
 
   // 上传单个文件的辅助函数
   const uploadSingleFile = async (
-    file: File, 
+    fileWithPath: FileWithPath, 
     projectId: string
   ): Promise<{filename: string; status: string; category?: string; categoryName?: string; message?: string}[]> => {
     const results: {filename: string; status: string; category?: string; categoryName?: string; message?: string}[] = []
+    const file = fileWithPath.file
+    const sourcePath = fileWithPath.relativePath
     
     // 检查是否是zip文件
     if (file.name.toLowerCase().endsWith('.zip')) {
@@ -895,10 +1032,14 @@ function MaterialCollectionContent() {
         const formData = new FormData()
         formData.append('file', file)
         
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 300000)
         const response = await fetch(`${API_BASE}/api/projects/${projectId}/material-collection/upload-zip`, {
           method: 'POST',
-          body: formData
+          body: formData,
+          signal: controller.signal
         })
+        clearTimeout(timeout)
         
         const data = await response.json()
         if (data.success && data.data) {
@@ -924,15 +1065,16 @@ function MaterialCollectionContent() {
         } else {
           results.push({ filename: file.name, status: 'error', message: data.error || '解压失败' })
         }
-      } catch {
-        results.push({ filename: file.name, status: 'error', message: '网络错误' })
+      } catch (err) {
+        results.push({ filename: file.name, status: 'error', message: err instanceof DOMException && err.name === 'AbortError' ? '上传超时' : '网络错误' })
       }
     } else {
-      const guess = guessFileCategory(file.name)
+      const guess = guessFileCategory(file.name, sourcePath)
       
       try {
         const formData = new FormData()
         formData.append('file', file)
+        formData.append('source_path', sourcePath)
         
         if (guess) {
           formData.append('category_id', guess.categoryId)
@@ -944,24 +1086,36 @@ function MaterialCollectionContent() {
           formData.append('description', '待手动分类 - 系统未能自动识别')
         }
         
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 120000)
         const response = await fetch(`${API_BASE}/api/projects/${projectId}/material-collection/upload`, {
           method: 'POST',
-          body: formData
+          body: formData,
+          signal: controller.signal
         })
+        clearTimeout(timeout)
         
         const data = await response.json()
         if (data.success) {
-          results.push({ 
-            filename: file.name, 
-            status: guess ? 'success' : 'unrecognized', 
-            category: guess ? `${guess.categoryId}/${guess.itemId}` : undefined,
-            message: guess ? undefined : '已保存，请在文件列表中手动分类'
-          })
+          if (data.duplicate) {
+            results.push({
+              filename: sourcePath !== file.name ? sourcePath : file.name,
+              status: 'duplicate',
+              message: data.message || '文件已存在，跳过'
+            })
+          } else {
+            results.push({ 
+              filename: sourcePath !== file.name ? sourcePath : file.name, 
+              status: guess ? 'success' : 'unrecognized', 
+              category: guess ? `${guess.categoryId}/${guess.itemId}` : undefined,
+              message: guess ? undefined : '已保存，请在文件列表中手动分类'
+            })
+          }
         } else {
           results.push({ filename: file.name, status: 'error', message: data.error })
         }
-      } catch {
-        results.push({ filename: file.name, status: 'error', message: '上传失败' })
+      } catch (err) {
+        results.push({ filename: file.name, status: 'error', message: err instanceof DOMException && err.name === 'AbortError' ? '上传超时(120s)' : '上传失败' })
       }
     }
     
@@ -981,7 +1135,7 @@ function MaterialCollectionContent() {
     setUploadProgress({
       current: 0,
       total: totalFiles,
-      currentFileName: batchFiles[0]?.name || '',
+      currentFileName: batchFiles[0]?.file.name || '',
       completedFiles: [],
       failedFiles: []
     })
@@ -991,26 +1145,23 @@ function MaterialCollectionContent() {
     const uploadQueue = [...batchFiles]
     const activeUploads: Promise<void>[] = []
     
-    const processFile = async (file: File, index: number) => {
-      // 更新当前正在上传的文件
+    const processFile = async (fwp: FileWithPath, index: number) => {
       setUploadProgress(prev => ({
         ...prev,
-        currentFileName: file.name,
+        currentFileName: fwp.relativePath,
       }))
       
-      const results = await uploadSingleFile(file, selectedProject.project_id)
+      const results = await uploadSingleFile(fwp, selectedProject.project_id)
       
-      // 更新结果
       allResults.push(...results)
       completedCount++
       
-      // 更新进度
       const hasError = results.some(r => r.status === 'error')
       setUploadProgress(prev => ({
         ...prev,
         current: completedCount,
-        completedFiles: hasError ? prev.completedFiles : [...prev.completedFiles, file.name],
-        failedFiles: hasError ? [...prev.failedFiles, file.name] : prev.failedFiles
+        completedFiles: hasError ? prev.completedFiles : [...prev.completedFiles, fwp.file.name],
+        failedFiles: hasError && !results.some(r => r.status === 'duplicate') ? [...prev.failedFiles, fwp.file.name] : prev.failedFiles
       }))
       
       // 实时更新结果（让用户看到进度）
@@ -1020,11 +1171,10 @@ function MaterialCollectionContent() {
     // 并行处理文件
     let fileIndex = 0
     while (fileIndex < uploadQueue.length || activeUploads.length > 0) {
-      // 启动新的上传任务直到达到并发限制
       while (activeUploads.length < CONCURRENT_LIMIT && fileIndex < uploadQueue.length) {
-        const file = uploadQueue[fileIndex]
+        const fwp = uploadQueue[fileIndex]
         const currentIndex = fileIndex
-        const uploadPromise = processFile(file, currentIndex).then(() => {
+        const uploadPromise = processFile(fwp, currentIndex).then(() => {
           // 从活动列表中移除
           const idx = activeUploads.indexOf(uploadPromise)
           if (idx > -1) activeUploads.splice(idx, 1)
@@ -1130,6 +1280,80 @@ function MaterialCollectionContent() {
       )}
     </div>
   )
+
+  // 将扁平文件列表构建为树形结构
+  const buildFileTree = useCallback((files: MaterialFile[]): TreeNode[] => {
+    const root: TreeNode = { name: '', fullPath: '', isFolder: true, children: [] }
+    
+    for (const file of files) {
+      const pathStr = file.source_path || file.file_name
+      const parts = pathStr.split('/').filter(Boolean)
+      let current = root
+      
+      for (let i = 0; i < parts.length; i++) {
+        const isLast = i === parts.length - 1
+        if (isLast) {
+          current.children.push({
+            name: parts[i],
+            fullPath: pathStr,
+            isFolder: false,
+            children: [],
+            file,
+          })
+        } else {
+          const folderPath = parts.slice(0, i + 1).join('/')
+          let folder = current.children.find(c => c.isFolder && c.name === parts[i])
+          if (!folder) {
+            folder = { name: parts[i], fullPath: folderPath, isFolder: true, children: [] }
+            current.children.push(folder)
+          }
+          current = folder
+        }
+      }
+    }
+    
+    // 排序：文件夹在前，文件在后，各自按名称排序
+    const sortTree = (nodes: TreeNode[]) => {
+      nodes.sort((a, b) => {
+        if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1
+        return a.name.localeCompare(b.name, 'zh-CN')
+      })
+      nodes.forEach(n => { if (n.isFolder) sortTree(n.children) })
+    }
+    sortTree(root.children)
+    
+    return root.children
+  }, [])
+
+  // 统计文件夹下的文件数量
+  const countFiles = (node: TreeNode): number => {
+    if (!node.isFolder) return 1
+    return node.children.reduce((sum, child) => sum + countFiles(child), 0)
+  }
+
+  const toggleFolder = useCallback((path: string) => {
+    setExpandedFolders(prev => {
+      const next = new Set(prev)
+      if (next.has(path)) next.delete(path)
+      else next.add(path)
+      return next
+    })
+  }, [])
+
+  const expandAllFolders = useCallback((files: MaterialFile[]) => {
+    const paths = new Set<string>()
+    for (const file of files) {
+      const parts = (file.source_path || file.file_name).split('/').filter(Boolean)
+      for (let i = 1; i < parts.length; i++) {
+        paths.add(parts.slice(0, i).join('/'))
+      }
+    }
+    setExpandedFolders(paths)
+  }, [])
+
+  const collapseAllFolders = useCallback(() => {
+    setExpandedFolders(new Set())
+  }, [])
 
   // 渲染材料收集视图
   const renderMaterialCollection = () => {
@@ -1354,65 +1578,104 @@ function MaterialCollectionContent() {
                 )}
               </div>
 
+              {/* 展开/折叠全部 */}
+              <div className="flex items-center gap-2 mb-2">
+                <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => expandAllFolders(uploadedFiles)}>
+                  <ChevronDown className="h-3 w-3 mr-1" /> 全部展开
+                </Button>
+                <Button variant="ghost" size="sm" className="text-xs h-7" onClick={collapseAllFolders}>
+                  <ChevronRight className="h-3 w-3 mr-1" /> 全部折叠
+                </Button>
+              </div>
+
               <div className="border rounded-lg overflow-hidden bg-background">
                 {/* 表头 */}
                 <div className="grid grid-cols-12 gap-2 p-3 bg-muted/50 text-sm font-medium border-b">
                   <div className="col-span-4">文件名</div>
-                  <div className="col-span-2">大小</div>
-                  <div className="col-span-2">上传时间</div>
+                  <div className="col-span-1">大小</div>
                   <div className="col-span-3">分类标签</div>
-                  <div className="col-span-1">操作</div>
+                  <div className="col-span-2">上传时间</div>
+                  <div className="col-span-2">操作</div>
                 </div>
                 
-                {/* 文件列表 */}
-                <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 350px)' }}>
-                    {uploadedFiles
-                      .filter((file) => {
-                        if (!filterTag || filterTag === '__all__') return true
-                        const tags = fileTagging[file.id] || []
-                        if (filterTag === '__untagged__') {
-                          return tags.length === 0
-                        }
-                        const [catId, itemId] = filterTag.split('|')
-                        return tags.some(t => t.categoryId === catId && t.itemId === itemId)
-                      })
-                      .map((file) => {
+                {/* 文件树 */}
+                <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 400px)' }}>
+                  {(() => {
+                    const filteredFiles = uploadedFiles.filter((file) => {
+                      if (!filterTag || filterTag === '__all__') return true
+                      const tags = fileTagging[file.id] || []
+                      if (filterTag === '__untagged__') return tags.length === 0
+                      const [catId, itemId] = filterTag.split('|')
+                      return tags.some(t => t.categoryId === catId && t.itemId === itemId)
+                    })
+                    const tree = buildFileTree(filteredFiles)
+                    const categoryOptions = getCategoryOptions()
+                    
+                    const renderTreeNode = (node: TreeNode, depth: number = 0): React.ReactNode => {
+                      const paddingLeft = depth * 20
+                      
+                      if (node.isFolder) {
+                        const isExpanded = expandedFolders.has(node.fullPath)
+                        const fileCount = countFiles(node)
+                        return (
+                          <div key={`folder-${node.fullPath}`}>
+                            <div
+                              className="flex items-center gap-2 p-2 border-b cursor-pointer hover:bg-muted/30 select-none"
+                              style={{ paddingLeft: `${paddingLeft + 8}px` }}
+                              onClick={() => toggleFolder(node.fullPath)}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                              )}
+                              {isExpanded ? (
+                                <FolderOpen className="h-4 w-4 text-amber-500 shrink-0" />
+                              ) : (
+                                <Folder className="h-4 w-4 text-amber-500 shrink-0" />
+                              )}
+                              <span className="text-sm font-medium truncate">{node.name}</span>
+                              <Badge variant="secondary" className="text-xs ml-auto shrink-0">
+                                {fileCount} 个文件
+                              </Badge>
+                            </div>
+                            {isExpanded && node.children.map(child => renderTreeNode(child, depth + 1))}
+                          </div>
+                        )
+                      }
+                      
+                      // 文件节点
+                      const file = node.file!
                       const currentTags = fileTagging[file.id] || []
-                      const categoryOptions = getCategoryOptions()
                       
                       return (
-                        <div 
-                          key={file.id}
-                          className="grid grid-cols-12 gap-2 p-3 border-b last:border-0 items-center hover:bg-muted/30"
+                        <div
+                          key={`file-${file.id}`}
+                          className="grid grid-cols-12 gap-2 p-2 border-b last:border-0 items-center hover:bg-muted/30"
+                          style={{ paddingLeft: `${paddingLeft + 8}px` }}
                         >
                           {/* 文件名 */}
-                          <div className="col-span-4 flex items-center gap-2">
+                          <div className="col-span-4 flex items-center gap-2 min-w-0">
+                            <span className="w-4 shrink-0" />
                             {getFileIcon(file.file_type)}
                             <span className="truncate text-sm" title={file.file_name}>
                               {file.file_name}
                             </span>
                           </div>
-                          
+
                           {/* 大小 */}
-                          <div className="col-span-2 text-sm text-muted-foreground">
+                          <div className="col-span-1 text-sm text-muted-foreground">
                             {formatFileSize(file.file_size)}
                           </div>
                           
-                          {/* 上传时间 */}
-                          <div className="col-span-2 text-sm text-muted-foreground">
-                            {formatDate(file.uploaded_at)}
-                          </div>
-                          
-                          {/* 分类选择 - 单标签 */}
+                          {/* 分类标签 */}
                           <div className="col-span-3">
                             <div className="flex flex-wrap gap-1 items-center">
-                              {/* 保存中状态 */}
                               {savingTagFileId === file.id && (
                                 <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                               )}
-                              {/* 显示当前标签（只有一个）或未分类警示 */}
                               {currentTags && currentTags.length > 0 ? (() => {
-                                const tag = currentTags[0] // 只取第一个标签
+                                const tag = currentTags[0]
                                 const catInfo = categories[tag.categoryId]
                                 const itemInfo = catInfo?.items?.find((i: any) => i.item_id === tag.itemId)
                                 return (
@@ -1428,19 +1691,14 @@ function MaterialCollectionContent() {
                                   </Badge>
                                 )
                               })() : (
-                                <Badge 
-                                  variant="outline" 
-                                  className="text-xs bg-red-100 text-red-700 border-red-300"
-                                >
+                                <Badge variant="outline" className="text-xs bg-red-100 text-red-700 border-red-300">
                                   未分类
                                 </Badge>
                               )}
-                              {/* 选择/更换标签 */}
                               <Select
                                 value={currentTags && currentTags.length > 0 ? `${currentTags[0].categoryId}|${currentTags[0].itemId}` : ''}
                                 onValueChange={(value) => {
                                   const [catId, itemId] = value.split('|')
-                                  // 直接更换标签（替换旧的）
                                   updateFileTag(file.id, catId, itemId)
                                 }}
                                 disabled={savingTagFileId === file.id}
@@ -1471,19 +1729,19 @@ function MaterialCollectionContent() {
                             </div>
                           </div>
                           
+                          {/* 上传时间 */}
+                          <div className="col-span-2 text-xs text-muted-foreground">
+                            {formatDate(file.uploaded_at)}
+                          </div>
+                          
                           {/* 操作 */}
-                          <div className="col-span-1 flex items-center gap-1">
+                          <div className="col-span-2 flex items-center gap-1">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-7 w-7"
-                                    onClick={() => {
-                                      setPreviewingFile(file)
-                                      setPreviewOpen(true)
-                                    }}
+                                    variant="ghost" size="icon" className="h-7 w-7"
+                                    onClick={() => { setPreviewingFile(file); setPreviewOpen(true) }}
                                   >
                                     <Eye className="h-4 w-4" />
                                   </Button>
@@ -1495,8 +1753,7 @@ function MaterialCollectionContent() {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button 
-                                    variant="ghost" 
-                                    size="icon" 
+                                    variant="ghost" size="icon" 
                                     className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
                                     onClick={() => deleteFile(file.id)}
                                     disabled={deletingFile === file.id}
@@ -1514,7 +1771,10 @@ function MaterialCollectionContent() {
                           </div>
                         </div>
                       )
-                    })}
+                    }
+                    
+                    return tree.map(node => renderTreeNode(node))
+                  })()}
                 </div>
               </div>
                 
@@ -1970,20 +2230,39 @@ function MaterialCollectionContent() {
               {/* 文件选择区域 - 可滚动 */}
               <div className="flex-1 overflow-y-auto space-y-4 py-2 min-h-0">
                 <div 
-                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
-                  onClick={() => batchFileInputRef.current?.click()}
+                  className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors"
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
                 >
-                  <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                  <p className="font-medium">点击选择文件或拖拽到此处</p>
+                  <FolderOpen className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                  <p className="font-medium">拖拽文件或文件夹到此处</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    支持一次选择多个文件，系统会根据文件名自动识别类型
+                    支持拖入整个文件夹，自动保留目录结构信息
                   </p>
+                  <div className="flex gap-2 justify-center mt-4">
+                    <Button variant="outline" size="sm" onClick={() => folderInputRef.current?.click()}>
+                      <FolderPlus className="h-4 w-4 mr-1" />
+                      选择文件夹
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => batchFileInputRef.current?.click()}>
+                      <Upload className="h-4 w-4 mr-1" />
+                      选择文件
+                    </Button>
+                  </div>
                 </div>
                 <input
                   ref={batchFileInputRef}
                   type="file"
                   multiple
                   onChange={handleBatchFileSelect}
+                  className="hidden"
+                />
+                <input
+                  ref={folderInputRef}
+                  type="file"
+                  {...({ webkitdirectory: "true", directory: "" } as any)}
+                  multiple
+                  onChange={handleFolderSelect}
                   className="hidden"
                 />
                 
@@ -1996,30 +2275,37 @@ function MaterialCollectionContent() {
                         清空
                       </Button>
                     </div>
-                    <div className="max-h-[180px] overflow-y-auto border rounded p-2">
-                      {batchFiles.map((file, index) => {
-                        const isZip = file.name.toLowerCase().endsWith('.zip')
-                        const guess = !isZip ? guessFileCategory(file.name) : null
+                    <div className="max-h-[220px] overflow-y-auto border rounded p-2">
+                      {batchFiles.map((fwp, index) => {
+                        const isZip = fwp.file.name.toLowerCase().endsWith('.zip')
+                        const guess = !isZip ? guessFileCategory(fwp.file.name, fwp.relativePath) : null
+                        const hasPath = fwp.relativePath !== fwp.file.name
                         return (
                           <div key={index} className={`flex items-center gap-2 text-sm py-1.5 border-b last:border-0 ${isZip ? 'bg-blue-50 dark:bg-blue-950/20' : ''}`}>
                             {isZip ? (
-                              <FolderArchive className="h-4 w-4 text-blue-600" />
+                              <FolderArchive className="h-4 w-4 text-blue-600 shrink-0" />
+                            ) : hasPath ? (
+                              <FolderOpen className="h-4 w-4 text-amber-500 shrink-0" />
                             ) : (
-                              getFileIcon(file.name.split('.').pop() || '')
+                              getFileIcon(fwp.file.name.split('.').pop() || '')
                             )}
-                            <span className="flex-1 truncate">{file.name}</span>
-                            <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
+                            <div className="flex-1 min-w-0">
+                              <span className="truncate block" title={fwp.relativePath}>
+                                {hasPath ? fwp.relativePath : fwp.file.name}
+                              </span>
+                            </div>
+                            <span className="text-xs text-muted-foreground shrink-0">{formatFileSize(fwp.file.size)}</span>
                             {isZip ? (
-                              <Badge className="text-xs bg-blue-600">自动解压</Badge>
+                              <Badge className="text-xs bg-blue-600 shrink-0">自动解压</Badge>
                             ) : guess ? (
-                              <Badge variant="secondary" className="text-xs">可识别</Badge>
+                              <Badge variant="secondary" className="text-xs shrink-0">可识别</Badge>
                             ) : (
-                              <Badge variant="outline" className="text-xs">待确认</Badge>
+                              <Badge variant="outline" className="text-xs shrink-0">待确认</Badge>
                             )}
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-6 w-6"
+                              className="h-6 w-6 shrink-0"
                               onClick={() => removeBatchFile(index)}
                             >
                               <X className="h-3 w-3" />
@@ -2033,6 +2319,10 @@ function MaterialCollectionContent() {
                 
                 {/* 识别说明 */}
                 <div className="bg-muted/50 rounded p-2 text-sm space-y-2">
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <FolderOpen className="h-4 w-4" />
+                    <span className="font-medium text-xs">支持上传整个文件夹，自动保留目录结构信息用于智能分类</span>
+                  </div>
                   <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                     <FolderArchive className="h-4 w-4" />
                     <span className="font-medium text-xs">支持上传zip压缩包，系统自动解压并分析每个文件</span>
@@ -2085,6 +2375,11 @@ function MaterialCollectionContent() {
                       <span className="text-green-600">
                         ✓ {uploadResults.filter(r => r.status === 'success').length} 成功
                       </span>
+                      {uploadResults.filter(r => r.status === 'duplicate').length > 0 && (
+                        <span className="text-blue-500">
+                          ≡ {uploadResults.filter(r => r.status === 'duplicate').length} 重复跳过
+                        </span>
+                      )}
                       {uploadResults.filter(r => r.status === 'unrecognized').length > 0 && (
                         <span className="text-yellow-600">
                           ⚠ {uploadResults.filter(r => r.status === 'unrecognized').length} 待分类
@@ -2111,7 +2406,7 @@ function MaterialCollectionContent() {
                   className="bg-green-600 hover:bg-green-700"
                 >
                   {batchUploading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  {batchUploading ? `上传中...` : `开始上传 (${batchFiles.length} 个文件)`}
+                  {batchUploading ? '上传中...' : `开始上传 (${batchFiles.length} 个文件)`}
                 </Button>
               </DialogFooter>
             </>
@@ -2126,6 +2421,14 @@ function MaterialCollectionContent() {
                       {uploadResults.filter(r => r.status === 'success').length} 个成功
                     </span>
                   </div>
+                  {uploadResults.filter(r => r.status === 'duplicate').length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-5 w-5 text-blue-500" />
+                      <span className="font-medium">
+                        {uploadResults.filter(r => r.status === 'duplicate').length} 个重复跳过
+                      </span>
+                    </div>
+                  )}
                   {uploadResults.filter(r => r.status === 'unrecognized').length > 0 && (
                     <div className="flex items-center gap-2">
                       <AlertCircle className="h-5 w-5 text-yellow-600" />
@@ -2149,6 +2452,8 @@ function MaterialCollectionContent() {
                     <div key={index} className="flex items-center gap-2 text-sm py-1.5 border-b last:border-0">
                       {result.status === 'success' ? (
                         <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                      ) : result.status === 'duplicate' ? (
+                        <CheckCircle2 className="h-4 w-4 text-blue-500 shrink-0" />
                       ) : result.status === 'unrecognized' ? (
                         <AlertCircle className="h-4 w-4 text-yellow-600 shrink-0" />
                       ) : (
@@ -2157,6 +2462,9 @@ function MaterialCollectionContent() {
                       <span className="flex-1 truncate">{result.filename}</span>
                       {result.status === 'success' && result.category && (
                         <Badge variant="secondary" className="text-xs">{result.category}</Badge>
+                      )}
+                      {result.status === 'duplicate' && (
+                        <span className="text-xs text-blue-500">{result.message || '文件已存在，跳过'}</span>
                       )}
                       {result.status === 'unrecognized' && (
                         <span className="text-xs text-orange-600">已保存，待分类</span>

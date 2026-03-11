@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Agent } from 'undici'
 
 const COPYWRITING_API_URL = process.env.COPYWRITING_API_URL || 'http://localhost:5005'
+
+const uploadAgent = new Agent({
+  headersTimeout: 600_000,
+  bodyTimeout: 600_000,
+  connectTimeout: 30_000,
+})
 
 async function proxyRequest(request: NextRequest, pathSegments: string[]) {
   const method = request.method
   const searchParams = request.nextUrl.searchParams.toString()
-  // 前端调用已经包含 /api/ 前缀，直接使用
   const rawPath = pathSegments.join('/')
-  // 如果路径已经以 api/ 开头，不要重复添加
   const path = rawPath.startsWith('api/') ? `/${rawPath}` : `/api/${rawPath}`
   const url = `${COPYWRITING_API_URL}${path}${searchParams ? `?${searchParams}` : ''}`
 
@@ -18,21 +23,26 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
 
     let body: string | FormData | undefined
 
-    // 处理multipart/form-data (文件上传)
     const contentType = request.headers.get('content-type') || ''
-    if (contentType.includes('multipart/form-data')) {
+    const isUpload = contentType.includes('multipart/form-data')
+    if (isUpload) {
       const formData = await request.formData()
       body = formData as any
-      delete headers['Content-Type'] // 让fetch自动设置boundary
+      delete headers['Content-Type']
     } else if (method !== 'GET' && method !== 'HEAD') {
       body = await request.text()
     }
 
-    const response = await fetch(url, {
+    const fetchOptions: any = {
       method,
       headers: body instanceof FormData ? {} : headers,
       body,
-    })
+    }
+    if (isUpload) {
+      fetchOptions.dispatcher = uploadAgent
+    }
+
+    const response = await fetch(url, fetchOptions)
 
     // 检查响应类型
     const responseContentType = response.headers.get('content-type') || ''
@@ -79,14 +89,32 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
       })
     }
 
-    // JSON响应
-    const data = await response.json()
-    return NextResponse.json(data, { status: response.status })
-  } catch (error) {
-    console.error('Copywriting API Error:', error)
+    // JSON响应：先检查 Content-Type 再解析
+    if (responseContentType.includes('application/json')) {
+      const data = await response.json()
+      return NextResponse.json(data, { status: response.status })
+    }
+
+    // 非 JSON 响应（如 HTML 错误页）：返回原始文本和状态
+    const text = await response.text()
     return NextResponse.json(
-      { success: false, error: 'API请求失败' },
-      { status: 500 }
+      { success: false, error: `后端返回非JSON响应(${response.status}): ${text.slice(0, 200)}` },
+      { status: response.status >= 400 ? response.status : 502 }
+    )
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('Copywriting API Error:', error)
+
+    const isTimeout = message.includes('HeadersTimeoutError') ||
+      message.includes('UND_ERR_HEADERS_TIMEOUT') ||
+      message.includes('aborted')
+    const friendlyMsg = isTimeout
+      ? '文件上传超时，请检查文件大小或网络后重试'
+      : `API请求失败: ${message}`
+
+    return NextResponse.json(
+      { success: false, error: friendlyMsg },
+      { status: isTimeout ? 504 : 500 }
     )
   }
 }
@@ -116,6 +144,14 @@ export async function PUT(
 }
 
 export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params
+  return proxyRequest(request, path)
+}
+
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {

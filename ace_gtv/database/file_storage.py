@@ -15,12 +15,12 @@
     FILE_STORAGE_TYPE=minio|s3|local
     
     # MinIO / S3 兼容存储
-    STORAGE_ENDPOINT=8.155.147.19:9000
+    STORAGE_ENDPOINT=127.0.0.1:9000          # 内部端点（上传/下载走本地快速通道）
     STORAGE_ACCESS_KEY=admin
     STORAGE_SECRET_KEY=admin123456
     STORAGE_SECURE=false
     STORAGE_DEFAULT_BUCKET=gtv-files
-    STORAGE_PUBLIC_URL=http://8.155.147.19:9000  # 公网访问地址（可选）
+    STORAGE_PUBLIC_URL=http://8.155.147.19:9000  # 公网端点（用于生成浏览器可访问的预签名 URL）
 
 使用方式：
     from database.file_storage import get_file_storage
@@ -382,7 +382,7 @@ class S3CompatibleStorage(FileStorage):
             secure_env = os.getenv('STORAGE_SECURE') or os.getenv('MINIO_SECURE', 'false')
             self.secure = secure_env.lower() in ('true', '1', 'yes')
         
-        # 初始化 S3 客户端（MinIO 客户端兼容所有 S3 服务）
+        # 内部客户端：用于上传/下载，走本地快速通道
         self.client = Minio(
             self.endpoint,
             access_key=self.access_key,
@@ -390,6 +390,22 @@ class S3CompatibleStorage(FileStorage):
             secure=self.secure,
             region=self.region if self.region else None
         )
+        
+        # 外部客户端：仅用于生成预签名 URL，Host 与浏览器访问一致
+        # 当 public_url 与 endpoint 不同时（如内部 127.0.0.1 vs 公网 IP），
+        # 需要用公网端点生成 URL 以保证签名中的 Host 匹配
+        self.public_endpoint = self._extract_endpoint(self.public_url) if self.public_url else None
+        if self.public_endpoint and self.public_endpoint != self.endpoint:
+            self.url_client = Minio(
+                self.public_endpoint,
+                access_key=self.access_key,
+                secret_key=self.secret_key,
+                secure=self.public_url.startswith('https') if self.public_url else self.secure,
+                region=self.region if self.region else None
+            )
+            logger.info(f"已创建公网 URL 客户端: {self.public_endpoint}")
+        else:
+            self.url_client = self.client
         
         # 确保默认存储桶存在
         try:
@@ -399,7 +415,18 @@ class S3CompatibleStorage(FileStorage):
         except Exception as e:
             logger.error(f"存储桶初始化失败: {e}")
         
-        logger.info(f"S3兼容存储初始化完成，端点: {self.endpoint}, 桶: {self.default_bucket}")
+        logger.info(f"S3兼容存储初始化完成，内部端点: {self.endpoint}, 公网端点: {self.public_endpoint or '同内部'}, 桶: {self.default_bucket}")
+    
+    @staticmethod
+    def _extract_endpoint(url: str) -> Optional[str]:
+        """从 URL 中提取 host:port 端点"""
+        if not url:
+            return None
+        url = url.rstrip('/')
+        for prefix in ('https://', 'http://'):
+            if url.startswith(prefix):
+                return url[len(prefix):]
+        return url
     
     @property
     def storage_type(self) -> str:
@@ -465,8 +492,8 @@ class S3CompatibleStorage(FileStorage):
             content_type=content_type
         )
         
-        # 生成预签名 URL
-        url = self.client.presigned_get_object(
+        # 用公网客户端生成预签名 URL，保证签名中的 Host 与浏览器一致
+        url = self.url_client.presigned_get_object(
             bucket,
             object_name,
             expires=timedelta(days=7)
@@ -500,7 +527,7 @@ class S3CompatibleStorage(FileStorage):
         from datetime import timedelta
         
         try:
-            url = self.client.presigned_get_object(
+            url = self.url_client.presigned_get_object(
                 bucket,
                 object_name,
                 expires=timedelta(seconds=expires)

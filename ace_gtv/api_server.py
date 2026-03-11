@@ -262,7 +262,39 @@ def initialize_services():
 
 @app.route('/health', methods=['GET'])
 def health():
-    """健康检查 - 返回所有服务的状态"""
+    """健康检查 - 返回所有服务的状态和已注册路由"""
+    skip_prefixes = ('/static',)
+    skip_methods = {'HEAD', 'OPTIONS'}
+
+    routes = []
+    for rule in app.url_map.iter_rules():
+        if rule.endpoint == 'static':
+            continue
+        if any(rule.rule.startswith(p) for p in skip_prefixes):
+            continue
+        methods = sorted(rule.methods - skip_methods)
+        if not methods:
+            continue
+        routes.append({
+            'path': rule.rule,
+            'methods': methods,
+            'endpoint': rule.endpoint,
+            'has_params': bool(rule.arguments),
+        })
+
+    routes.sort(key=lambda r: r['path'])
+
+    groups: dict[str, list] = {}
+    for r in routes:
+        parts = r['path'].strip('/').split('/')
+        if len(parts) >= 2 and parts[0] == 'api':
+            group = parts[1]
+        elif r['path'] == '/health':
+            group = 'system'
+        else:
+            group = parts[0] if parts[0] else 'root'
+        groups.setdefault(group, []).append(r)
+
     return jsonify({
         'status': 'healthy',
         'message': 'GTV统一API服务运行中',
@@ -273,15 +305,8 @@ def health():
             'copywriting': 'enabled' if COPYWRITING_ROUTES_AVAILABLE else 'disabled',
             'supabase': 'enabled' if SUPABASE_ROUTES_AVAILABLE else 'disabled',
         },
-        'endpoints': {
-            'scoring': '/api/scoring/*',
-            'documents': '/api/documents/*',
-            'projects': '/api/projects/*',
-            'material_collection': '/api/material-collection/*',
-            'extraction': '/api/projects/*/extraction/*',
-            'framework': '/api/projects/*/framework/*',
-            'files': '/api/files/*',
-        }
+        'route_groups': groups,
+        'total_routes': len(routes),
     }), 200
 
 

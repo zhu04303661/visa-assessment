@@ -49,7 +49,7 @@ export function Navbar() {
         { href: "/copywriting", label: "CaseCenter", icon: Wand2 },
         { href: "/material-collection", label: language === "en" ? "Material Collection" : "材料收集", icon: ClipboardList },
         { href: "/material-tags", label: language === "en" ? "Tag Settings" : "标签设置", icon: Tags },
-        { href: "/health", label: language === "en" ? "Service Status" : "服务状态", icon: Activity },
+        { href: "/admin", label: language === "en" ? "Admin Console" : "管理控制台", icon: Activity },
       ]
     },
     // AI 咨询

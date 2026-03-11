@@ -422,7 +422,7 @@ export default function ExtractionPage() {
         // 获取进度
         const progressRes = await fetch(`${API_BASE}/api/projects/${projectId}/classification-progress`)
         const progressData = await progressRes.json()
-        if (progressData.success) {
+        if (progressData.success && progressData.data) {
           setClassificationProgress(progressData.data)
           
           // 如果完成或失败，停止轮询
@@ -1168,19 +1168,19 @@ export default function ExtractionPage() {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <CardContent className="pt-0 space-y-4">
-                          {Object.entries(classifications.MC.subcategories).map(([subKey, subData]) => (
+                          {Object.entries(classifications.MC?.subcategories ?? {}).map(([subKey, subData]) => (
                             <div key={subKey} className="border rounded-lg p-4">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
                                   <h4 className="font-medium">{subData.name}</h4>
                                   <Badge variant="outline" className="text-xs">
-                                    {subData.items.length} 条
+                                    {(subData.items ?? []).length} 条
                                   </Badge>
                                 </div>
                                 <span className="text-xs text-muted-foreground">{subData.description}</span>
                               </div>
                               <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                                {subData.items.map((item, idx) => (
+                                {(subData.items ?? []).map((item, idx) => (
                                   <div 
                                     key={idx} 
                                     className="p-3 bg-slate-50 rounded-lg text-sm hover:bg-slate-100 transition-colors group"
@@ -1320,19 +1320,19 @@ export default function ExtractionPage() {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <CardContent className="pt-0 space-y-4">
-                          {Object.entries(classifications.OC.subcategories).map(([subKey, subData]) => (
+                          {Object.entries(classifications.OC?.subcategories ?? {}).map(([subKey, subData]) => (
                             <div key={subKey} className="border rounded-lg p-4">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
                                   <h4 className="font-medium">{subData.name}</h4>
                                   <Badge variant="outline" className="text-xs">
-                                    {subData.items.length} 条
+                                    {(subData.items ?? []).length} 条
                                   </Badge>
                                 </div>
                                 <span className="text-xs text-muted-foreground">{subData.description}</span>
                               </div>
                               <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                                {subData.items.map((item, idx) => (
+                                {(subData.items ?? []).map((item, idx) => (
                                   <div 
                                     key={idx} 
                                     className="p-3 bg-slate-50 rounded-lg text-sm hover:bg-slate-100 transition-colors group"
@@ -1464,19 +1464,19 @@ export default function ExtractionPage() {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <CardContent className="pt-0 space-y-4">
-                          {Object.entries(classifications.RECOMMENDER.subcategories).map(([subKey, subData]) => (
+                          {Object.entries(classifications.RECOMMENDER?.subcategories ?? {}).map(([subKey, subData]) => (
                             <div key={subKey} className="border rounded-lg p-4">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
                                   <h4 className="font-medium">{subData.name}</h4>
                                   <Badge variant="outline" className="text-xs">
-                                    {subData.items.length} 条
+                                    {(subData.items ?? []).length} 条
                                   </Badge>
                                 </div>
                                 <span className="text-xs text-muted-foreground">{subData.description}</span>
                               </div>
                               <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                                {subData.items.map((item, idx) => (
+                                {(subData.items ?? []).map((item, idx) => (
                                   <div 
                                     key={idx} 
                                     className="p-3 bg-slate-50 rounded-lg text-sm hover:bg-slate-100 transition-colors group"
@@ -1722,11 +1722,11 @@ export default function ExtractionPage() {
                         <CardContent className="pt-0">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* MC标准 */}
-                            {outline.evidence_coverage.MC标准覆盖 && (
+                            {outline.evidence_coverage?.MC标准覆盖 && (
                               <div>
                                 <h4 className="font-medium text-sm mb-3 text-blue-700">MC 必选标准</h4>
                                 <div className="space-y-2">
-                                  {Object.entries(outline.evidence_coverage.MC标准覆盖).map(([key, value]) => (
+                                  {Object.entries(outline.evidence_coverage.MC标准覆盖 ?? {}).map(([key, value]) => (
                                     <div key={key} className="flex items-center justify-between text-sm">
                                       <span className="text-muted-foreground">{key.replace('MC', 'MC')}</span>
                                       <span className={`font-medium ${getCoverageColor(value)}`}>
@@ -1739,11 +1739,11 @@ export default function ExtractionPage() {
                             )}
                             
                             {/* OC标准 */}
-                            {outline.evidence_coverage.OC标准覆盖 && (
+                            {outline.evidence_coverage?.OC标准覆盖 && (
                               <div>
                                 <h4 className="font-medium text-sm mb-3 text-green-700">OC 可选标准</h4>
                                 <div className="space-y-2">
-                                  {Object.entries(outline.evidence_coverage.OC标准覆盖).map(([key, value]) => (
+                                  {Object.entries(outline.evidence_coverage.OC标准覆盖 ?? {}).map(([key, value]) => (
                                     <div key={key} className="flex items-center justify-between text-sm">
                                       <span className="text-muted-foreground">{key.replace('OC', 'OC')}</span>
                                       <span className={`font-medium ${getCoverageColor(value)}`}>
