@@ -21,9 +21,10 @@ interface AuthDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   defaultMode?: "login" | "register"
+  onSuccess?: () => void
 }
 
-export function AuthDialog({ open, onOpenChange, defaultMode = "login" }: AuthDialogProps) {
+export function AuthDialog({ open, onOpenChange, defaultMode = "login", onSuccess }: AuthDialogProps) {
   const { t, language } = useLanguage()
   const { signIn, signUp, resetPassword, loading: authLoading } = useAuth()
   const [mode, setMode] = useState<"login" | "register" | "forgot">(defaultMode)
@@ -54,6 +55,7 @@ export function AuthDialog({ open, onOpenChange, defaultMode = "login" }: AuthDi
           onOpenChange(false)
           setEmail("")
           setPassword("")
+          onSuccess?.()
         }
       } else if (mode === "register") {
         // 验证手机号

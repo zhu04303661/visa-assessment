@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/lib/i18n"
-import OpenClawChatUI from "@/components/openclaw-chat-ui"
+import OpenClawChatUI, { type OpenClawChatUIHandle } from "@/components/openclaw-chat-ui"
 import ChatHistorySidebar from "@/components/chat-history-sidebar"
 import { Navbar } from "@/components/navbar"
 import { AuthGuard } from "@/components/auth-guard"
@@ -21,16 +21,17 @@ import {
 } from "@/lib/chat-sessions"
 
 const SIDEBAR_SKILLS = [
-  { icon: Target, label: "GTV资格评估", labelEn: "GTV Assessment", desc: "系统化评分与路径推荐", descEn: "Scoring & path recommendation", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30" },
-  { icon: FileText, label: "简历分析", labelEn: "Resume Analysis", desc: "亮点识别与差距分析", descEn: "Highlights & gap analysis", color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30" },
-  { icon: PenTool, label: "文案撰写", labelEn: "Copywriting", desc: "个人陈述与证据描述", descEn: "Statement & evidence description", color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/30" },
-  { icon: ScrollText, label: "推荐信", labelEn: "Recommendation", desc: "四阶段专业流程", descEn: "4-phase professional workflow", color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
-  { icon: MapPin, label: "策略规划", labelEn: "Strategy", desc: "路线图与时间表", descEn: "Roadmap & timeline", color: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-950/30" },
-  { icon: Search, label: "政策查询", labelEn: "Policy Research", desc: "实时政策与规则", descEn: "Live policy & rules", color: "text-cyan-600", bg: "bg-cyan-50 dark:bg-cyan-950/30" },
+  { icon: Target, label: "GTV资格评估", labelEn: "GTV Assessment", desc: "系统化评分与路径推荐", descEn: "Scoring & path recommendation", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30", prompt: "请使用 gtv-assessment 技能帮我做一次完整的GTV资格评估。请先引导我提供所需的背景信息。" },
+  { icon: FileText, label: "简历分析", labelEn: "Resume Analysis", desc: "亮点识别与差距分析", descEn: "Highlights & gap analysis", color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30", prompt: "请使用 resume-analyzer 技能帮我分析简历，识别GTV申请相关的亮点和不足。我可以粘贴简历内容给你。" },
+  { icon: PenTool, label: "文案撰写", labelEn: "Copywriting", desc: "个人陈述与证据描述", descEn: "Statement & evidence description", color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/30", prompt: "请使用 gtv-copywriting 技能帮我撰写GTV申请的个人陈述(Personal Statement)。请先了解我的背景信息。" },
+  { icon: ScrollText, label: "推荐信", labelEn: "Recommendation", desc: "四阶段专业流程", descEn: "4-phase professional workflow", color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/30", prompt: "请使用 gtv-recommendation-letter 技能帮我撰写GTV推荐信。请先引导我提供推荐人信息和申请人材料。" },
+  { icon: MapPin, label: "策略规划", labelEn: "Strategy", desc: "路线图与时间表", descEn: "Roadmap & timeline", color: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-950/30", prompt: "请使用 immigration-strategy 技能帮我制定GTV签证的申请策略和时间规划。" },
+  { icon: Search, label: "政策查询", labelEn: "Policy Research", desc: "实时政策与规则", descEn: "Live policy & rules", color: "text-cyan-600", bg: "bg-cyan-50 dark:bg-cyan-950/30", prompt: "请使用 uk-immigration-policy 技能帮我查询最新的英国移民政策和GTV签证规则变化。" },
 ]
 
 export default function ChatAssessmentPage() {
   const { language } = useLanguage()
+  const chatRef = useRef<OpenClawChatUIHandle>(null)
   const [activeSessionId, setActiveId] = useState<string | null>(null)
   const [sidebarRefresh, setSidebarRefresh] = useState(0)
   const [mounted, setMounted] = useState(false)
@@ -92,6 +93,7 @@ export default function ChatAssessmentPage() {
         {/* Center: Chat area — takes all remaining space */}
         <div className="flex-1 min-w-0 flex flex-col">
           <OpenClawChatUI
+            ref={chatRef}
             sessionId={activeSessionId}
             onSessionUpdate={handleSessionUpdate}
           />
@@ -106,7 +108,11 @@ export default function ChatAssessmentPage() {
             </div>
             <div className="space-y-1.5">
               {SIDEBAR_SKILLS.map((skill, i) => (
-                <div key={i} className={`flex items-start gap-2 p-2 rounded-lg ${skill.bg} transition-colors`}>
+                <button
+                  key={i}
+                  onClick={() => chatRef.current?.sendMessage(skill.prompt)}
+                  className={`w-full flex items-start gap-2 p-2 rounded-lg ${skill.bg} transition-all cursor-pointer hover:opacity-80 hover:scale-[1.02] active:scale-[0.98] text-left`}
+                >
                   <div className={`p-1 rounded ${skill.color}`}>
                     <skill.icon className="h-3.5 w-3.5" />
                   </div>
@@ -118,7 +124,7 @@ export default function ChatAssessmentPage() {
                       {language === "en" ? skill.descEn : skill.desc}
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
 

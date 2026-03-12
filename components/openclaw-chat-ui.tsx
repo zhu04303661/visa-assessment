@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle } from "react"
 import { useLanguage } from "@/lib/i18n"
 import { sessionKeyFor } from "@/lib/chat-sessions"
 import {
@@ -232,12 +232,16 @@ const GATEWAY_URL = typeof window !== "undefined"
 
 const GATEWAY_TOKEN = OC_TOKEN
 
+export interface OpenClawChatUIHandle {
+  sendMessage: (text: string) => void
+}
+
 interface OpenClawChatUIProps {
   sessionId: string | null
   onSessionUpdate?: (info: { messageCount: number; preview: string; title?: string }) => void
 }
 
-export default function OpenClawChatUI({ sessionId, onSessionUpdate }: OpenClawChatUIProps) {
+const OpenClawChatUI = forwardRef<OpenClawChatUIHandle, OpenClawChatUIProps>(function OpenClawChatUI({ sessionId, onSessionUpdate }, ref) {
   const { language } = useLanguage()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
@@ -494,6 +498,10 @@ export default function OpenClawChatUI({ sessionId, onSessionUpdate }: OpenClawC
       setIsLoading(false)
     }
   }
+
+  useImperativeHandle(ref, () => ({
+    sendMessage: (text: string) => handleSend(text),
+  }))
 
   const handleStop = async () => {
     try {
@@ -996,4 +1004,6 @@ export default function OpenClawChatUI({ sessionId, onSessionUpdate }: OpenClawC
       </div>
     </div>
   )
-}
+})
+
+export default OpenClawChatUI

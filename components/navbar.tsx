@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -25,11 +26,37 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [loginRedirect, setLoginRedirect] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+  const router = useRouter()
   
   // 客户端挂载后才显示认证相关UI，避免hydration不匹配
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // 检测 ?login=required&redirect=xxx 参数，自动弹出登录框
+  useEffect(() => {
+    if (!mounted) return
+    const loginParam = searchParams.get("login")
+    const redirectParam = searchParams.get("redirect")
+    if (loginParam === "required" && !user) {
+      setLoginRedirect(redirectParam || "/")
+      setAuthDialogOpen(true)
+      // 清除 URL 中的登录参数，避免刷新后重复弹出
+      const url = new URL(window.location.href)
+      url.searchParams.delete("login")
+      url.searchParams.delete("redirect")
+      window.history.replaceState({}, "", url.pathname + url.search)
+    }
+  }, [mounted, searchParams, user])
+
+  const handleLoginSuccess = useCallback(() => {
+    if (loginRedirect) {
+      window.location.href = loginRedirect
+      setLoginRedirect(null)
+    }
+  }, [loginRedirect])
 
   // 导航菜单分组
   const navGroups = {
@@ -429,7 +456,7 @@ export function Navbar() {
       </div>
       
       {/* Auth Dialog */}
-      <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
+      <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} onSuccess={handleLoginSuccess} />
     </nav>
   )
 }
