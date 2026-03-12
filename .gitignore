@@ -110,4 +110,5 @@ test-*.js
 !tsconfig.json
 !components.json
 !public/*.json
+!deploy/**/*.json
 !ecosystem.config.js
