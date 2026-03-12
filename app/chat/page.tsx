@@ -1,93 +1,153 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect, useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/lib/i18n"
 import OpenClawChatUI from "@/components/openclaw-chat-ui"
+import ChatHistorySidebar from "@/components/chat-history-sidebar"
 import { Navbar } from "@/components/navbar"
 import { AuthGuard } from "@/components/auth-guard"
-import { MessageCircle, Globe } from "lucide-react"
+import {
+  MessageCircle, Target, FileText, PenTool,
+  ScrollText, MapPin, Search, Sparkles, ArrowRight
+} from "lucide-react"
+import {
+  getSessions,
+  createSession,
+  updateSession,
+  getActiveSessionId,
+  setActiveSessionId,
+} from "@/lib/chat-sessions"
+
+const SIDEBAR_SKILLS = [
+  { icon: Target, label: "GTV资格评估", labelEn: "GTV Assessment", desc: "系统化评分与路径推荐", descEn: "Scoring & path recommendation", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30" },
+  { icon: FileText, label: "简历分析", labelEn: "Resume Analysis", desc: "亮点识别与差距分析", descEn: "Highlights & gap analysis", color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30" },
+  { icon: PenTool, label: "文案撰写", labelEn: "Copywriting", desc: "个人陈述与证据描述", descEn: "Statement & evidence description", color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/30" },
+  { icon: ScrollText, label: "推荐信", labelEn: "Recommendation", desc: "四阶段专业流程", descEn: "4-phase professional workflow", color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+  { icon: MapPin, label: "策略规划", labelEn: "Strategy", desc: "路线图与时间表", descEn: "Roadmap & timeline", color: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-950/30" },
+  { icon: Search, label: "政策查询", labelEn: "Policy Research", desc: "实时政策与规则", descEn: "Live policy & rules", color: "text-cyan-600", bg: "bg-cyan-50 dark:bg-cyan-950/30" },
+]
 
 export default function ChatAssessmentPage() {
   const { language } = useLanguage()
+  const [activeSessionId, setActiveId] = useState<string | null>(null)
+  const [sidebarRefresh, setSidebarRefresh] = useState(0)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const existing = getActiveSessionId()
+    const sessions = getSessions()
+    if (existing && sessions.some(s => s.id === existing)) {
+      setActiveId(existing)
+    } else if (sessions.length > 0) {
+      setActiveId(sessions[0].id)
+      setActiveSessionId(sessions[0].id)
+    } else {
+      const newSession = createSession()
+      setActiveId(newSession.id)
+    }
+  }, [])
+
+  const handleSelectSession = useCallback((id: string) => {
+    setActiveId(id)
+    setActiveSessionId(id)
+  }, [])
+
+  const handleNewSession = useCallback(() => {
+    const session = createSession()
+    setActiveId(session.id)
+    setSidebarRefresh(n => n + 1)
+  }, [])
+
+  const handleSessionUpdate = useCallback((info: { messageCount: number; preview: string; title?: string }) => {
+    if (!activeSessionId) return
+    const updates: Record<string, unknown> = {
+      messageCount: info.messageCount,
+      preview: info.preview,
+    }
+    if (info.title) {
+      updates.title = info.title
+    }
+    updateSession(activeSessionId, updates as { messageCount: number; preview: string; title?: string })
+    setSidebarRefresh(n => n + 1)
+  }, [activeSessionId])
+
+  if (!mounted) return null
 
   return (
     <AuthGuard requireAuth={true}>
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-medium text-primary">
-              <MessageCircle className="h-4 w-4" />
-              <span>{language === "en" ? "AI-Powered Consultation" : "AI智能咨询"}</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-              {language === "en" ? "AI Immigration Consultation" : "AI移民咨询"}
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {language === "en"
-                ? "Get instant answers to your UK immigration questions. Our AI assistant can help with visa eligibility, application processes, and provide personalized guidance."
-                : "即时解答您的英国移民问题。我们的AI助手可以帮助您了解签证资格、申请流程，并提供个性化指导。"}
-            </p>
-          </div>
+      <div className="flex-1 flex min-h-0">
+        {/* Left: History sidebar */}
+        <ChatHistorySidebar
+          activeSessionId={activeSessionId}
+          onSelectSession={handleSelectSession}
+          onNewSession={handleNewSession}
+          refreshTrigger={sidebarRefresh}
+        />
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-3">
-              <Card className="h-[calc(100vh-280px)] min-h-[500px] flex flex-col shadow-lg">
-                <CardContent className="flex-1 p-0 min-h-0">
-                  <OpenClawChatUI />
-                </CardContent>
-              </Card>
-            </div>
+        {/* Center: Chat area — takes all remaining space */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          <OpenClawChatUI
+            sessionId={activeSessionId}
+            onSessionUpdate={handleSessionUpdate}
+          />
+        </div>
 
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Globe className="h-5 w-5 text-emerald-500" />
-                    {language === "en" ? "AI Consultant" : "AI移民顾问"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    {language === "en"
-                      ? "Powered by OpenClaw AI Agent with real-time skills and tools. Ask about any UK visa type, application process, or immigration strategy."
-                      : "基于OpenClaw AI Agent驱动，具备实时技能和工具调用能力。可以咨询任何英国签证类型、申请流程或移民策略。"}
-                  </p>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">GTV签证</Badge>
-                      <Badge variant="outline" className="text-xs">工作签证</Badge>
-                      <Badge variant="outline" className="text-xs">学生签证</Badge>
+        {/* Right: Skills panel — collapsible on smaller screens */}
+        <div className="hidden 2xl:flex w-56 shrink-0 flex-col border-l bg-muted/10 overflow-y-auto">
+          <div className="p-3 space-y-3">
+            <div className="flex items-center gap-1.5 text-sm font-medium px-1">
+              <Sparkles className="h-4 w-4 text-emerald-500" />
+              {language === "en" ? "AI Skills" : "AI专业技能"}
+            </div>
+            <div className="space-y-1.5">
+              {SIDEBAR_SKILLS.map((skill, i) => (
+                <div key={i} className={`flex items-start gap-2 p-2 rounded-lg ${skill.bg} transition-colors`}>
+                  <div className={`p-1 rounded ${skill.color}`}>
+                    <skill.icon className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium leading-tight">
+                      {language === "en" ? skill.labelEn : skill.label}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">创业签证</Badge>
-                      <Badge variant="outline" className="text-xs">永居规划</Badge>
-                      <Badge variant="outline" className="text-xs">材料指导</Badge>
+                    <div className="text-xs text-muted-foreground mt-0.5 leading-tight">
+                      {language === "en" ? skill.descEn : skill.desc}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    {language === "en" ? "Quick Actions" : "快捷操作"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button
-                    onClick={() => window.location.href = '/assessment'}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {language === "en" ? "Full Assessment Form" : "完整评估表"}
-                  </Button>
-                </CardContent>
-              </Card>
+                </div>
+              ))}
             </div>
+
+            <div className="border-t pt-3">
+              <div className="text-xs font-medium text-muted-foreground mb-2 px-1">
+                {language === "en" ? "Data Flow" : "数据联动"}
+              </div>
+              <div className="flex flex-col items-center gap-1 text-xs text-muted-foreground">
+                <Badge variant="outline" className="text-xs">简历分析</Badge>
+                <ArrowRight className="h-3 w-3 rotate-90" />
+                <Badge variant="outline" className="text-xs">资格评估</Badge>
+                <ArrowRight className="h-3 w-3 rotate-90" />
+                <div className="flex gap-1 flex-wrap justify-center">
+                  <Badge variant="outline" className="text-xs">文案撰写</Badge>
+                  <Badge variant="outline" className="text-xs">推荐信</Badge>
+                  <Badge variant="outline" className="text-xs">策略规划</Badge>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => window.location.href = '/assessment'}
+              variant="outline"
+              className="w-full"
+              size="sm"
+            >
+              {language === "en" ? "Full Assessment Form" : "传统评估表"}
+              <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+            </Button>
           </div>
         </div>
       </div>

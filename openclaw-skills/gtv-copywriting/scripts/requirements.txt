@@ -1,0 +1,8 @@
+# GTV Copywriting Skill 脚本依赖
+#
+# 本 skill 的 check_statement.py、check_evidence_desc.py、word_count.py
+# 仅依赖 Python 3 标准库，无需安装额外包。
+#
+# 若需读取 .docx 格式文件，可参考 gtv-recommendation-letter skill 的
+# read_docx.py，该脚本需要：
+#   python-docx>=1.0.0

@@ -259,7 +259,15 @@ export class OpenClawClient {
     }, 5000)
   }
 
-  async sendMessage(text: string): Promise<{ runId: string; status: string }> {
+  updateSessionKey(key: string): void {
+    this.options.sessionKey = key
+  }
+
+  get sessionKey(): string {
+    return this.options.sessionKey || "agent:main:main"
+  }
+
+  async sendMessage(text: string, overrideSessionKey?: string): Promise<{ runId: string; status: string }> {
     if (!this.connected || !this.ws) {
       throw new Error("未连接到OpenClaw Gateway")
     }
@@ -274,14 +282,15 @@ export class OpenClawClient {
       method: "chat.send",
       params: {
         message: text,
-        sessionKey: this.options.sessionKey,
+        sessionKey: overrideSessionKey || this.options.sessionKey,
         idempotencyKey,
       },
     }
 
     this.ws.send(JSON.stringify(req))
 
-    const result = await this.waitForResponse(id) as Record<string, unknown>
+    const raw = await this.waitForResponse(id)
+    const result = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>
     this.currentRunId = (result.runId as string) || null
     return {
       runId: this.currentRunId || "",
@@ -313,9 +322,9 @@ export class OpenClawClient {
     }
   }
 
-  async getHistory(limit = 50): Promise<Array<{ role: string; content: string; timestamp?: string }>> {
+  async getHistory(limit = 50, overrideSessionKey?: string): Promise<Array<{ role: string; content: unknown; timestamp?: string }>> {
     if (!this.connected || !this.ws) {
-      throw new Error("未连接到OpenClaw Gateway")
+      return []
     }
 
     const id = this.nextId()
@@ -324,15 +333,29 @@ export class OpenClawClient {
       id,
       method: "chat.history",
       params: {
-        sessionKey: this.options.sessionKey,
+        sessionKey: overrideSessionKey || this.options.sessionKey,
         limit,
       },
     }
 
     this.ws.send(JSON.stringify(req))
 
-    const result = await this.waitForResponse(id) as Record<string, unknown>
-    return (result.messages as Array<{ role: string; content: string; timestamp?: string }>) || []
+    try {
+      const result = await this.waitForResponse(id)
+      if (Array.isArray(result)) {
+        return result as Array<{ role: string; content: unknown; timestamp?: string }>
+      }
+      if (result && typeof result === "object") {
+        const r = result as Record<string, unknown>
+        const messages = r.messages || r.history || r.data
+        if (Array.isArray(messages)) {
+          return messages as Array<{ role: string; content: unknown; timestamp?: string }>
+        }
+      }
+      return []
+    } catch {
+      return []
+    }
   }
 
   get isConnected(): boolean {

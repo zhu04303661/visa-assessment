@@ -50,6 +50,8 @@ next-env.d.ts
 ace_gtv/logs/
 
 # === 运行时数据目录 ===
+/public/downloads/*
+!/public/downloads/.gitkeep
 /uploads/
 /resumes/
 /reports/

@@ -1,0 +1,3 @@
+# resume-analyzer 脚本依赖
+# 仅使用 Python 标准库，无需额外安装包
+# 若需解析 DOCX，请使用 gtv-recommendation-letter 的 read_docx.py（依赖 python-docx）
