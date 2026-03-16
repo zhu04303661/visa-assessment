@@ -1,3 +1,7 @@
 # GTV Assessment Skill 脚本依赖
-# 本 skill 仅使用 Python 标准库，无需额外安装
-# 若需与项目其他模块集成，可参考主项目 requirements.txt
+# generate_report.py / compare_paths.py — 仅使用标准库
+# generate_pdf_report.py — 需要 reportlab
+# parse_resume.py — 需要 pdfminer.six, python-docx
+reportlab>=4.0
+pdfminer.six>=20221105
+python-docx>=1.0

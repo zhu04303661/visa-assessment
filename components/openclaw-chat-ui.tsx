@@ -109,6 +109,7 @@ const IMMIGRATION_SYSTEM_PROMPT = `你是一位资深的英国移民顾问AI助�
 - 主动询问用户背景以提供更精准的建议
 - 当用户问题对应某个技能时，**主动说明你将调用该技能**并按流程执行
 - 在技能工作流中，**必须按阶段逐步执行**，每完成一个阶段向用户确认后再继续
+- **重要**：在开始执行报告生成（包括评估报告、简历分析、文案撰写等任何耗时较长的生成任务）之前，**必须先提醒用户**：「⏳ 正在为您生成专业报告，预计需要 3-10 分钟，请耐心等待...」
 
 ## 文件输出规范（非常重要）：
 
@@ -145,6 +146,14 @@ const IMMIGRATION_SYSTEM_PROMPT = `你是一位资深的英国移民顾问AI助�
 
 请根据用户的问题提供专业的移民咨询服务。`
 
+const GTV_WELCOME_MESSAGE = `您好，欢迎找到我们，很高兴为您评估。
+
+请根据个人情况和所属行业领域详细填写以下信息，不适用的情况写"无"即可。
+
+**我们深知您的信息属于重要隐私，我们郑重承诺对所有信息严格保密。**
+
+请依次提供以下信息，我将为您进行专业的 GTV 资格评估：`
+
 const SKILL_ACTIONS = [
   {
     icon: Target,
@@ -153,6 +162,9 @@ const SKILL_ACTIONS = [
     desc: "系统化评分 · 路径推荐",
     descEn: "Scoring · Path Recommendation",
     prompt: "请使用 gtv-assessment 技能帮我做一次完整的GTV资格评估。请先引导我提供所需的背景信息。",
+    welcomeMessage: GTV_WELCOME_MESSAGE,
+    displayLabel: "GTV资格评估",
+    displayLabelEn: "GTV Assessment",
     color: "text-blue-600",
     bgColor: "hover:bg-blue-50 dark:hover:bg-blue-950/20",
     borderColor: "hover:border-blue-200 dark:hover:border-blue-800",
@@ -233,7 +245,7 @@ const GATEWAY_URL = typeof window !== "undefined"
 const GATEWAY_TOKEN = OC_TOKEN
 
 export interface OpenClawChatUIHandle {
-  sendMessage: (text: string) => void
+  sendMessage: (text: string, options?: { welcomeMessage?: string; displayLabel?: string }) => void
 }
 
 interface OpenClawChatUIProps {
@@ -257,6 +269,10 @@ const OpenClawChatUI = forwardRef<OpenClawChatUIHandle, OpenClawChatUIProps>(fun
   const streamingMsgIdRef = useRef<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const currentSessionIdRef = useRef<string | null>(null)
+  const titleGeneratedRef = useRef(false)
+  const firstUserMsgRef = useRef<string | null>(null)
+  const onSessionUpdateRef = useRef(onSessionUpdate)
+  onSessionUpdateRef.current = onSessionUpdate
 
   const currentSessionKey = useMemo(
     () => sessionId ? sessionKeyFor(sessionId) : "agent:main:visa-consultant",
@@ -318,6 +334,24 @@ const OpenClawChatUI = forwardRef<OpenClawChatUIHandle, OpenClawChatUIProps>(fun
           streamingMsgIdRef.current = null
           setIsLoading(false)
           setActiveToolCalls([])
+
+          if (!titleGeneratedRef.current && firstUserMsgRef.current) {
+            titleGeneratedRef.current = true
+            const userMsg = firstUserMsgRef.current
+            const assistantMsg = text
+            fetch('/api/chat-title', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userMessage: userMsg, assistantMessage: assistantMsg }),
+            })
+              .then(r => r.json())
+              .then(data => {
+                if (data.title) {
+                  onSessionUpdateRef.current?.({ messageCount: 1, preview: userMsg.slice(0, 50), title: data.title })
+                }
+              })
+              .catch(() => {})
+          }
         }
 
         scrollToBottom()
@@ -387,6 +421,8 @@ const OpenClawChatUI = forwardRef<OpenClawChatUIHandle, OpenClawChatUIProps>(fun
     setActiveToolCalls([])
     streamingMsgIdRef.current = null
     setIsLoading(false)
+    titleGeneratedRef.current = false
+    firstUserMsgRef.current = null
 
     if (!client.isConnected) return
 
@@ -417,12 +453,12 @@ const OpenClawChatUI = forwardRef<OpenClawChatUIHandle, OpenClawChatUIProps>(fun
       })
   }, [sessionId, currentSessionKey])
 
-  const handleSend = async (text?: string) => {
+  const handleSend = async (text?: string, options?: { welcomeMessage?: string; displayLabel?: string }) => {
     const messageText = text || inputValue.trim()
     const uploadedFiles = pendingFiles.filter(p => p.status === "done" && p.result).map(p => p.result!)
     if ((!messageText && uploadedFiles.length === 0) || isLoading) return
 
-    let displayContent = messageText
+    let displayContent = options?.displayLabel || messageText
     const attachments = uploadedFiles.length > 0 ? uploadedFiles : undefined
 
     if (attachments && !messageText) {
@@ -437,7 +473,20 @@ const OpenClawChatUI = forwardRef<OpenClawChatUIHandle, OpenClawChatUIProps>(fun
       attachments,
     }
 
-    const assistantMsgId = `assistant-${Date.now()}`
+    const newMessages: Message[] = [userMessage]
+
+    if (options?.welcomeMessage) {
+      const welcomeMsg: Message = {
+        id: `assistant-welcome-${Date.now()}`,
+        role: "assistant",
+        content: options.welcomeMessage,
+        timestamp: new Date(),
+        isStreaming: false,
+      }
+      newMessages.push(welcomeMsg)
+    }
+
+    const assistantMsgId = `assistant-${Date.now() + 1}`
     const assistantMessage: Message = {
       id: assistantMsgId,
       role: "assistant",
@@ -445,12 +494,17 @@ const OpenClawChatUI = forwardRef<OpenClawChatUIHandle, OpenClawChatUIProps>(fun
       timestamp: new Date(),
       isStreaming: true,
     }
+    newMessages.push(assistantMessage)
 
     streamingMsgIdRef.current = assistantMsgId
-    setMessages(prev => [...prev, userMessage, assistantMessage])
+    setMessages(prev => [...prev, ...newMessages])
     setInputValue("")
     setPendingFiles([])
     setIsLoading(true)
+
+    if (messages.length === 0 && !titleGeneratedRef.current) {
+      firstUserMsgRef.current = displayContent
+    }
 
     try {
       const client = clientRef.current
@@ -478,11 +532,9 @@ const OpenClawChatUI = forwardRef<OpenClawChatUIHandle, OpenClawChatUIProps>(fun
       await client.sendMessage(fullMessage)
 
       const userMsgs = [...messages, userMessage].filter(m => m.role === "user")
-      const firstUserMsg = userMsgs[0]?.content || displayContent
       onSessionUpdate?.({
         messageCount: userMsgs.length,
         preview: displayContent.slice(0, 50),
-        title: userMsgs.length === 1 ? firstUserMsg.slice(0, 30) : undefined,
       })
     } catch (error) {
       setMessages(prev => prev.map(m =>
@@ -500,7 +552,7 @@ const OpenClawChatUI = forwardRef<OpenClawChatUIHandle, OpenClawChatUIProps>(fun
   }
 
   useImperativeHandle(ref, () => ({
-    sendMessage: (text: string) => handleSend(text),
+    sendMessage: (text: string, options?: { welcomeMessage?: string; displayLabel?: string }) => handleSend(text, options),
   }))
 
   const handleStop = async () => {
@@ -744,7 +796,12 @@ const OpenClawChatUI = forwardRef<OpenClawChatUIHandle, OpenClawChatUIProps>(fun
                   <button
                     key={i}
                     className={`group relative text-left rounded-xl border border-border/60 p-4 transition-all duration-200 ${skill.bgColor} ${skill.borderColor} hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed`}
-                    onClick={() => handleSend(skill.prompt)}
+                    onClick={() => handleSend(skill.prompt, {
+                      welcomeMessage: (skill as typeof SKILL_ACTIONS[0]).welcomeMessage,
+                      displayLabel: language === "en"
+                        ? ((skill as typeof SKILL_ACTIONS[0]).displayLabelEn || skill.labelEn)
+                        : ((skill as typeof SKILL_ACTIONS[0]).displayLabel || skill.label),
+                    })}
                     disabled={connectionStatus !== "connected"}
                   >
                     <div className="flex items-start gap-3">
@@ -905,7 +962,12 @@ const OpenClawChatUI = forwardRef<OpenClawChatUIHandle, OpenClawChatUIProps>(fun
               <button
                 key={i}
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border/50 text-xs whitespace-nowrap transition-all ${skill.bgColor} ${skill.borderColor} hover:shadow-sm`}
-                onClick={() => handleSend(skill.prompt)}
+                onClick={() => handleSend(skill.prompt, {
+                  welcomeMessage: (skill as typeof SKILL_ACTIONS[0]).welcomeMessage,
+                  displayLabel: language === "en"
+                    ? ((skill as typeof SKILL_ACTIONS[0]).displayLabelEn || skill.labelEn)
+                    : ((skill as typeof SKILL_ACTIONS[0]).displayLabel || skill.label),
+                })}
               >
                 <skill.icon className={`h-3 w-3 ${skill.color}`} />
                 <span className="text-muted-foreground">{language === "en" ? skill.labelEn : skill.label}</span>

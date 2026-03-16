@@ -1,857 +1,919 @@
 #!/usr/bin/env python3
-"""
-GTV签证评估PDF报告生成器
-使用ReportLab生成专业的PDF报告
+"""GTV 签证评估 PDF 报告生成器。
+
+使用 ReportLab 生成专业的多页 PDF 报告。
+字体优先级：WenQuanYi(Linux) > macOS系统字体 > CID回退。
 """
 
-import os
 import logging
+import math
+import os
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 try:
     from reportlab.lib import colors
+    from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_RIGHT
     from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import cm
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
-    from reportlab.platypus.flowables import HRFlowable
-    from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.platypus import (
+        PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle,
+    )
+    from reportlab.platypus.flowables import HRFlowable
+    from reportlab.graphics.shapes import Circle, Drawing, Line, Polygon, String
     print("✅ ReportLab 导入成功")
 except ImportError as e:
     print(f"❌ ReportLab 导入失败: {e}")
     raise
 
-# 导入Markdown保存器
-try:
-    from markdown_saver import GTVMarkdownSaver, load_assessment_from_markdown
-    print("✅ Markdown保存器导入成功")
-except ImportError as e:
-    print(f"❌ Markdown保存器导入失败: {e}")
-    GTVMarkdownSaver = None
-    load_assessment_from_markdown = None
-
-# 配置日志（支持环境变量 LOG_LEVEL）
 _level_name = os.getenv("LOG_LEVEL", "INFO").upper()
 _level = getattr(logging, _level_name, logging.INFO)
-# 统一日志（UTF-8、文件+控制台、包含文件与行号）
 logger = logging.getLogger("resume_processor")
 logger.setLevel(_level)
 
-class GTVPDFReportGenerator:
-    """GTV签证评估PDF报告生成器"""
-    
-    def __init__(self):
-        self.styles = getSampleStyleSheet()
-        self._register_chinese_fonts()
-        self._setup_custom_styles()
-    
-    def _register_chinese_fonts(self):
-        """注册中文字体"""
-        logger.info("🔤 开始注册中文字体...")
-        try:
-            # 尝试注册系统中文字体 - 重新排序，优先使用PingFang
-            font_paths = [
-                # macOS 系统字体 - 优先使用PingFang，它对中文支持最好
-                '/System/Library/Fonts/PingFang.ttc',
-                '/System/Library/Fonts/STHeiti Light.ttc',
-                '/System/Library/Fonts/STHeiti Medium.ttc',
-                '/System/Library/Fonts/STSong.ttc',
-                '/System/Library/Fonts/STKaiti.ttc',
-                '/System/Library/Fonts/Arial Unicode MS.ttf',
-                '/Library/Fonts/Arial Unicode MS.ttf',
-                '/System/Library/Fonts/AppleGothic.ttf',
-            ]
-            
-            logger.info(f"🔍 检查 {len(font_paths)} 个字体路径...")
-            chinese_font_registered = False
-            
-            for i, font_path in enumerate(font_paths, 1):
-                logger.info(f"🔍 检查字体 {i}/{len(font_paths)}: {font_path}")
-                if os.path.exists(font_path):
-                    logger.info(f"✅ 字体文件存在: {font_path}")
-                    try:
-                        # 注册中文字体
-                        logger.info(f"🔄 正在注册字体: {font_path}")
-                        pdfmetrics.registerFont(TTFont('ChineseFont', font_path))
-                        pdfmetrics.registerFont(TTFont('ChineseFontBold', font_path))
-                        chinese_font_registered = True
-                        logger.info(f"✅ 中文字体注册成功: {font_path}")
-                        
-                        # 测试字体是否真的支持中文
-                        try:
-                            from reportlab.pdfgen import canvas
-                            test_canvas = canvas.Canvas('/tmp/font_test.pdf')
-                            test_canvas.setFont('ChineseFont', 12)
-                            test_canvas.drawString(100, 100, "测试中文")
-                            test_canvas.save()
-                            logger.info("✅ 字体中文测试成功")
-                        except Exception as test_e:
-                            logger.warning(f"⚠️ 字体中文测试失败: {test_e}")
-                        
-                        break
-                    except Exception as e:
-                        logger.warning(f"⚠️ 字体注册失败 {font_path}: {e}")
-                        continue
-                else:
-                    logger.info(f"❌ 字体文件不存在: {font_path}")
-            
-            if not chinese_font_registered:
-                # 如果没有找到系统字体，使用ReportLab内置的字体
-                logger.warning("⚠️ 未找到系统中文字体，使用默认字体")
-                self.chinese_font = 'Helvetica'
-                self.chinese_font_bold = 'Helvetica-Bold'
-            else:
-                self.chinese_font = 'ChineseFont'
-                self.chinese_font_bold = 'ChineseFontBold'
-            
-            logger.info(f"🎨 最终字体设置: 中文={self.chinese_font}, 中文粗体={self.chinese_font_bold}")
-                
-        except Exception as e:
-            logger.error(f"❌ 中文字体注册失败: {e}")
-            self.chinese_font = 'Helvetica'
-            self.chinese_font_bold = 'Helvetica-Bold'
-    
-    def _safe_text(self, text):
-        """安全处理文本，确保中文字符正确显示"""
-        if not text:
-            return ""
-        
-        # 确保文本是字符串
-        text = str(text)
-        
-        # 处理特殊字符
-        text = text.replace('&', '&amp;')
-        text = text.replace('<', '&lt;')
-        text = text.replace('>', '&gt;')
-        
-        # 确保文本编码正确
-        try:
-            # 尝试编码为UTF-8
-            text.encode('utf-8')
-            logger.debug(f"✅ 文本编码正常: {text[:50]}...")
-        except UnicodeEncodeError as e:
-            logger.warning(f"⚠️ 文本编码失败: {e}, 原始文本: {text[:50]}...")
-            # 如果编码失败，使用ASCII安全字符
-            text = text.encode('ascii', 'ignore').decode('ascii')
-            logger.warning(f"⚠️ 使用ASCII安全字符: {text[:50]}...")
-        
-        return text
-    
-    def _setup_custom_styles(self):
-        """设置自定义样式"""
-        logger.info("🎨 开始设置自定义样式...")
-        # 检查样式是否已存在，避免重复定义
-        style_names = ['CustomTitle', 'SectionTitle', 'SubSectionTitle', 'BodyText', 'Emphasis', 'Score']
-        
-        logger.info(f"📝 需要设置的样式: {style_names}")
-        
-        for style_name in style_names:
-            if style_name not in self.styles:
-                logger.debug(f"➕ 添加样式: {style_name}")
-                if style_name == 'CustomTitle':
-                    self.styles.add(ParagraphStyle(
-                        name='CustomTitle',
-                        parent=self.styles['Title'],
-                        fontSize=24,
-                        spaceAfter=30,
-                        alignment=TA_CENTER,
-                        textColor=colors.HexColor('#1f2937'),
-                        fontName=self.chinese_font_bold
-                    ))
-                elif style_name == 'SectionTitle':
-                    self.styles.add(ParagraphStyle(
-                        name='SectionTitle',
-                        parent=self.styles['Heading1'],
-                        fontSize=16,
-                        spaceAfter=12,
-                        spaceBefore=20,
-                        textColor=colors.HexColor('#374151'),
-                        fontName=self.chinese_font_bold,
-                        borderWidth=0,
-                        borderColor=colors.HexColor('#e5e7eb'),
-                        borderPadding=5
-                    ))
-                elif style_name == 'SubSectionTitle':
-                    self.styles.add(ParagraphStyle(
-                        name='SubSectionTitle',
-                        parent=self.styles['Heading2'],
-                        fontSize=14,
-                        spaceAfter=8,
-                        spaceBefore=12,
-                        textColor=colors.HexColor('#4b5563'),
-                        fontName=self.chinese_font_bold
-                    ))
-                elif style_name == 'BodyText':
-                    self.styles.add(ParagraphStyle(
-                        name='BodyText',
-                        parent=self.styles['Normal'],
-                        fontSize=11,
-                        spaceAfter=6,
-                        alignment=TA_JUSTIFY,
-                        textColor=colors.HexColor('#374151'),
-                        fontName=self.chinese_font
-                    ))
-                elif style_name == 'Emphasis':
-                    self.styles.add(ParagraphStyle(
-                        name='Emphasis',
-                        parent=self.styles['Normal'],
-                        fontSize=11,
-                        spaceAfter=6,
-                        textColor=colors.HexColor('#1f2937'),
-                        fontName=self.chinese_font_bold
-                    ))
-                elif style_name == 'Score':
-                    self.styles.add(ParagraphStyle(
-                        name='Score',
-                        parent=self.styles['Normal'],
-                        fontSize=18,
-                        spaceAfter=10,
-                        alignment=TA_CENTER,
-                        textColor=colors.HexColor('#059669'),
-                        fontName=self.chinese_font_bold
-                    ))
-                logger.debug(f"✅ 样式 {style_name} 添加成功")
-            else:
-                logger.debug(f"⚠️ 样式 {style_name} 已存在，跳过")
-        
-            logger.info("✅ 自定义样式设置完成，共 %d 个样式", len(style_names))
-    
-    def generate_report(self, assessment_data: Dict[str, Any], output_path: str = None) -> str:
-        """生成PDF报告"""
-        logger.info("🚀 开始生成PDF报告...")
-        logger.info(f"📊 评估数据概览: 申请人={assessment_data.get('applicantInfo', {}).get('name', 'N/A')}, 总分={assessment_data.get('overallScore', 0)}")
-        
-        try:
-            # 步骤1: 生成输出路径
-            if not output_path:
-                logger.info("📁 生成默认输出路径...")
-                applicant_name = assessment_data.get('applicantInfo', {}).get('name', 'Applicant')
-                logger.info(f"👤 申请人姓名: {applicant_name}")
-                
-                # 将中文名转换为拼音或使用英文标识
-                if any('\u4e00' <= char <= '\u9fff' for char in applicant_name):
-                    # 包含中文字符，使用英文标识
-                    safe_name = "Applicant"
-                    logger.info("🈶 检测到中文字符，使用英文标识")
-                else:
-                    safe_name = "".join(c for c in applicant_name if c.isalnum() or c in (' ', '-', '_')).rstrip()
-                    safe_name = safe_name.replace(' ', '-')
-                    logger.info(f"🔤 使用原始姓名: {safe_name}")
-                
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                output_path = f"reports/GTV-Assessment-{safe_name}-{timestamp}.pdf"
-                logger.info(f"📄 输出路径: {output_path}")
-            else:
-                logger.info(f"📄 使用指定输出路径: {output_path}")
-            
-            # 步骤2: 确保输出目录存在
-            logger.info("📂 确保输出目录存在...")
-            output_dir = os.path.dirname(output_path)
-            if output_dir:  # 只有当目录路径不为空时才创建
-                os.makedirs(output_dir, exist_ok=True)
-                logger.info(f"✅ 输出目录已确认: {output_dir}")
-            else:
-                logger.info("📁 输出文件在当前目录，无需创建目录")
-            
-            # 步骤3: 创建PDF文档
-            logger.info("📋 创建PDF文档模板...")
-            doc = SimpleDocTemplate(
-                output_path,
-                pagesize=A4,
-                rightMargin=2*cm,
-                leftMargin=2*cm,
-                topMargin=2*cm,
-                bottomMargin=2*cm
-            )
-            logger.info("✅ PDF文档模板创建成功")
-            
-            # 步骤4: 构建内容
-            logger.info("📝 开始构建PDF内容...")
-            story = []
-            
-            # 添加封面
-            logger.info("📄 添加封面页...")
-            cover_content = self._create_cover_page(assessment_data)
-            story.extend(cover_content)
-            story.append(PageBreak())
-            logger.info(f"✅ 封面页添加完成，内容元素数量: {len(cover_content)}，页面内容：{cover_content}")
-            
-            # 添加执行摘要
-            logger.info("📊 添加执行摘要...")
-            summary_content = self._create_executive_summary(assessment_data)
-            story.extend(summary_content)
-            story.append(PageBreak())
-            logger.info(f"✅ 执行摘要添加完成，内容元素数量: {len(summary_content)}，页面内容：{summary_content}")
-            
-            # 添加申请人信息
-            logger.info("👤 添加申请人信息...")
-            applicant_content = self._create_applicant_info(assessment_data)
-            story.extend(applicant_content)
-            story.append(PageBreak())
-            logger.info(f"✅ 申请人信息添加完成，内容元素数量: {len(applicant_content)}，页面内容：{applicant_content}")
-            
-            # 添加评估结果
-            logger.info("📈 添加评估结果...")
-            results_content = self._create_assessment_results(assessment_data)
-            story.extend(results_content)
-            story.append(PageBreak())
-            logger.info(f"✅ 评估结果添加完成，内容元素数量: {len(results_content)}，页面内容：{results_content}")
-            
-            # 添加详细分析
-            logger.info("🔍 添加详细分析...")
-            analysis_content = self._create_detailed_analysis(assessment_data)
-            story.extend(analysis_content)
-            story.append(PageBreak())
-            logger.info(f"✅ 详细分析添加完成，内容元素数量: {len(analysis_content)}，页面内容：{analysis_content}")
-            
-            # 添加建议和行动计划
-            logger.info("💡 添加建议和行动计划...")
-            recommendations_content = self._create_recommendations(assessment_data)
-            story.extend(recommendations_content)
-            logger.info(f"✅ 建议和行动计划添加完成，内容元素数量: {len(recommendations_content)}，页面内容：{recommendations_content}")
-            
-            # 统计总内容
-            total_elements = len(story)
-            logger.info(f"📊 内容构建完成，总元素数量: {total_elements}，页面内容：{story}")
-            
-            # 步骤5: 生成PDF
-            logger.info("🖨️ 开始生成PDF文件...")
-            logger.info(f"🎨 使用字体: 中文={self.chinese_font}, 中文粗体={self.chinese_font_bold}")
-            
-            doc.build(story, onFirstPage=self._add_header_footer, onLaterPages=self._add_header_footer)
-            
-            # 步骤6: 验证生成的文件
-            if os.path.exists(output_path):
-                file_size = os.path.getsize(output_path)
-                logger.info("✅ PDF文件生成成功!")
-                logger.info(f"📄 文件路径: {output_path}")
-                logger.info(f"📏 文件大小: {file_size:,} 字节 ({file_size/1024:.1f} KB)")
-                logger.info(f"🎯 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            else:
-                logger.error(f"❌ PDF文件生成失败，文件不存在: {output_path}")
-                raise FileNotFoundError(f"PDF文件未生成: {output_path}")
-            
-            logger.info("🎉 PDF报告生成流程完成!")
-            return output_path
-            
-        except Exception as e:
-            logger.error(f"❌ PDF报告生成失败: {e}")
-            logger.error(f"🔍 错误类型: {type(e).__name__}")
-            logger.error(f"📍 错误位置: {e.__traceback__.tb_frame.f_code.co_filename}:{e.__traceback__.tb_lineno}")
-            raise
-    
+PAGE_W, PAGE_H = A4
+MARGIN = 2 * cm
 
-    def _create_cover_page(self, data: Dict[str, Any]) -> List:
-        """创建封面页"""
-        logger.debug("📄 开始创建封面页...")
-        story = []
-        
-        # 标题
-        logger.debug("📝 添加标题...")
-        story.append(Paragraph(self._safe_text("UK Global Talent Visa"), self.styles['CustomTitle']))
-        story.append(Paragraph(self._safe_text("Assessment Report"), self.styles['CustomTitle']))
-        story.append(Spacer(1, 30))
-        
-        # 申请人姓名
-        applicant_name = data.get('applicantInfo', {}).get('name', 'N/A')
-        logger.debug(f"👤 添加申请人姓名: {applicant_name}")
-        story.append(Paragraph(self._safe_text(f"Applicant: {applicant_name}"), self.styles['SectionTitle']))
-        story.append(Spacer(1, 20))
-        
-        # 评估日期
-        assessment_date = datetime.now().strftime('%B %d, %Y')
-        logger.debug(f"📅 添加评估日期: {assessment_date}")
-        story.append(Paragraph(self._safe_text(f"Assessment Date: {assessment_date}"), self.styles['BodyText']))
-        story.append(Spacer(1, 20))
-        
-        # 总体评分
-        overall_score = data.get('overallScore', 0)
+BRAND_PRIMARY = colors.HexColor("#1e40af")
+BRAND_DARK = colors.HexColor("#1f2937")
+BRAND_GRAY = colors.HexColor("#6b7280")
+BRAND_LIGHT_GRAY = colors.HexColor("#f3f4f6")
+BRAND_BORDER = colors.HexColor("#e5e7eb")
+COLOR_GREEN = colors.HexColor("#059669")
+COLOR_GREEN_LIGHT = colors.HexColor("#d1fae5")
+COLOR_AMBER = colors.HexColor("#d97706")
+COLOR_RED = colors.HexColor("#dc2626")
+COLOR_BLUE_LIGHT = colors.HexColor("#dbeafe")
+
+MC_DIMS = [
+    ("MC1 专业成就与认可", "MC1", 15),
+    ("MC2 领导角色与产品贡献", "MC2", 18),
+    ("MC3 商业成功证据", "MC3", 15),
+    ("MC4 行业影响力", "MC4", 12),
+]
+OC_DIMS = [
+    ("OC1 创新贡献", "OC1", 10),
+    ("OC2 学术与知识贡献", "OC2", 10),
+    ("OC3 技术领导力", "OC3", 10),
+    ("OC4 行业外贡献", "OC4", 10),
+]
+
+
+def _register_fonts():
+    """注册中文字体。Linux WQY > macOS > CID fallback。"""
+    regular, bold = "Helvetica", "Helvetica-Bold"
+
+    font_candidates = [
+        # Linux WenQuanYi (TrueType TTC, ReportLab 兼容)
+        ("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc", "WQY", None),
+        ("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc", "WQYBold", 1),
+        ("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc", "WQYZen", None),
+        # macOS
+        ("/System/Library/Fonts/PingFang.ttc", "PingFang", None),
+        ("/System/Library/Fonts/STHeiti Light.ttc", "STHeiti", None),
+    ]
+
+    for path, name, subfont in font_candidates:
+        if not os.path.exists(path):
+            continue
         try:
-            overall_score = int(float(overall_score)) if overall_score else 0
-        except (ValueError, TypeError):
-            logger.warning(f"⚠️ overallScore转换失败: {overall_score}，使用默认值0")
-            overall_score = 0
-        score_color = self._get_score_color(overall_score)
-        logger.debug(f"📊 添加总体评分: {overall_score}/100, 颜色: {score_color}")
-        story.append(Paragraph(self._safe_text(f"Overall Score: {overall_score}/100"), 
-                              ParagraphStyle('Score', parent=self.styles['Score'], textColor=score_color)))
-        story.append(Spacer(1, 30))
-        
-        # 推荐路径
-        pathway = data.get('gtvPathway', {}).get('recommendedRoute', 'N/A')
-        logger.debug(f"🛤️ 添加推荐路径: {pathway}")
-        story.append(Paragraph(self._safe_text(f"Recommended Pathway: {pathway}"), self.styles['Emphasis']))
-        story.append(Spacer(1, 20))
-        
-        # 免责声明
-        logger.debug("⚠️ 添加免责声明...")
-        disclaimer = """
-        <i>This assessment report is generated by an AI-powered system and is for informational purposes only. 
-        It should not be considered as official immigration advice. Please consult with qualified immigration 
-        professionals for official guidance on UK visa applications.</i>
-        """
-        story.append(Paragraph(disclaimer, self.styles['BodyText']))
-        
-        logger.debug(f"✅ 封面页创建完成，元素数量: {len(story)}")
-        return story
-    
-    def _create_executive_summary(self, data: Dict[str, Any]) -> List:
-        """创建执行摘要"""
-        logger.debug("📊 开始创建执行摘要...")
-        story = []
-        
-        logger.debug("📝 添加执行摘要标题...")
-        story.append(Paragraph(self._safe_text("Executive Summary"), self.styles['SectionTitle']))
-        story.append(HRFlowable(width="100%", thickness=1, lineCap='round', color=colors.HexColor('#e5e7eb')))
-        story.append(Spacer(1, 12))
-        
-        # 总体评估
-        overall_score = data.get('overallScore', 0)
+            if subfont is not None:
+                pdfmetrics.registerFont(TTFont(name, path, subfontIndex=subfont))
+            else:
+                pdfmetrics.registerFont(TTFont(name, path))
+
+            if regular == "Helvetica":
+                regular = name
+            elif bold == "Helvetica-Bold":
+                bold = name
+        except Exception as e:
+            logger.warning(f"字体加载跳过 {path}({name}): {e}")
+            continue
+
+    if bold == "Helvetica-Bold" and regular != "Helvetica":
+        bold = regular
+
+    if regular == "Helvetica":
         try:
-            overall_score = int(float(overall_score)) if overall_score else 0
+            from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+            pdfmetrics.registerFont(UnicodeCIDFont("STSong-Light"))
+            regular = bold = "STSong-Light"
+        except Exception:
+            logger.warning("无可用中文字体，中文将显示异常")
+
+    logger.info(f"字体: regular={regular}, bold={bold}")
+    return regular, bold
+
+
+def _safe(text) -> str:
+    if text is None:
+        return ""
+    text = str(text)
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _score_color(score: int):
+    if score >= 80:
+        return COLOR_GREEN
+    if score >= 65:
+        return COLOR_AMBER
+    return COLOR_RED
+
+
+def _score_level(score: int) -> str:
+    if score >= 80:
+        return "Exceptional Talent"
+    if score >= 65:
+        return "Exceptional Promise"
+    if score >= 55:
+        return "Startup Visa"
+    return "Needs Improvement"
+
+
+def _build_radar_chart(mc_scores: dict, oc_scores: dict, width=320, height=320) -> Drawing:
+    dims = MC_DIMS + OC_DIMS
+    n = len(dims)
+    d = Drawing(width, height)
+    cx, cy = width / 2, height / 2
+    radius = min(width, height) / 2 - 36
+    mc_keys_set = {k for _, k, _ in MC_DIMS}
+
+    for ring in [0.2, 0.4, 0.6, 0.8, 1.0]:
+        r = radius * ring
+        pts = []
+        for i in range(n):
+            angle = math.pi / 2 - 2 * math.pi * i / n
+            pts.extend([cx + r * math.cos(angle), cy + r * math.sin(angle)])
+        poly = Polygon(pts)
+        poly.strokeColor = colors.Color(0.85, 0.85, 0.85)
+        poly.strokeWidth = 0.4
+        poly.fillColor = None
+        d.add(poly)
+
+    for i in range(n):
+        angle = math.pi / 2 - 2 * math.pi * i / n
+        x = cx + radius * math.cos(angle)
+        y = cy + radius * math.sin(angle)
+        d.add(Line(cx, cy, x, y, strokeColor=colors.Color(0.9, 0.9, 0.9), strokeWidth=0.3))
+        label_r = radius + 22
+        lx = cx + label_r * math.cos(angle)
+        ly = cy + label_r * math.sin(angle)
+        _, key, _ = dims[i]
+        d.add(String(lx, ly - 4, key, fontSize=8, textAnchor="middle", fillColor=BRAND_DARK))
+
+    data_pts = []
+    for _, key, max_val in dims:
+        scores = mc_scores if key in mc_keys_set else oc_scores
+        raw = scores.get(key, 0)
+        try:
+            val = float(raw)
         except (ValueError, TypeError):
-            logger.warning(f"⚠️ overallScore转换失败: {overall_score}，使用默认值0")
-            overall_score = 0
-        pathway = data.get('gtvPathway', {})
-        recommendation = data.get('recommendation', '')
-        
-        logger.debug(f"📈 添加总体评估，分数: {overall_score}, 等级: {self._get_score_level(overall_score)}")
-        summary_text = f"""
-        The applicant has achieved an overall assessment score of <b>{overall_score}/100</b>, 
-        indicating a <b>{self._get_score_level(overall_score)}</b> level of qualification for the UK Global Talent Visa.
-        """
-        story.append(Paragraph(self._safe_text(summary_text), self.styles['BodyText']))
-        story.append(Spacer(1, 12))
-        
-        # 推荐路径分析
-        if pathway:
-            route = pathway.get('recommendedRoute', 'N/A')
-            eligibility = pathway.get('eligibilityLevel', 'N/A')
-            analysis = pathway.get('analysis', '')
-            
-            logger.debug(f"🛤️ 添加推荐路径分析: {route}, 资格等级: {eligibility}")
-            story.append(Paragraph(self._safe_text(f"<b>Recommended Pathway:</b> {route}"), self.styles['Emphasis']))
-            story.append(Paragraph(self._safe_text(f"<b>Eligibility Level:</b> {eligibility}"), self.styles['Emphasis']))
-            story.append(Spacer(1, 8))
-            
-            if analysis:
-                logger.debug(f"📝 添加路径分析: {analysis[:50]}...")
-                story.append(Paragraph(self._safe_text(analysis), self.styles['BodyText']))
-                story.append(Spacer(1, 12))
-        else:
-            logger.debug("⚠️ 未找到推荐路径数据")
-        
-        # 最终建议
-        if recommendation:
-            logger.debug(f"💡 添加最终建议: {recommendation[:50]}...")
-            story.append(Paragraph(self._safe_text("<b>Final Recommendation:</b>"), self.styles['Emphasis']))
-            story.append(Paragraph(self._safe_text(recommendation), self.styles['BodyText']))
-        else:
-            logger.debug("⚠️ 未找到最终建议数据")
-        
-        logger.debug(f"✅ 执行摘要创建完成，元素数量: {len(story)}")
-        return story
-    
-    def _create_applicant_info(self, data: Dict[str, Any]) -> List:
-        """创建申请人信息部分"""
-        logger.debug("👤 开始创建申请人信息...")
-        story = []
-        
-        logger.debug("📝 添加申请人信息标题...")
-        story.append(Paragraph(self._safe_text("Applicant Information"), self.styles['SectionTitle']))
-        story.append(HRFlowable(width="100%", thickness=1, lineCap='round', color=colors.HexColor('#e5e7eb')))
-        story.append(Spacer(1, 12))
-        
-        applicant_info = data.get('applicantInfo', {})
-        logger.debug(f"📋 申请人信息数据: {list(applicant_info.keys())}")
-        
-        # 基本信息表格
-        logger.debug("📊 创建基本信息表格...")
-        info_data = [
-            ['Name', self._safe_text(applicant_info.get('name', 'N/A'))],
-            ['Field', self._safe_text(applicant_info.get('field', 'N/A'))],
-            ['Current Position', self._safe_text(applicant_info.get('currentPosition', 'N/A'))],
-            ['Company', self._safe_text(applicant_info.get('company', 'N/A'))],
-            ['Years of Experience', self._safe_text(str(applicant_info.get('yearsOfExperience', 'N/A')))]
-        ]
-        
-        logger.debug(f"📝 表格数据行数: {len(info_data)}")
-        info_table = Table(info_data, colWidths=[4*cm, 10*cm])
-        info_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f9fafb')),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#374151')),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (0, -1), self.chinese_font_bold),
-            ('FONTNAME', (1, 0), (1, -1), self.chinese_font),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e5e7eb'))
+            val = 0
+        ratio = min(val / max_val, 1.0) if max_val else 0
+        data_pts.append(ratio)
+
+    pts = []
+    for i, ratio in enumerate(data_pts):
+        angle = math.pi / 2 - 2 * math.pi * i / n
+        r = radius * ratio
+        pts.extend([cx + r * math.cos(angle), cy + r * math.sin(angle)])
+
+    poly = Polygon(pts)
+    poly.fillColor = colors.Color(0.12, 0.25, 0.69, 0.15)
+    poly.strokeColor = BRAND_PRIMARY
+    poly.strokeWidth = 2
+    d.add(poly)
+
+    for i, ratio in enumerate(data_pts):
+        angle = math.pi / 2 - 2 * math.pi * i / n
+        r = radius * ratio
+        x = cx + r * math.cos(angle)
+        y = cy + r * math.sin(angle)
+        dot = Circle(x, y, 3.5)
+        dot.fillColor = BRAND_PRIMARY
+        dot.strokeColor = colors.white
+        dot.strokeWidth = 1.5
+        d.add(dot)
+
+    return d
+
+
+class GTVPDFReportGenerator:
+    def __init__(self):
+        self.font_r, self.font_b = _register_fonts()
+        self.styles = getSampleStyleSheet()
+        self._setup_styles()
+
+    def _setup_styles(self):
+        defs = {
+            "CoverTitle": dict(fontSize=26, spaceAfter=6, alignment=TA_CENTER, textColor=BRAND_DARK, fontName=self.font_b, leading=34),
+            "CoverSub": dict(fontSize=12, spaceAfter=16, alignment=TA_CENTER, textColor=BRAND_GRAY, fontName=self.font_r, leading=18),
+            "H1": dict(fontSize=15, spaceBefore=16, spaceAfter=8, textColor=BRAND_PRIMARY, fontName=self.font_b, leading=22),
+            "H2": dict(fontSize=12, spaceBefore=10, spaceAfter=5, textColor=BRAND_DARK, fontName=self.font_b, leading=18),
+            "H3": dict(fontSize=10, spaceBefore=8, spaceAfter=4, textColor=BRAND_DARK, fontName=self.font_b, leading=15),
+            "Body": dict(fontSize=9, spaceAfter=4, leading=15, alignment=TA_JUSTIFY, textColor=BRAND_DARK, fontName=self.font_r),
+            "BodyBold": dict(fontSize=9, spaceAfter=4, leading=15, textColor=BRAND_DARK, fontName=self.font_b),
+            "BodySmall": dict(fontSize=8, spaceAfter=3, leading=12, textColor=BRAND_GRAY, fontName=self.font_r),
+            "Bullet": dict(fontSize=9, spaceAfter=3, leading=14, textColor=BRAND_DARK, fontName=self.font_r, leftIndent=12),
+            "ScoreBig": dict(fontSize=42, alignment=TA_CENTER, textColor=COLOR_GREEN, fontName=self.font_b, leading=50),
+            "Small": dict(fontSize=7, textColor=BRAND_GRAY, fontName=self.font_r),
+            "TH": dict(fontSize=8, textColor=colors.white, fontName=self.font_b, leading=12),
+            "TD": dict(fontSize=8, textColor=BRAND_DARK, fontName=self.font_r, leading=12),
+            "TDB": dict(fontSize=8, textColor=BRAND_DARK, fontName=self.font_b, leading=12),
+        }
+        for name, kw in defs.items():
+            if name not in [s.name for s in self.styles.byName.values()]:
+                self.styles.add(ParagraphStyle(name, parent=self.styles["Normal"], **kw))
+
+    def _hr(self):
+        return HRFlowable(width="100%", thickness=0.6, color=BRAND_BORDER, spaceAfter=8, spaceBefore=4)
+
+    def _section(self, title, num=""):
+        prefix = f"{num}. " if num else ""
+        return [Paragraph(_safe(f"{prefix}{title}"), self.styles["H1"]), self._hr()]
+
+    def _info_table(self, rows, cw=None):
+        cw = cw or [4 * cm, 12.5 * cm]
+        data = [[Paragraph(_safe(k), self.styles["TDB"]),
+                  Paragraph(_safe(str(v)), self.styles["TD"])] for k, v in rows]
+        t = Table(data, colWidths=cw)
+        t.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (0, -1), COLOR_BLUE_LIGHT),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("GRID", (0, 0), (-1, -1), 0.4, BRAND_BORDER),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ]))
-        
-        story.append(info_table)
-        story.append(Spacer(1, 20))
-        
-        # 教育背景
-        education = data.get('educationBackground', {})
-        if education:
-            logger.debug("🎓 添加教育背景...")
-            story.append(Paragraph(self._safe_text("Education Background"), self.styles['SubSectionTitle']))
-            education_analysis = education.get('analysis', '')
-            logger.debug(f"📝 教育背景分析: {education_analysis[:50] if education_analysis else 'N/A'}...")
-            story.append(Paragraph(self._safe_text(education_analysis), self.styles['BodyText']))
-            story.append(Spacer(1, 12))
-        else:
-            logger.debug("⚠️ 未找到教育背景数据")
-        
-        # 行业背景
-        industry = data.get('industryBackground', {})
-        if industry:
-            logger.debug("🏭 添加行业背景...")
-            story.append(Paragraph(self._safe_text("Industry Background"), self.styles['SubSectionTitle']))
-            industry_analysis = industry.get('analysis', '')
-            logger.debug(f"📝 行业背景分析: {industry_analysis[:50] if industry_analysis else 'N/A'}...")
-            story.append(Paragraph(self._safe_text(industry_analysis), self.styles['BodyText']))
-            story.append(Spacer(1, 12))
-        else:
-            logger.debug("⚠️ 未找到行业背景数据")
-        
-        logger.debug(f"✅ 申请人信息创建完成，元素数量: {len(story)}")
-        return story
-    
-    def _create_assessment_results(self, data: Dict[str, Any]) -> List:
-        """创建评估结果部分"""
-        logger.debug("📈 开始创建评估结果...")
+        return t
+
+    def _dim_table(self, dims, scores_dict):
+        header = [Paragraph(_safe(h), self.styles["TH"])
+                   for h in ["维度", "得分", "满分", "%", "评分依据与理由"]]
+        rows = [header]
+        for label, key, max_val in dims:
+            entry = scores_dict.get(key, {})
+            score = entry.get("score", entry) if isinstance(entry, dict) else entry
+            evidence = entry.get("evidence", "") if isinstance(entry, dict) else ""
+            justification = entry.get("scoring_justification", "") if isinstance(entry, dict) else ""
+            official_std = entry.get("official_standard", "") if isinstance(entry, dict) else ""
+            verified = entry.get("web_verified", None) if isinstance(entry, dict) else None
+            try:
+                score = round(float(score), 1)
+            except (ValueError, TypeError):
+                score = 0
+            pct = int(score / max_val * 100) if max_val else 0
+            parts = [str(evidence)] if evidence else []
+            if justification:
+                parts.append(f"评分理由: {justification}")
+            if official_std:
+                parts.append(f"官方标准: {official_std}")
+            ev_text = "\n".join(parts)
+            if verified:
+                ev_text += "\n[已验证]"
+            rows.append([
+                Paragraph(_safe(label), self.styles["TD"]),
+                Paragraph(_safe(str(score)), self.styles["TDB"]),
+                Paragraph(_safe(str(max_val)), self.styles["TD"]),
+                Paragraph(_safe(f"{pct}%"), self.styles["TD"]),
+                Paragraph(_safe(ev_text), self.styles["TD"]),
+            ])
+        t = Table(rows, colWidths=[3*cm, 1.2*cm, 1.2*cm, 1*cm, 10.1*cm])
+        t.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), BRAND_PRIMARY),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("ALIGN", (1, 0), (3, -1), "CENTER"),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("GRID", (0, 0), (-1, -1), 0.3, BRAND_BORDER),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, BRAND_LIGHT_GRAY]),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ]))
+        return t
+
+    def _extract_mc_oc(self, data):
+        raw_mc = data.get("mc_scores", data.get("mcScores", {}))
+        raw_oc = data.get("oc_scores", data.get("ocScores", {}))
+
+        def _make_entry(v):
+            if isinstance(v, dict):
+                return {
+                    "score": v.get("score", v.get("level", 0)),
+                    "evidence": v.get("evidence", ""),
+                    "scoring_justification": v.get("scoring_justification", ""),
+                    "official_standard": v.get("official_standard", ""),
+                    "level": v.get("level", ""),
+                    "web_verified": v.get("web_verified", None),
+                }
+            return {"score": v, "evidence": "", "scoring_justification": "", "official_standard": "", "level": "", "web_verified": None}
+
+        mc, oc = {}, {}
+        for _, key, _ in MC_DIMS:
+            v = raw_mc.get(key, 0)
+            mc[key] = _make_entry(v)
+        for _, key, _ in OC_DIMS:
+            v = raw_oc.get(key, 0)
+            oc[key] = _make_entry(v)
+
+        criteria = data.get("criteriaAssessment", [])
+        mc_keys = {k for _, k, _ in MC_DIMS}
+        for item in criteria:
+            name = item.get("name", "")
+            for _, key, _ in MC_DIMS + OC_DIMS:
+                if key in name:
+                    target = mc if key in mc_keys else oc
+                    target[key] = {
+                        "score": item.get("score", 0),
+                        "evidence": item.get("evidence", ""),
+                        "scoring_justification": item.get("scoring_justification", ""),
+                        "official_standard": item.get("official_standard", item.get("officialRequirement", "")),
+                        "level": item.get("level", ""),
+                        "web_verified": item.get("web_verified", None),
+                    }
+                    break
+        return mc, oc
+
+    def _flat_scores(self, scores):
+        return {k: (v.get("score", v) if isinstance(v, dict) else v) for k, v in scores.items()}
+
+    def generate_report(self, data: Dict[str, Any], output_path: str = None) -> str:
+        logger.info("开始生成PDF报告...")
+
+        if not output_path:
+            name = data.get("applicantInfo", {}).get("name", "Applicant")
+            safe_name = "".join(c for c in name if c.isalnum() or c in (" ", "-", "_")).rstrip().replace(" ", "-")
+            if not safe_name or any("\u4e00" <= c <= "\u9fff" for c in safe_name):
+                safe_name = "Applicant"
+            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_path = f"reports/GTV-Assessment-{safe_name}-{ts}.pdf"
+
+        out_dir = os.path.dirname(output_path)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
+
+        doc = SimpleDocTemplate(output_path, pagesize=A4,
+                                leftMargin=MARGIN, rightMargin=MARGIN,
+                                topMargin=MARGIN, bottomMargin=1.5*cm)
+
+        mc, oc = self._extract_mc_oc(data)
         story = []
-        
-        logger.debug("📝 添加评估结果标题...")
-        story.append(Paragraph(self._safe_text("Assessment Results"), self.styles['SectionTitle']))
-        story.append(HRFlowable(width="100%", thickness=1, lineCap='round', color=colors.HexColor('#e5e7eb')))
-        story.append(Spacer(1, 12))
-        
-        # 总体评分
-        overall_score = data.get('overallScore', 0)
-        try:
-            overall_score = int(float(overall_score)) if overall_score else 0
-        except (ValueError, TypeError):
-            logger.warning(f"⚠️ overallScore转换失败: {overall_score}，使用默认值0")
-            overall_score = 0
-        score_color = self._get_score_color(overall_score)
-        logger.debug(f"📊 添加总体评分: {overall_score}/100, 颜色: {score_color}")
-        story.append(Paragraph(self._safe_text(f"Overall Assessment Score: {overall_score}/100"), 
-                              ParagraphStyle('Score', parent=self.styles['Score'], textColor=score_color)))
-        story.append(Spacer(1, 20))
-        
-        # 评估标准
-        criteria = data.get('criteriaAssessment', [])
+        story += self._cover(data, mc, oc)
+        story.append(PageBreak())
+        story += self._summary(data, mc, oc)
+        story.append(PageBreak())
+        story += self._score_details(data, mc, oc)
+        story.append(PageBreak())
+        story += self._background(data)
+        story.append(PageBreak())
+        story += self._strengths_weaknesses(data)
+        story += self._pathway(data)
+        story += self._recommendations(data)
+        story += self._appendix(data)
+        story += self._disclaimer()
+
+        doc.build(story, onFirstPage=self._header_footer, onLaterPages=self._header_footer)
+
+        if os.path.exists(output_path):
+            size = os.path.getsize(output_path)
+            logger.info(f"PDF已生成: {output_path} ({size/1024:.1f} KB)")
+        return output_path
+
+    # ======================== 封面 ========================
+    def _cover(self, data, mc, oc):
+        s = self.styles
+        score = int(float(data.get("overallScore", 0) or 0))
+        app = data.get("applicantInfo", {})
+        pw = data.get("gtvPathway", {})
+
+        story = [
+            Spacer(1, 80),
+            Paragraph(_safe("UK Global Talent Visa"), s["CoverTitle"]),
+            Paragraph(_safe("资格评估报告"), s["CoverTitle"]),
+            Spacer(1, 12),
+            Paragraph(_safe("Assessment Report"), s["CoverSub"]),
+            Spacer(1, 30),
+        ]
+        sc_style = ParagraphStyle("ScD", parent=s["ScoreBig"], textColor=_score_color(score))
+        story.append(Paragraph(_safe(f"{score}/100"), sc_style))
+        story.append(Spacer(1, 6))
+        story.append(Paragraph(_safe(_score_level(score)),
+                     ParagraphStyle("Lvl", parent=s["CoverSub"], fontSize=11, textColor=_score_color(score))))
+        route = pw.get("recommendedRoute", "N/A")
+        eligibility = pw.get("eligibilityLevel", "")
+        story.append(Spacer(1, 6))
+        story.append(Paragraph(_safe(f"推荐路径: {route}"),
+                     ParagraphStyle("Pw", parent=s["CoverSub"], fontSize=11, textColor=BRAND_PRIMARY)))
+        if eligibility:
+            story.append(Paragraph(_safe(f"竞争力评级: {eligibility}"),
+                         ParagraphStyle("El", parent=s["CoverSub"], fontSize=10)))
+        story.append(Spacer(1, 30))
+
+        info_rows = [
+            ["申请人", app.get("name", "N/A")],
+            ["申请领域", app.get("field", "N/A")],
+            ["当前职位", app.get("currentPosition", "N/A")],
+            ["所在公司", app.get("company", "N/A")],
+            ["工作年限", f"{app.get('yearsOfExperience', 'N/A')} 年"],
+            ["评估日期", datetime.now().strftime("%Y-%m-%d")],
+        ]
+        story.append(self._info_table(info_rows, cw=[4*cm, 9*cm]))
+        story.append(Spacer(1, 30))
+        story.append(Paragraph(
+            _safe("本报告由惜池集团 AI 评估系统生成，基于申请人提供的材料综合分析。最终申请决定请咨询专业移民顾问。"),
+            ParagraphStyle("Disc", parent=s["Small"], alignment=TA_CENTER)))
+        return story
+
+    # ======================== 总体评估 ========================
+    def _summary(self, data, mc, oc):
+        s = self.styles
+        score = int(float(data.get("overallScore", 0) or 0))
+        mc_flat = self._flat_scores(mc)
+        oc_flat = self._flat_scores(oc)
+        mc_total = sum(float(v) for v in mc_flat.values())
+        oc_total = sum(float(v) for v in oc_flat.values())
+        mc_max = sum(m for _, _, m in MC_DIMS)
+        oc_max = sum(m for _, _, m in OC_DIMS)
+        pw = data.get("gtvPathway", {})
+
+        story = self._section("总体评估摘要", "一")
+
+        summary_rows = [
+            [Paragraph(_safe("指标"), s["TH"]), Paragraph(_safe("得分"), s["TH"]), Paragraph(_safe("评估等级"), s["TH"])],
+            [Paragraph(_safe("总分"), s["TDB"]), Paragraph(_safe(f"{score}/100"), s["TDB"]),
+             Paragraph(_safe(_score_level(score)), s["TD"])],
+            [Paragraph(_safe("MC 强制标准"), s["TDB"]), Paragraph(_safe(f"{mc_total:.1f}/{mc_max}"), s["TD"]),
+             Paragraph(_safe(f"达成率 {int(mc_total/mc_max*100)}%"), s["TD"])],
+            [Paragraph(_safe("OC 可选标准"), s["TDB"]), Paragraph(_safe(f"{oc_total:.1f}/{oc_max}"), s["TD"]),
+             Paragraph(_safe(f"达成率 {int(oc_total/oc_max*100)}%"), s["TD"])],
+            [Paragraph(_safe("推荐路径"), s["TDB"]), Paragraph(_safe(pw.get("recommendedRoute", "N/A")), s["TD"]),
+             Paragraph(_safe(pw.get("eligibilityLevel", "")), s["TD"])],
+        ]
+        t = Table(summary_rows, colWidths=[4*cm, 5*cm, 7.5*cm])
+        t.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), BRAND_PRIMARY),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("BACKGROUND", (0, 1), (0, -1), BRAND_LIGHT_GRAY),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("GRID", (0, 0), (-1, -1), 0.4, BRAND_BORDER),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 14))
+
+        raw = data.get("gtvAnalysis", data)
+        eb_rec = raw.get("endorsing_body_recommendation", raw.get("endorsing_body", ""))
+        if isinstance(eb_rec, dict):
+            endorsing_body = eb_rec.get("body", eb_rec.get("name", eb_rec.get("endorsing_body", "")))
+        else:
+            endorsing_body = eb_rec or raw.get("endorsing_body", "")
+        if endorsing_body:
+            story.append(Paragraph(_safe(f"推荐背书机构: {endorsing_body}"), s["Body"]))
+            story.append(Spacer(1, 6))
+
+        chart = _build_radar_chart(mc_flat, oc_flat)
+        story.append(Paragraph(_safe("八维能力雷达图"), s["H2"]))
+        story.append(chart)
+        story.append(Spacer(1, 10))
+
+        rec = data.get("recommendation", "")
+        if rec:
+            story.append(Paragraph(_safe("综合评估意见"), s["H2"]))
+            story.append(Paragraph(_safe(rec), s["Body"]))
+        return story
+
+    # ======================== 评分明细 ========================
+    def _score_details(self, data, mc, oc):
+        s = self.styles
+        story = self._section("评分明细", "二")
+
+        story.append(Paragraph(_safe("2.1 Mandatory Criteria (MC) — 强制标准"), s["H2"]))
+        story.append(Paragraph(
+            _safe("MC 标准是 GTV 申请的核心评审维度。根据 GOV.UK 官方标准（Appendix Global Talent, GTE 8.1-8.10），申请人须展示在数字技术领域被认可为杰出人才（Exceptional Talent）或潜在领导者（Exceptional Promise）的证据，并满足至少 2 项'其他必要技能'。"),
+            s["BodySmall"]))
+        story.append(Spacer(1, 4))
+        story.append(self._dim_table(MC_DIMS, mc))
+        story.append(Spacer(1, 14))
+
+        story.append(Paragraph(_safe("2.2 Optional Criteria (OC) — 可选标准"), s["H2"]))
+        story.append(Paragraph(
+            _safe("OC 标准评估申请人的创新、学术、技术领导和社会贡献。根据官方标准，申请人须在以下技能中展示至少 2 项：研究发表、产品主导贡献、工作外贡献、创新记录。"),
+            s["BodySmall"]))
+        story.append(Spacer(1, 4))
+        story.append(self._dim_table(OC_DIMS, oc))
+        story.append(Spacer(1, 14))
+
+        criteria = data.get("criteriaAssessment", [])
         if criteria:
-            logger.debug(f"📋 添加评估标准，数量: {len(criteria)}")
-            story.append(Paragraph(self._safe_text("Assessment Criteria"), self.styles['SubSectionTitle']))
-            
-            criteria_data = [[self._safe_text('Criteria'), self._safe_text('Score'), self._safe_text('Comments')]]
-            for i, criterion in enumerate(criteria):
-                name = criterion.get('name', 'N/A')
-                score = criterion.get('score', 0)
-                comments = criterion.get('comments', 'N/A')
-                logger.debug(f"📝 标准 {i+1}: {name}, 分数: {score}/10")
-                criteria_data.append([
-                    self._safe_text(name),
-                    self._safe_text(f"{score}/10"),
-                    self._safe_text(comments)
-                ])
-            
-            logger.debug(f"📊 创建评估标准表格，行数: {len(criteria_data)}")
-            criteria_table = Table(criteria_data, colWidths=[5*cm, 2*cm, 7*cm])
-            criteria_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#374151')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (-1, 0), self.chinese_font_bold),
-                ('FONTNAME', (0, 1), (-1, -1), self.chinese_font),
-                ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e5e7eb'))
-            ]))
-            
-            story.append(criteria_table)
-            story.append(Spacer(1, 20))
-        else:
-            logger.debug("⚠️ 未找到评估标准数据")
-        
-        logger.debug(f"✅ 评估结果创建完成，元素数量: {len(story)}")
+            story.append(Paragraph(_safe("2.3 各标准评审详情"), s["H2"]))
+            for i, item in enumerate(criteria, 1):
+                name = item.get("name", f"标准 {i}")
+                status = item.get("status", "")
+                sc = item.get("score", 0)
+                evidence = item.get("evidence", "")
+                recs = item.get("recommendations", "")
+                official = item.get("officialRequirement", "")
+
+                story.append(Paragraph(_safe(f"{i}. {name}"), s["H3"]))
+                rows = []
+                if status:
+                    rows.append(["状态", status])
+                try:
+                    rows.append(["评分", f"{int(float(sc))}/100"])
+                except (ValueError, TypeError):
+                    rows.append(["评分", str(sc)])
+                if official:
+                    rows.append(["官方要求", str(official)[:200]])
+                if evidence:
+                    rows.append(["评估证据", str(evidence)[:200]])
+                if recs:
+                    rows.append(["补强建议", str(recs)[:200]])
+                if rows:
+                    story.append(self._info_table(rows, cw=[3*cm, 13.5*cm]))
+                    story.append(Spacer(1, 6))
         return story
-    
-    def _create_detailed_analysis(self, data: Dict[str, Any]) -> List:
-        """创建详细分析部分"""
-        logger.debug("🔍 开始创建详细分析...")
-        story = []
-        
-        logger.debug("📝 添加详细分析标题...")
-        story.append(Paragraph(self._safe_text("Detailed Analysis"), self.styles['SectionTitle']))
-        story.append(HRFlowable(width="100%", thickness=1, lineCap='round', color=colors.HexColor('#e5e7eb')))
-        story.append(Spacer(1, 12))
-        
-        # 技术专长
-        technical = data.get('technicalExpertise', {})
-        if technical:
-            logger.debug("💻 添加技术专长...")
-            story.append(Paragraph(self._safe_text("Technical Expertise"), self.styles['SubSectionTitle']))
-            technical_analysis = technical.get('analysis', '')
-            logger.debug(f"📝 技术专长分析: {technical_analysis[:50] if technical_analysis else 'N/A'}...")
-            story.append(Paragraph(self._safe_text(technical_analysis), self.styles['BodyText']))
-            story.append(Spacer(1, 8))
-            
-            # 核心技术技能
-            core_skills = technical.get('coreSkills', [])
-            if core_skills:
-                logger.debug(f"🔧 添加核心技能，数量: {len(core_skills)}")
-                story.append(Paragraph(self._safe_text("<b>Core Skills:</b>"), self.styles['Emphasis']))
-                for skill in core_skills:
-                    logger.debug(f"📝 技能: {skill[:30] if skill else 'N/A'}...")
-                    story.append(Paragraph(self._safe_text(f"• {skill}"), self.styles['BodyText']))
-                story.append(Spacer(1, 8))
-            
-            # 专业领域
-            specializations = technical.get('specializations', [])
-            if specializations:
-                logger.debug(f"🎯 添加专业领域，数量: {len(specializations)}")
-                story.append(Paragraph(self._safe_text("<b>Specializations:</b>"), self.styles['Emphasis']))
-                for spec in specializations:
-                    logger.debug(f"📝 专业领域: {spec[:30] if spec else 'N/A'}...")
-                    story.append(Paragraph(self._safe_text(f"• {spec}"), self.styles['BodyText']))
-                story.append(Spacer(1, 8))
-            
-            # 创新成果
-            innovations = technical.get('innovations', [])
-            if innovations:
-                logger.debug(f"💡 添加创新成果，数量: {len(innovations)}")
-                story.append(Paragraph(self._safe_text("<b>Innovations:</b>"), self.styles['Emphasis']))
-                for innovation in innovations:
-                    logger.debug(f"📝 创新成果: {innovation[:30] if innovation else 'N/A'}...")
-                    story.append(Paragraph(self._safe_text(f"• {innovation}"), self.styles['BodyText']))
-                story.append(Spacer(1, 8))
-            
-            # 行业认可
-            industry_recognition = technical.get('industryRecognition', [])
-            if industry_recognition:
-                logger.debug(f"🏆 添加行业认可，数量: {len(industry_recognition)}")
-                story.append(Paragraph(self._safe_text("<b>Industry Recognition:</b>"), self.styles['Emphasis']))
-                for recognition in industry_recognition:
-                    logger.debug(f"📝 行业认可: {recognition[:30] if recognition else 'N/A'}...")
-                    story.append(Paragraph(self._safe_text(f"• {recognition}"), self.styles['BodyText']))
-                story.append(Spacer(1, 8))
-            
-            story.append(Spacer(1, 12))
-        else:
-            logger.debug("⚠️ 未找到技术专长数据")
-        
-        # 工作经验
-        work_exp = data.get('workExperience', {})
-        if work_exp:
-            logger.debug("💼 添加工作经验...")
-            story.append(Paragraph(self._safe_text("Work Experience"), self.styles['SubSectionTitle']))
-            work_analysis = work_exp.get('analysis', '')
-            logger.debug(f"📝 工作经验分析: {work_analysis[:50] if work_analysis else 'N/A'}...")
-            story.append(Paragraph(self._safe_text(work_analysis), self.styles['BodyText']))
-            story.append(Spacer(1, 12))
-        else:
-            logger.debug("⚠️ 未找到工作经验数据")
-        
-        # 优势
-        strengths = data.get('strengths', [])
+
+    # ======================== 背景分析 ========================
+    def _background(self, data):
+        s = self.styles
+        story = self._section("背景深度分析", "三")
+
+        # 教育
+        edu = data.get("educationBackground", {})
+        if edu and (edu.get("analysis") or edu.get("degrees")):
+            story.append(Paragraph(_safe("3.1 教育背景"), s["H2"]))
+            if edu.get("degrees"):
+                story.append(Paragraph(_safe(f"学位: {', '.join(edu['degrees'])}"), s["Body"]))
+            if edu.get("institutions"):
+                story.append(Paragraph(_safe(f"院校: {', '.join(edu['institutions'])}"), s["Body"]))
+            if edu.get("analysis"):
+                story.append(Paragraph(_safe(edu["analysis"]), s["Body"]))
+            story.append(Spacer(1, 6))
+
+        # 行业
+        ind = data.get("industryBackground", {})
+        if ind and (ind.get("analysis") or ind.get("sector")):
+            story.append(Paragraph(_safe("3.2 行业背景"), s["H2"]))
+            rows = []
+            if ind.get("sector"): rows.append(["行业领域", ind["sector"]])
+            if ind.get("yearsInIndustry"): rows.append(["行业经验", f"{ind['yearsInIndustry']} 年"])
+            if ind.get("keyCompanies"): rows.append(["关键公司", ", ".join(ind["keyCompanies"])])
+            if ind.get("industryImpact"): rows.append(["影响力评分", f"{ind['industryImpact']}/10"])
+            if rows:
+                story.append(self._info_table(rows, cw=[3*cm, 13.5*cm]))
+            if ind.get("analysis"):
+                story.append(Spacer(1, 4))
+                story.append(Paragraph(_safe(ind["analysis"]), s["Body"]))
+            story.append(Spacer(1, 6))
+
+        # 工作
+        work = data.get("workExperience", {})
+        if work and (work.get("analysis") or work.get("positions")):
+            story.append(Paragraph(_safe("3.3 工作经验"), s["H2"]))
+            if work.get("positions"):
+                story.append(Paragraph(_safe(f"职位: {', '.join(work['positions'][:5])}"), s["Body"]))
+            if work.get("leadershipRoles"):
+                story.append(Paragraph(_safe(f"领导角色: {', '.join(work['leadershipRoles'][:5])}"), s["Body"]))
+            if work.get("keyAchievements"):
+                story.append(Paragraph(_safe("关键成就:"), s["BodyBold"]))
+                for a in work["keyAchievements"][:6]:
+                    story.append(Paragraph(_safe(f"\u2022 {a}"), s["Bullet"]))
+            if work.get("projectImpact"):
+                story.append(Paragraph(_safe("项目影响:"), s["BodyBold"]))
+                for p in work["projectImpact"][:5]:
+                    story.append(Paragraph(_safe(f"\u2022 {p}"), s["Bullet"]))
+            if work.get("analysis"):
+                story.append(Spacer(1, 4))
+                story.append(Paragraph(_safe(work["analysis"]), s["Body"]))
+            story.append(Spacer(1, 6))
+
+        # 技术
+        tech = data.get("technicalExpertise", {})
+        if tech and (tech.get("analysis") or tech.get("coreSkills")):
+            story.append(Paragraph(_safe("3.4 技术专长"), s["H2"]))
+            if tech.get("coreSkills"):
+                story.append(Paragraph(_safe(f"核心技能: {', '.join(tech['coreSkills'][:8])}"), s["Body"]))
+            if tech.get("specializations"):
+                story.append(Paragraph(_safe(f"专业领域: {', '.join(tech['specializations'][:5])}"), s["Body"]))
+            if tech.get("innovations"):
+                story.append(Paragraph(_safe("创新成果:"), s["BodyBold"]))
+                for inv in tech["innovations"][:5]:
+                    story.append(Paragraph(_safe(f"\u2022 {inv}"), s["Bullet"]))
+            if tech.get("industryRecognition"):
+                story.append(Paragraph(_safe("行业认可:"), s["BodyBold"]))
+                for r in tech["industryRecognition"][:5]:
+                    story.append(Paragraph(_safe(f"\u2022 {r}"), s["Bullet"]))
+            if tech.get("analysis"):
+                story.append(Spacer(1, 4))
+                story.append(Paragraph(_safe(tech["analysis"]), s["Body"]))
+            story.append(Spacer(1, 6))
+
+        # 行业影响力
+        ia = data.get("industryAnalysis", {})
+        if ia and ia.get("analysis"):
+            story.append(Paragraph(_safe("3.5 行业影响力"), s["H2"]))
+            if ia.get("industryImpact"):
+                story.append(Paragraph(_safe(f"影响力评分: {ia['industryImpact']}/10"), s["Body"]))
+            story.append(Paragraph(_safe(ia["analysis"]), s["Body"]))
+            story.append(Spacer(1, 6))
+
+        # 公司贡献
+        cc = data.get("companyContribution", {})
+        if cc and cc.get("analysis"):
+            story.append(Paragraph(_safe("3.6 公司贡献"), s["H2"]))
+            if cc.get("impact"):
+                story.append(Paragraph(_safe(f"贡献评分: {cc['impact']}/10"), s["Body"]))
+            if cc.get("achievements"):
+                for a in cc["achievements"][:5]:
+                    story.append(Paragraph(_safe(f"\u2022 {a}"), s["Bullet"]))
+            story.append(Paragraph(_safe(cc["analysis"]), s["Body"]))
+            story.append(Spacer(1, 6))
+
+        # 行业地位
+        ist = data.get("industryStatus", {})
+        if ist and ist.get("analysis"):
+            story.append(Paragraph(_safe("3.7 行业地位"), s["H2"]))
+            if ist.get("status"):
+                story.append(Paragraph(_safe(f"地位评分: {ist['status']}/10"), s["Body"]))
+            if ist.get("awards"):
+                for aw in ist["awards"][:5]:
+                    story.append(Paragraph(_safe(f"\u2022 {aw}"), s["Bullet"]))
+            story.append(Paragraph(_safe(ist["analysis"]), s["Body"]))
+            story.append(Spacer(1, 6))
+
+        return story
+
+    # ======================== 优劣势 ========================
+    def _strengths_weaknesses(self, data):
+        s = self.styles
+        story = self._section("优劣势分析", "四")
+
+        strengths = data.get("strengths", [])
         if strengths:
-            logger.debug(f"💪 添加优势，数量: {len(strengths)}")
-            story.append(Paragraph(self._safe_text("Key Strengths"), self.styles['SubSectionTitle']))
-            for i, strength in enumerate(strengths):
-                description = strength.get('description', '')
-                logger.debug(f"📝 优势 {i+1}: {description[:30] if description else 'N/A'}...")
-                story.append(Paragraph(self._safe_text(f"• {description}"), self.styles['BodyText']))
-            story.append(Spacer(1, 12))
-        else:
-            logger.debug("⚠️ 未找到优势数据")
-        
-        # 需要改进的地方
-        weaknesses = data.get('weaknesses', [])
+            story.append(Paragraph(_safe("4.1 核心优势"), s["H2"]))
+            for i, item in enumerate(strengths, 1):
+                if isinstance(item, str):
+                    story.append(Paragraph(_safe(f"{i}. {item}"), s["Body"]))
+                elif isinstance(item, dict):
+                    area = item.get("area", "")
+                    desc = item.get("description", "")
+                    evidence = item.get("evidence", "")
+                    gtv_rel = item.get("gtvRelevance", "")
+                    title = f"{i}. {area}" if area else f"{i}."
+                    story.append(Paragraph(_safe(title), s["H3"]))
+                    story.append(Paragraph(_safe(desc), s["Body"]))
+                    if evidence:
+                        story.append(Paragraph(_safe(f"证据: {evidence}"), s["BodySmall"]))
+                    if gtv_rel:
+                        story.append(Paragraph(_safe(f"GTV 关联: {gtv_rel}"), s["BodySmall"]))
+                    story.append(Spacer(1, 3))
+
+        weaknesses = data.get("weaknesses", [])
         if weaknesses:
-            logger.debug(f"🔧 添加需要改进的地方，数量: {len(weaknesses)}")
-            story.append(Paragraph(self._safe_text("Areas for Improvement"), self.styles['SubSectionTitle']))
-            for i, weakness in enumerate(weaknesses):
-                description = weakness.get('description', '')
-                logger.debug(f"📝 改进点 {i+1}: {description[:30] if description else 'N/A'}...")
-                story.append(Paragraph(self._safe_text(f"• {description}"), self.styles['BodyText']))
-            story.append(Spacer(1, 12))
-        else:
-            logger.debug("⚠️ 未找到需要改进的地方数据")
-        
-        logger.debug(f"✅ 详细分析创建完成，元素数量: {len(story)}")
+            story.append(Paragraph(_safe("4.2 待提升领域"), s["H2"]))
+            for i, item in enumerate(weaknesses, 1):
+                if isinstance(item, str):
+                    story.append(Paragraph(_safe(f"{i}. {item}"), s["Body"]))
+                elif isinstance(item, dict):
+                    area = item.get("area", "")
+                    desc = item.get("description", "")
+                    improvement = item.get("improvement", "")
+                    priority = item.get("priority", "")
+                    timeframe = item.get("timeframe", "")
+                    title = f"{i}. {area}" if area else f"{i}."
+                    story.append(Paragraph(_safe(title), s["H3"]))
+                    story.append(Paragraph(_safe(desc), s["Body"]))
+                    if improvement:
+                        story.append(Paragraph(_safe(f"改进方案: {improvement}"), s["BodySmall"]))
+                    if priority:
+                        story.append(Paragraph(_safe(f"优先级: {priority}"), s["BodySmall"]))
+                    if timeframe:
+                        story.append(Paragraph(_safe(f"时间框架: {timeframe}"), s["BodySmall"]))
+                    story.append(Spacer(1, 3))
+
         return story
-    
-    def _create_recommendations(self, data: Dict[str, Any]) -> List:
-        """创建建议和行动计划部分"""
-        logger.debug("💡 开始创建建议和行动计划...")
-        story = []
-        
-        logger.debug("📝 添加建议和行动计划标题...")
-        story.append(Paragraph(self._safe_text("Recommendations & Action Plan"), self.styles['SectionTitle']))
-        story.append(HRFlowable(width="100%", thickness=1, lineCap='round', color=colors.HexColor('#e5e7eb')))
-        story.append(Spacer(1, 12))
-        
-        # 专业建议
-        advice = data.get('professionalAdvice', [])
+
+    # ======================== 路径分析 ========================
+    def _pathway(self, data):
+        s = self.styles
+        story = self._section("GTV 路径分析", "五")
+
+        pw = data.get("gtvPathway", {})
+        if pw.get("analysis"):
+            story.append(Paragraph(_safe(pw["analysis"]), s["Body"]))
+            story.append(Spacer(1, 8))
+
+        pa = data.get("path_analysis", {})
+        if pa:
+            header = [Paragraph(_safe(h), s["TH"]) for h in ["路径", "评分", "达标", "主要差距"]]
+            rows = [header]
+            path_names = {
+                "exceptional_talent": "Exceptional Talent",
+                "exceptional_promise": "Exceptional Promise",
+                "startup_visa": "Startup Visa",
+            }
+            for pkey, plabel in path_names.items():
+                info = pa.get(pkey, {})
+                if not info:
+                    continue
+                pscore = info.get("score", "N/A")
+                meets = "是" if info.get("meets_threshold") else "否"
+                gaps = info.get("gaps", [])
+                gaps_text = "; ".join(gaps[:3]) if gaps else "无"
+                rows.append([
+                    Paragraph(_safe(plabel), s["TD"]),
+                    Paragraph(_safe(str(pscore)), s["TDB"]),
+                    Paragraph(_safe(meets), s["TD"]),
+                    Paragraph(_safe(gaps_text[:150]), s["TD"]),
+                ])
+            if len(rows) > 1:
+                t = Table(rows, colWidths=[4.5*cm, 1.5*cm, 1.5*cm, 9*cm])
+                t.setStyle(TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, 0), BRAND_PRIMARY),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                    ("ALIGN", (1, 0), (2, -1), "CENTER"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                    ("GRID", (0, 0), (-1, -1), 0.3, BRAND_BORDER),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, BRAND_LIGHT_GRAY]),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]))
+                story.append(t)
+        return story
+
+    # ======================== 建议 ========================
+    def _recommendations(self, data):
+        s = self.styles
+        story = self._section("建议与行动计划", "六")
+
+        advice = data.get("professionalAdvice", [])
         if advice:
-            logger.debug(f"💼 添加专业建议，数量: {len(advice)}")
-            story.append(Paragraph(self._safe_text("Professional Advice"), self.styles['SubSectionTitle']))
+            story.append(Paragraph(_safe("6.1 专业行动建议"), s["H2"]))
             for i, item in enumerate(advice, 1):
-                logger.debug(f"📝 建议 {i}: {item[:50] if item else 'N/A'}...")
-                story.append(Paragraph(self._safe_text(f"{i}. {item}"), self.styles['BodyText']))
-            story.append(Spacer(1, 12))
-        else:
-            logger.debug("⚠️ 未找到专业建议数据")
-        
-        # 所需文件
-        documents = data.get('requiredDocuments', [])
+                story.append(Paragraph(_safe(f"{i}. {item}"), s["Body"]))
+            story.append(Spacer(1, 8))
+
+        timeline = data.get("timeline", "")
+        if timeline:
+            story.append(Paragraph(_safe("6.2 时间规划"), s["H2"]))
+            story.append(Paragraph(_safe(timeline), s["Body"]))
+            story.append(Spacer(1, 8))
+
+        documents = data.get("requiredDocuments", [])
         if documents:
-            logger.debug(f"📄 添加所需文件，数量: {len(documents)}")
-            story.append(Paragraph(self._safe_text("Required Documents"), self.styles['SubSectionTitle']))
-            for i, doc in enumerate(documents, 1):
-                logger.debug(f"📝 文件 {i}: {doc[:50] if doc else 'N/A'}...")
-                story.append(Paragraph(self._safe_text(f"{i}. {doc}"), self.styles['BodyText']))
-            story.append(Spacer(1, 12))
-        else:
-            logger.debug("⚠️ 未找到所需文件数据")
-        
-        # 时间线和预算
-        timeline = data.get('timeline', '')
-        budget = data.get('estimatedBudget', {})
-        
-        if timeline or budget:
-            logger.debug("⏰ 添加时间线和预算...")
-            story.append(Paragraph(self._safe_text("Timeline & Budget"), self.styles['SubSectionTitle']))
-            
-            if timeline:
-                logger.debug(f"📅 时间线: {timeline}")
-                story.append(Paragraph(self._safe_text(f"<b>Estimated Timeline:</b> {timeline}"), self.styles['BodyText']))
-            else:
-                logger.debug("⚠️ 未找到时间线数据")
-            
-            if budget:
-                min_budget = budget.get('min', 0)
-                max_budget = budget.get('max', 0)
-                currency = budget.get('currency', 'GBP')
-                logger.debug(f"💰 预算: {min_budget} - {max_budget} {currency}")
-                story.append(Paragraph(self._safe_text(f"<b>Estimated Budget:</b> {min_budget} - {max_budget} {currency}"), 
-                                      self.styles['BodyText']))
-            else:
-                logger.debug("⚠️ 未找到预算数据")
-            story.append(Spacer(1, 12))
-        else:
-            logger.debug("⚠️ 未找到时间线和预算数据")
-        
-        logger.debug(f"✅ 建议和行动计划创建完成，元素数量: {len(story)}")
+            story.append(Paragraph(_safe("6.3 所需文档"), s["H2"]))
+            for doc in documents:
+                story.append(Paragraph(_safe(f"\u2022 {doc}"), s["Bullet"]))
+            story.append(Spacer(1, 8))
+
+        budget = data.get("estimatedBudget", {})
+        if budget and (budget.get("min") or budget.get("max")):
+            story.append(Paragraph(_safe("6.4 预算估算"), s["H2"]))
+            currency = budget.get("currency", "GBP")
+            story.append(Paragraph(_safe(f"预计费用: {currency} {budget.get('min', 'N/A')} - {budget.get('max', 'N/A')}"), s["Body"]))
+            story.append(Spacer(1, 8))
+
+        raw = data.get("gtvAnalysis", data)
+        non_risks = raw.get("non_endorsement_risk_factors", [])
+        if non_risks:
+            story.append(Paragraph(_safe("6.5 非背书风险因素"), s["H2"]))
+            story.append(Paragraph(_safe("⚠ 以下因素可能影响背书机构对申请的评估，请予以关注："), s["BodyBold"]))
+            for risk in non_risks:
+                risk_text = risk if isinstance(risk, str) else risk.get("description", risk.get("risk", str(risk)))
+                story.append(Paragraph(_safe(f"\u2022 {risk_text}"), s["Bullet"]))
+            story.append(Spacer(1, 8))
+
         return story
-    
-    def _add_header_footer(self, canvas, doc):
-        """添加页眉页脚"""
-        logger.debug(f"📄 添加页眉页脚，页码: {doc.page}")
+
+    # ======================== 附录 ========================
+    def _appendix(self, data):
+        s = self.styles
+        story = []
+        web_v = data.get("web_verification", {})
+        if not web_v:
+            return story
+
+        sources = {k: v for k, v in web_v.items()
+                   if k not in ("search_date", "discrepancies", "additional_findings") and isinstance(v, dict)}
+        if not sources:
+            return story
+
+        story += self._section("附录: 全网信息验证", "七")
+
+        if web_v.get("search_date"):
+            story.append(Paragraph(_safe(f"搜索日期: {web_v['search_date']}"), s["BodySmall"]))
+            story.append(Spacer(1, 4))
+
+        labels = {"linkedin": "LinkedIn", "github": "GitHub", "scholar": "Google Scholar",
+                  "patents": "专利数据库", "media": "媒体报道"}
+        header = [Paragraph(_safe(h), s["TH"]) for h in ["信息源", "状态", "详情"]]
+        rows = [header]
+        for src_key, src_label in labels.items():
+            info = web_v.get(src_key, {})
+            if not info:
+                continue
+            status = info.get("status", "未搜索")
+            parts = []
+            if info.get("findings"):
+                parts.append(str(info["findings"]))
+            if src_key == "github":
+                if info.get("total_stars"): parts.append(f"Stars: {info['total_stars']}")
+                top = info.get("top_project", {})
+                if top: parts.append(f"Top: {top.get('name', '')} ({top.get('stars', 0)}★)")
+            if src_key == "scholar":
+                if info.get("total_papers"): parts.append(f"论文: {info['total_papers']}")
+                if info.get("total_citations"): parts.append(f"引用: {info['total_citations']}")
+                if info.get("h_index"): parts.append(f"h-index: {info['h_index']}")
+            if src_key == "patents":
+                if info.get("count"): parts.append(f"专利: {info['count']}")
+            if src_key == "media":
+                for art in info.get("articles", [])[:2]:
+                    if isinstance(art, dict):
+                        parts.append(f"{art.get('source', '')}: {art.get('title', '')}")
+            det = "; ".join(parts) if parts else "-"
+            rows.append([Paragraph(_safe(src_label), s["TDB"]),
+                         Paragraph(_safe(status), s["TD"]),
+                         Paragraph(_safe(det[:200]), s["TD"])])
+
+        if len(rows) > 1:
+            t = Table(rows, colWidths=[3*cm, 2.5*cm, 11*cm])
+            t.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), BRAND_PRIMARY),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("GRID", (0, 0), (-1, -1), 0.3, BRAND_BORDER),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, BRAND_LIGHT_GRAY]),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ]))
+            story.append(t)
+
+        for disc in web_v.get("discrepancies", []):
+            story.append(Paragraph(_safe(f"\u2022 差异: {disc}"), s["Bullet"]))
+        for af in web_v.get("additional_findings", []):
+            story.append(Paragraph(_safe(f"\u2022 补充: {af}"), s["Bullet"]))
+
+        return story
+
+    # ======================== 免责声明 ========================
+    def _disclaimer(self):
+        s = self.styles
+        return [
+            Spacer(1, 20),
+            self._hr(),
+            Paragraph(_safe("免责声明: 本报告由 AI 系统自动生成，仅供参考。评估结果不构成法律建议。建议咨询专业移民顾问。"),
+                       ParagraphStyle("FD", parent=s["BodySmall"], alignment=TA_CENTER)),
+            Spacer(1, 8),
+            Paragraph(_safe(f"报告生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M')} | 惜池集团 · 英国移民服务"),
+                       ParagraphStyle("Ft", parent=s["Small"], alignment=TA_CENTER)),
+        ]
+
+    def _header_footer(self, canvas, doc):
         canvas.saveState()
-        
-        # 页眉
-        logger.debug("📝 绘制页眉...")
-        canvas.setFont(self.chinese_font, 9)
-        canvas.setFillColor(colors.HexColor('#6b7280'))
-        header_text = self._safe_text("UK Global Talent Visa Assessment")
-        canvas.drawRightString(A4[0] - 2*cm, A4[1] - 1.5*cm, header_text)
-        logger.debug(f"✅ 页眉绘制完成: {header_text}")
-        
-        # 页脚
-        logger.debug("📝 绘制页脚...")
-        canvas.setFont(self.chinese_font, 8)
-        canvas.setFillColor(colors.HexColor('#9ca3af'))
-        page_text = self._safe_text(f"Page {doc.page}")
-        date_text = self._safe_text(f"Generated on {datetime.now().strftime('%B %d, %Y')}")
-        canvas.drawCentredString(A4[0]/2, 1*cm, page_text)
-        canvas.drawString(2*cm, 1*cm, date_text)
-        logger.debug(f"✅ 页脚绘制完成: {page_text}, {date_text}")
-        
+        canvas.setFont(self.font_r, 7)
+        canvas.setFillColor(BRAND_GRAY)
+        canvas.drawRightString(PAGE_W - MARGIN, PAGE_H - 1*cm, "UK Global Talent Visa Assessment Report")
+        canvas.drawString(MARGIN, 0.8*cm, f"Generated {datetime.now().strftime('%Y-%m-%d')}")
+        canvas.drawCentredString(PAGE_W / 2, 0.8*cm, f"Page {doc.page}")
+        canvas.drawRightString(PAGE_W - MARGIN, 0.8*cm, "Confidential")
+        canvas.setStrokeColor(BRAND_PRIMARY)
+        canvas.setLineWidth(2)
+        canvas.line(MARGIN, PAGE_H - 1.4*cm, PAGE_W - MARGIN, PAGE_H - 1.4*cm)
         canvas.restoreState()
-    
-    def _get_score_color(self, score) -> colors.Color:
-        """根据分数获取颜色"""
-        try:
-            score = float(score) if isinstance(score, str) else score
-            score = int(score)
-        except (ValueError, TypeError):
-            logger.warning(f"⚠️ 分数转换失败: {score}，使用默认分数0")
-            score = 0
-        
-        if score >= 80:
-            color = colors.HexColor('#059669')  # 绿色
-            logger.debug(f"🎨 分数 {score} 使用绿色")
-        elif score >= 70:
-            color = colors.HexColor('#d97706')  # 橙色
-            logger.debug(f"🎨 分数 {score} 使用橙色")
-        else:
-            color = colors.HexColor('#dc2626')  # 红色
-            logger.debug(f"🎨 分数 {score} 使用红色")
-        return color
-    
-    def _get_score_level(self, score) -> str:
-        """根据分数获取等级"""
-        try:
-            score = float(score) if isinstance(score, str) else score
-            score = int(score)
-        except (ValueError, TypeError):
-            logger.warning(f"⚠️ 分数转换失败: {score}，使用默认分数0")
-            score = 0
-        
-        if score >= 80:
-            level = "Strong"
-        elif score >= 70:
-            level = "Good"
-        elif score >= 60:
-            level = "Fair"
-        else:
-            level = "Needs Improvement"
-        return level
+
 
 def generate_gtv_pdf_report(assessment_data: Dict[str, Any], output_path: str = None) -> str:
     """生成GTV评估PDF报告的便捷函数"""
-    logger.info("🚀 调用便捷函数生成PDF报告...")
+    logger.info("调用 generate_gtv_pdf_report...")
     generator = GTVPDFReportGenerator()
     result = generator.generate_report(assessment_data, output_path)
-    logger.info(f"✅ 便捷函数PDF生成完成: {result}")
+    logger.info(f"PDF生成完成: {result}")
     return result
 
+
 if __name__ == "__main__":
-    # 测试代码
-    logger.info("🧪 开始PDF生成器测试...")
     test_data = {
         "applicantInfo": {
-            "name": "John Doe",
+            "name": "测试用户",
             "field": "Digital Technology",
-            "currentPosition": "Senior Software Engineer",
+            "currentPosition": "Senior Engineer",
             "company": "Tech Corp",
-            "yearsOfExperience": 8
+            "yearsOfExperience": 8,
         },
-        "overallScore": 85,
+        "overallScore": 72,
         "gtvPathway": {
-            "recommendedRoute": "Exceptional Talent",
-            "eligibilityLevel": "Strong",
-            "analysis": "The applicant demonstrates exceptional talent in digital technology."
+            "recommendedRoute": "Exceptional Promise",
+            "eligibilityLevel": "Good",
+            "analysis": "综合分析认为申请人适合走 Exceptional Promise 路径。",
         },
-        "recommendation": "Strongly recommended for UK Global Talent Visa application."
+        "recommendation": "推荐走 Exceptional Promise 路径。",
     }
-    
-    logger.info(f"📊 测试数据: 申请人={test_data['applicantInfo']['name']}, 分数={test_data['overallScore']}")
-    
     try:
         output_file = generate_gtv_pdf_report(test_data)
-        logger.info(f"🎉 测试PDF生成成功: {output_file}")
         print(f"测试PDF生成成功: {output_file}")
     except Exception as e:
-        logger.error(f"❌ 测试PDF生成失败: {e}")
         print(f"测试PDF生成失败: {e}")

@@ -8,6 +8,7 @@ import OpenClawChatUI, { type OpenClawChatUIHandle } from "@/components/openclaw
 import ChatHistorySidebar from "@/components/chat-history-sidebar"
 import { Navbar } from "@/components/navbar"
 import { AuthGuard } from "@/components/auth-guard"
+import { useAuth } from "@/lib/auth/auth-context"
 import {
   MessageCircle, Target, FileText, PenTool,
   ScrollText, MapPin, Search, Sparkles, ArrowRight
@@ -16,12 +17,19 @@ import {
   getSessions,
   createSession,
   updateSession,
-  getActiveSessionId,
   setActiveSessionId,
 } from "@/lib/chat-sessions"
 
+const GTV_WELCOME = `您好，欢迎找到我们，很高兴为您评估。
+
+请根据个人情况和所属行业领域详细填写以下信息，不适用的情况写"无"即可。
+
+**我们深知您的信息属于重要隐私，我们郑重承诺对所有信息严格保密。**
+
+请依次提供以下信息，我将为您进行专业的 GTV 资格评估：`
+
 const SIDEBAR_SKILLS = [
-  { icon: Target, label: "GTV资格评估", labelEn: "GTV Assessment", desc: "系统化评分与路径推荐", descEn: "Scoring & path recommendation", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30", prompt: "请使用 gtv-assessment 技能帮我做一次完整的GTV资格评估。请先引导我提供所需的背景信息。" },
+  { icon: Target, label: "GTV资格评估", labelEn: "GTV Assessment", desc: "系统化评分与路径推荐", descEn: "Scoring & path recommendation", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30", prompt: "请使用 gtv-assessment 技能帮我做一次完整的GTV资格评估。请先引导我提供所需的背景信息。", welcomeMessage: GTV_WELCOME },
   { icon: FileText, label: "简历分析", labelEn: "Resume Analysis", desc: "亮点识别与差距分析", descEn: "Highlights & gap analysis", color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30", prompt: "请使用 resume-analyzer 技能帮我分析简历，识别GTV申请相关的亮点和不足。我可以粘贴简历内容给你。" },
   { icon: PenTool, label: "文案撰写", labelEn: "Copywriting", desc: "个人陈述与证据描述", descEn: "Statement & evidence description", color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/30", prompt: "请使用 gtv-copywriting 技能帮我撰写GTV申请的个人陈述(Personal Statement)。请先了解我的背景信息。" },
   { icon: ScrollText, label: "推荐信", labelEn: "Recommendation", desc: "四阶段专业流程", descEn: "4-phase professional workflow", color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/30", prompt: "请使用 gtv-recommendation-letter 技能帮我撰写GTV推荐信。请先引导我提供推荐人信息和申请人材料。" },
@@ -31,36 +39,32 @@ const SIDEBAR_SKILLS = [
 
 export default function ChatAssessmentPage() {
   const { language } = useLanguage()
+  const { user, isSuperAdmin } = useAuth()
   const chatRef = useRef<OpenClawChatUIHandle>(null)
   const [activeSessionId, setActiveId] = useState<string | null>(null)
   const [sidebarRefresh, setSidebarRefresh] = useState(0)
   const [mounted, setMounted] = useState(false)
 
+  const userId = user?.id || "anonymous"
+  const userEmail = user?.email
+
   useEffect(() => {
+    if (!user) return
     setMounted(true)
-    const existing = getActiveSessionId()
-    const sessions = getSessions()
-    if (existing && sessions.some(s => s.id === existing)) {
-      setActiveId(existing)
-    } else if (sessions.length > 0) {
-      setActiveId(sessions[0].id)
-      setActiveSessionId(sessions[0].id)
-    } else {
-      const newSession = createSession()
-      setActiveId(newSession.id)
-    }
-  }, [])
+    const newSession = createSession(userId, userEmail)
+    setActiveId(newSession.id)
+  }, [user, userId, userEmail])
 
   const handleSelectSession = useCallback((id: string) => {
     setActiveId(id)
-    setActiveSessionId(id)
-  }, [])
+    setActiveSessionId(userId, id)
+  }, [userId])
 
   const handleNewSession = useCallback(() => {
-    const session = createSession()
+    const session = createSession(userId, userEmail)
     setActiveId(session.id)
     setSidebarRefresh(n => n + 1)
-  }, [])
+  }, [userId, userEmail])
 
   const handleSessionUpdate = useCallback((info: { messageCount: number; preview: string; title?: string }) => {
     if (!activeSessionId) return
@@ -71,9 +75,9 @@ export default function ChatAssessmentPage() {
     if (info.title) {
       updates.title = info.title
     }
-    updateSession(activeSessionId, updates as { messageCount: number; preview: string; title?: string })
+    updateSession(userId, activeSessionId, updates as { messageCount: number; preview: string; title?: string })
     setSidebarRefresh(n => n + 1)
-  }, [activeSessionId])
+  }, [activeSessionId, userId])
 
   if (!mounted) return null
 
@@ -82,15 +86,15 @@ export default function ChatAssessmentPage() {
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <Navbar />
       <div className="flex-1 flex min-h-0">
-        {/* Left: History sidebar */}
         <ChatHistorySidebar
+          userId={userId}
+          isSuperAdmin={isSuperAdmin()}
           activeSessionId={activeSessionId}
           onSelectSession={handleSelectSession}
           onNewSession={handleNewSession}
           refreshTrigger={sidebarRefresh}
         />
 
-        {/* Center: Chat area — takes all remaining space */}
         <div className="flex-1 min-w-0 flex flex-col">
           <OpenClawChatUI
             ref={chatRef}
@@ -99,7 +103,6 @@ export default function ChatAssessmentPage() {
           />
         </div>
 
-        {/* Right: Skills panel — collapsible on smaller screens */}
         <div className="hidden 2xl:flex w-56 shrink-0 flex-col border-l bg-muted/10 overflow-y-auto">
           <div className="p-3 space-y-3">
             <div className="flex items-center gap-1.5 text-sm font-medium px-1">
@@ -110,7 +113,10 @@ export default function ChatAssessmentPage() {
               {SIDEBAR_SKILLS.map((skill, i) => (
                 <button
                   key={i}
-                  onClick={() => chatRef.current?.sendMessage(skill.prompt)}
+                  onClick={() => chatRef.current?.sendMessage(skill.prompt, {
+                    welcomeMessage: (skill as typeof SIDEBAR_SKILLS[0]).welcomeMessage,
+                    displayLabel: language === "en" ? skill.labelEn : skill.label,
+                  })}
                   className={`w-full flex items-start gap-2 p-2 rounded-lg ${skill.bg} transition-all cursor-pointer hover:opacity-80 hover:scale-[1.02] active:scale-[0.98] text-left`}
                 >
                   <div className={`p-1 rounded ${skill.color}`}>

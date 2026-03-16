@@ -4,19 +4,22 @@ import { useState, useRef, useEffect } from "react"
 import { useLanguage } from "@/lib/i18n"
 import {
   Plus, MessageSquare, Trash2, Pencil, Check, X,
-  PanelLeftClose, PanelLeftOpen, MoreHorizontal
+  PanelLeftClose, PanelLeftOpen, MoreHorizontal, Users, User,
+  Share2, Link, CheckCheck
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   ChatSession,
   getSessions,
-  createSession,
+  getAllUsersSessions,
   updateSession,
   deleteSession,
   groupSessionsByDate,
 } from "@/lib/chat-sessions"
 
 interface ChatHistorySidebarProps {
+  userId: string
+  isSuperAdmin: boolean
   activeSessionId: string | null
   onSelectSession: (id: string) => void
   onNewSession: () => void
@@ -24,6 +27,8 @@ interface ChatHistorySidebarProps {
 }
 
 export default function ChatHistorySidebar({
+  userId,
+  isSuperAdmin,
   activeSessionId,
   onSelectSession,
   onNewSession,
@@ -35,12 +40,18 @@ export default function ChatHistorySidebar({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState("")
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
+  const [showAll, setShowAll] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setSessions(getSessions())
-  }, [refreshTrigger])
+    if (showAll && isSuperAdmin) {
+      setSessions(getAllUsersSessions())
+    } else {
+      setSessions(getSessions(userId))
+    }
+  }, [refreshTrigger, userId, showAll, isSuperAdmin])
 
   useEffect(() => {
     if (editingId && editInputRef.current) {
@@ -61,12 +72,17 @@ export default function ChatHistorySidebar({
 
   const handleNewSession = () => {
     onNewSession()
-    setSessions(getSessions())
+    setSessions(getSessions(userId))
   }
 
-  const handleDelete = (id: string) => {
-    deleteSession(id)
-    setSessions(getSessions())
+  const handleDelete = (session: ChatSession) => {
+    const ownerUserId = session.userId || userId
+    deleteSession(ownerUserId, session.id)
+    if (showAll && isSuperAdmin) {
+      setSessions(getAllUsersSessions())
+    } else {
+      setSessions(getSessions(userId))
+    }
     setMenuOpenId(null)
   }
 
@@ -76,16 +92,40 @@ export default function ChatHistorySidebar({
     setMenuOpenId(null)
   }
 
-  const confirmRename = () => {
+  const confirmRename = (session: ChatSession) => {
     if (editingId && editTitle.trim()) {
-      updateSession(editingId, { title: editTitle.trim() })
-      setSessions(getSessions())
+      const ownerUserId = session.userId || userId
+      updateSession(ownerUserId, editingId, { title: editTitle.trim() })
+      if (showAll && isSuperAdmin) {
+        setSessions(getAllUsersSessions())
+      } else {
+        setSessions(getSessions(userId))
+      }
     }
     setEditingId(null)
   }
 
   const cancelRename = () => {
     setEditingId(null)
+  }
+
+  const handleShare = async (session: ChatSession) => {
+    setMenuOpenId(null)
+    try {
+      const res = await fetch("/api/chat-share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: session.id }),
+      })
+      const data = await res.json()
+      if (data.shareUrl) {
+        await navigator.clipboard.writeText(data.shareUrl)
+        setCopiedId(session.id)
+        setTimeout(() => setCopiedId(null), 2000)
+      }
+    } catch (err) {
+      console.error("Share failed:", err)
+    }
   }
 
   const formatTime = (ts: number) => {
@@ -142,12 +182,26 @@ export default function ChatHistorySidebar({
 
   return (
     <div className="w-64 flex flex-col border-r bg-muted/20 shrink-0 h-full">
-      {/* Header */}
       <div className="flex items-center justify-between p-3 border-b">
         <span className="text-sm font-medium">
-          {language === "en" ? "Chat History" : "对话历史"}
+          {showAll
+            ? (language === "en" ? "All Chats" : "所有对话")
+            : (language === "en" ? "Chat History" : "对话历史")}
         </span>
         <div className="flex items-center gap-0.5">
+          {isSuperAdmin && (
+            <Button
+              variant={showAll ? "default" : "ghost"}
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setShowAll(!showAll)}
+              title={showAll
+                ? (language === "en" ? "My chats" : "我的对话")
+                : (language === "en" ? "All users" : "所有用户")}
+            >
+              {showAll ? <User className="h-4 w-4" /> : <Users className="h-4 w-4" />}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -169,7 +223,6 @@ export default function ChatHistorySidebar({
         </div>
       </div>
 
-      {/* Session list */}
       <div className="flex-1 overflow-y-auto py-1">
         {sessions.length === 0 && (
           <div className="px-3 py-8 text-center text-xs text-muted-foreground">
@@ -208,13 +261,13 @@ export default function ChatHistorySidebar({
                           value={editTitle}
                           onChange={e => setEditTitle(e.target.value)}
                           onKeyDown={e => {
-                            if (e.key === "Enter") confirmRename()
+                            if (e.key === "Enter") confirmRename(session)
                             if (e.key === "Escape") cancelRename()
                           }}
                           className="flex-1 bg-white dark:bg-gray-800 border rounded px-1.5 py-0.5 text-xs outline-none focus:ring-1 focus:ring-emerald-500"
                           onClick={e => e.stopPropagation()}
                         />
-                        <button onClick={(e) => { e.stopPropagation(); confirmRename() }} className="p-0.5 hover:text-emerald-600">
+                        <button onClick={(e) => { e.stopPropagation(); confirmRename(session) }} className="p-0.5 hover:text-emerald-600">
                           <Check className="h-3 w-3" />
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); cancelRename() }} className="p-0.5 hover:text-red-500">
@@ -226,6 +279,11 @@ export default function ChatHistorySidebar({
                         <div className="text-xs font-medium truncate leading-tight">
                           {session.title}
                         </div>
+                        {showAll && session.userEmail && (
+                          <div className="text-xs text-blue-500/80 truncate mt-0.5 leading-tight">
+                            {session.userEmail}
+                          </div>
+                        )}
                         {session.preview && (
                           <div className="text-xs text-muted-foreground truncate mt-0.5 leading-tight">
                             {session.preview}
@@ -261,8 +319,17 @@ export default function ChatHistorySidebar({
                             {language === "en" ? "Rename" : "重命名"}
                           </button>
                           <button
+                            className="w-full px-3 py-1.5 text-xs text-left hover:bg-muted flex items-center gap-2 text-emerald-600"
+                            onClick={(e) => { e.stopPropagation(); handleShare(session) }}
+                          >
+                            {copiedId === session.id
+                              ? <><CheckCheck className="h-3 w-3" />{language === "en" ? "Copied!" : "已复制!"}</>
+                              : <><Share2 className="h-3 w-3" />{language === "en" ? "Share" : "分享"}</>
+                            }
+                          </button>
+                          <button
                             className="w-full px-3 py-1.5 text-xs text-left hover:bg-muted flex items-center gap-2 text-red-600"
-                            onClick={(e) => { e.stopPropagation(); handleDelete(session.id) }}
+                            onClick={(e) => { e.stopPropagation(); handleDelete(session) }}
                           >
                             <Trash2 className="h-3 w-3" />
                             {language === "en" ? "Delete" : "删除"}

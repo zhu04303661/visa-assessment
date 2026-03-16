@@ -5,10 +5,16 @@ export interface ChatSession {
   updatedAt: number
   messageCount: number
   preview: string
+  userId?: string
+  userEmail?: string
 }
 
-const SESSIONS_KEY = "visa-chat-sessions"
-const ACTIVE_KEY = "visa-chat-active"
+function sessionsKey(userId: string) {
+  return `visa-chat-sessions:${userId}`
+}
+function activeKey(userId: string) {
+  return `visa-chat-active:${userId}`
+}
 
 function readStorage<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback
@@ -25,20 +31,34 @@ function writeStorage(key: string, value: unknown) {
   try {
     localStorage.setItem(key, JSON.stringify(value))
   } catch {
-    // quota exceeded — silently ignore
+    // quota exceeded
   }
 }
 
-export function getSessions(): ChatSession[] {
-  const sessions = readStorage<ChatSession[]>(SESSIONS_KEY, [])
+export function getSessions(userId: string): ChatSession[] {
+  const sessions = readStorage<ChatSession[]>(sessionsKey(userId), [])
   return sessions.sort((a, b) => b.updatedAt - a.updatedAt)
 }
 
-export function getSession(id: string): ChatSession | undefined {
-  return getSessions().find(s => s.id === id)
+export function getAllUsersSessions(): ChatSession[] {
+  if (typeof window === "undefined") return []
+  const all: ChatSession[] = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (!key?.startsWith("visa-chat-sessions:")) continue
+    try {
+      const sessions: ChatSession[] = JSON.parse(localStorage.getItem(key) || "[]")
+      all.push(...sessions)
+    } catch { /* skip */ }
+  }
+  return all.sort((a, b) => b.updatedAt - a.updatedAt)
 }
 
-export function createSession(title?: string): ChatSession {
+export function getSession(userId: string, id: string): ChatSession | undefined {
+  return getSessions(userId).find(s => s.id === id)
+}
+
+export function createSession(userId: string, userEmail?: string, title?: string): ChatSession {
   const session: ChatSession = {
     id: `s-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     title: title || "新对话",
@@ -46,36 +66,38 @@ export function createSession(title?: string): ChatSession {
     updatedAt: Date.now(),
     messageCount: 0,
     preview: "",
+    userId,
+    userEmail,
   }
-  const sessions = getSessions()
+  const sessions = getSessions(userId)
   sessions.unshift(session)
-  writeStorage(SESSIONS_KEY, sessions)
-  setActiveSessionId(session.id)
+  writeStorage(sessionsKey(userId), sessions)
+  setActiveSessionId(userId, session.id)
   return session
 }
 
-export function updateSession(id: string, updates: Partial<Omit<ChatSession, "id" | "createdAt">>) {
-  const sessions = getSessions()
+export function updateSession(userId: string, id: string, updates: Partial<Omit<ChatSession, "id" | "createdAt" | "userId">>) {
+  const sessions = getSessions(userId)
   const idx = sessions.findIndex(s => s.id === id)
   if (idx === -1) return
   sessions[idx] = { ...sessions[idx], ...updates, updatedAt: updates.updatedAt ?? Date.now() }
-  writeStorage(SESSIONS_KEY, sessions)
+  writeStorage(sessionsKey(userId), sessions)
 }
 
-export function deleteSession(id: string) {
-  const sessions = getSessions().filter(s => s.id !== id)
-  writeStorage(SESSIONS_KEY, sessions)
-  if (getActiveSessionId() === id) {
-    setActiveSessionId(sessions[0]?.id || null)
+export function deleteSession(userId: string, id: string) {
+  const sessions = getSessions(userId).filter(s => s.id !== id)
+  writeStorage(sessionsKey(userId), sessions)
+  if (getActiveSessionId(userId) === id) {
+    setActiveSessionId(userId, sessions[0]?.id || null)
   }
 }
 
-export function getActiveSessionId(): string | null {
-  return readStorage<string | null>(ACTIVE_KEY, null)
+export function getActiveSessionId(userId: string): string | null {
+  return readStorage<string | null>(activeKey(userId), null)
 }
 
-export function setActiveSessionId(id: string | null) {
-  writeStorage(ACTIVE_KEY, id)
+export function setActiveSessionId(userId: string, id: string | null) {
+  writeStorage(activeKey(userId), id)
 }
 
 export function sessionKeyFor(sessionId: string): string {
@@ -83,7 +105,6 @@ export function sessionKeyFor(sessionId: string): string {
 }
 
 export function groupSessionsByDate(sessions: ChatSession[]): { label: string; labelEn: string; sessions: ChatSession[] }[] {
-  const now = Date.now()
   const todayStart = new Date().setHours(0, 0, 0, 0)
   const weekAgo = todayStart - 6 * 24 * 60 * 60 * 1000
 
