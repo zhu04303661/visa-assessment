@@ -701,6 +701,25 @@ const OpenClawChatUI = forwardRef<OpenClawChatUIHandle, OpenClawChatUIProps>(fun
         </a>
       )
     },
+    table: ({ children }) => (
+      <div className="overflow-x-auto my-3">
+        <table className="min-w-full border-collapse border border-gray-200 dark:border-gray-700 text-sm">
+          {children}
+        </table>
+      </div>
+    ),
+    thead: ({ children }) => (
+      <thead className="bg-gray-100 dark:bg-gray-800">{children}</thead>
+    ),
+    th: ({ children }) => (
+      <th className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-left font-semibold text-xs">{children}</th>
+    ),
+    td: ({ children }) => (
+      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-xs">{children}</td>
+    ),
+    tr: ({ children }) => (
+      <tr className="even:bg-gray-50 dark:even:bg-gray-800/50">{children}</tr>
+    ),
   }
 
   const statusColor = connectionStatus === "connected"
