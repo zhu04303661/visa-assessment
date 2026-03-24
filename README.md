@@ -1,5 +1,6 @@
-# UK GTV Visa Assessment Application
-# 英国全球人才签证评估应用
+# 惜池移民 — AI 驱动的英国全球人才签证评估与文书平台
+
+# Xichi Immigration — AI-Powered UK GTV Assessment & Copywriting Platform
 
 [English](#english) | [中文](#chinese)
 
@@ -10,267 +11,303 @@
 
 ### Overview
 
-This is an AI-powered assessment application for the UK Global Talent Visa (GTV). It analyzes applicants' resumes and provides detailed evaluations based on official UK GTV criteria, including recommendations for Exceptional Talent or Exceptional Promise pathways.
+A full-stack AI-powered platform for UK Global Talent Visa (GTV) applicants. The system provides end-to-end support — from initial eligibility assessment and scoring, through material collection and evidence validation, to AI-assisted copywriting of personal statements, recommendation letters, and application documents.
 
-### Features
+### Key Features
 
-- **Resume Analysis**: Upload resume files or paste text for AI-powered analysis
-- **Comprehensive Evaluation**: Detailed assessment across multiple dimensions:
-  - Education Background
-  - Industry Background
-  - Work Experience
-  - Technical Expertise
-- **Official Standards**: Evaluation based on Tech Nation and UK government criteria
-- **Bilingual Support**: Full English and Chinese language support
-- **Debug Interface**: Built-in debugging tools for administrators to optimize AI prompts
-- **Detailed Reports**: 
-  - Overall eligibility score
-  - Strengths and weaknesses analysis
-  - GTV pathway recommendations
-  - Required documentation checklist
-  - Professional advice and timeline
+- **Resume Analysis & Scoring**: Upload resume files (PDF/DOC/DOCX/TXT) or paste text. Multi-dimensional AI analysis across education, industry, work experience, and technical expertise.
+- **GTV Eligibility Assessment**: Automated evaluation against official Tech Nation / UK government criteria with Exceptional Talent, Exceptional Promise, and Startup Visa pathway recommendations.
+- **Deep Assessment**: In-depth evaluation with LangGraph-based scoring agents, Optional Criteria (OC) analysis, and gap identification.
+- **AI Smart Chat**: Multiple chat modes — OpenClaw WebSocket chat, Claude Code agent chat, and Vercel AI SDK chat — with persistent history and sharable links.
+- **Copywriting Workflow**: Project-based multi-stage document pipeline:
+  - Material collection & upload
+  - Content extraction & analysis
+  - Application framework building
+  - Personal statement, cover letter & recommendation letter generation
+  - AI assistant (Agent / Ask modes) with real-time streaming
+- **Material Management**: Upload, tag, classify, and preview application materials with support for MinIO / S3 / OSS / COS object storage.
+- **Knowledge Base**: Rule-based knowledge management for GTV assessment criteria.
+- **PDF Report Generation**: Multiple export styles with CJK font support.
+- **Bilingual Support**: Full English and Chinese interface.
+- **Admin Dashboard**: User management and system administration.
+- **SEO Optimized**: Full metadata, sitemap, robots.txt, JSON-LD structured data, and dynamic OG images.
 
 ### Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS v4
-- **UI Components**: shadcn/ui
-- **AI**: OpenAI GPT-4 via Vercel AI SDK
-- **Deployment**: Vercel
+#### Frontend
+
+| Category | Technology |
+|----------|------------|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript 5 |
+| UI Runtime | React 19 |
+| Styling | Tailwind CSS v4, tw-animate-css |
+| Component Libraries | shadcn/ui, Semi UI (`@douyinfe/semi-ui`), Radix UI |
+| Rich Text Editor | TipTap |
+| Charts & Visualization | Recharts, Mermaid, React Flow (`@xyflow/react`) |
+| Video / Animation | Remotion, Framer Motion |
+| AI Integration | Vercel AI SDK (`ai`, `@ai-sdk/openai`, `@ai-sdk/azure`) |
+| PDF | jsPDF, react-pdf, pdfjs-dist |
+| Terminal | xterm.js |
+| Analytics | Vercel Analytics |
+
+#### Backend (Python)
+
+| Category | Technology |
+|----------|------------|
+| Web Framework | Flask 3, Flask-CORS, Flask-SocketIO |
+| LLM Orchestration | LangChain, LangGraph, OpenAI SDK |
+| Data | pandas, numpy |
+| Documents | pdfminer.six, python-docx, ReportLab, Pillow |
+| Object Storage | MinIO (S3-compatible) |
+| Database | SQLite (via DAO layer) |
+| Testing | pytest, pytest-flask |
+
+#### Infrastructure
+
+| Category | Technology |
+|----------|------------|
+| Process Manager | PM2 (ecosystem.config.js) |
+| Reverse Proxy | Nginx + Certbot (SSL) |
+| AI Gateway | OpenClaw Gateway |
+| Package Manager | pnpm |
 
 ### Prerequisites
 
-- Node.js 18+ or Bun
-- OpenAI API key (or Vercel AI Gateway access)
+- Node.js 20+ and pnpm
+- Python 3.9+
+- OpenAI API key (or Azure OpenAI / ENNCLOUD credentials)
 
-### Installation
+### Quick Start
 
-1. **Clone the repository**
-   \`\`\`bash
+1. **Clone and install frontend dependencies**
+   ```bash
    git clone <repository-url>
-   cd gtv-visa-assessment
-   \`\`\`
+   cd visa-assessment
+   pnpm install
+   ```
 
-2. **Install dependencies**
-   \`\`\`bash
-   npm install
-   # or
-   bun install
-   \`\`\`
+2. **Install backend dependencies**
+   ```bash
+   cd ace_gtv
+   pip install -r requirements.txt
+   cd ..
+   ```
 
-3. **Set up environment variables**
-   
-   Create a `.env.local` file in the root directory:
-   \`\`\`env
-   # Optional: If not using Vercel AI Gateway
-   OPENAI_API_KEY=your_openai_api_key_here
-   \`\`\`
+3. **Configure environment**
 
-4. **Run the development server**
-   \`\`\`bash
-   npm run dev
-   # or
-   bun dev
-   \`\`\`
+   Create `.env.local` in the project root:
+   ```env
+   # AI Provider (openai / azure)
+   AI_PROVIDER=openai
+   OPENAI_API_KEY=your_key_here
 
-5. **Open your browser**
-   
-   Navigate to [http://localhost:3000](http://localhost:3000)
+   # Backend URL
+   COPYWRITING_API_URL=http://localhost:5005
 
-### Deployment
+   # File Storage (local / minio / s3 / oss / cos)
+   FILE_STORAGE_TYPE=local
+   ```
 
-#### Deploy to Vercel (Recommended)
+4. **Start all services with PM2**
+   ```bash
+   pm2 start ecosystem.config.js
+   ```
 
-1. **Push to GitHub**
-   \`\`\`bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git remote add origin <your-github-repo-url>
-   git push -u origin main
-   \`\`\`
+   Or start individually:
+   ```bash
+   # Frontend (dev)
+   pnpm dev
 
-2. **Deploy on Vercel**
-   - Go to [vercel.com](https://vercel.com)
-   - Click "New Project"
-   - Import your GitHub repository
-   - Configure environment variables (if needed)
-   - Click "Deploy"
+   # Backend
+   cd ace_gtv && python3 api_server.py
+   ```
 
-3. **Environment Variables on Vercel**
-   
-   If not using Vercel AI Gateway, add in Vercel dashboard:
-   - `OPENAI_API_KEY`: Your OpenAI API key
+5. **Open** [http://localhost](http://localhost) (port 80) or [http://localhost:3000](http://localhost:3000)
 
-#### Manual Deployment
+### Production Deployment
 
-1. **Build the application**
-   \`\`\`bash
-   npm run build
-   # or
-   bun run build
-   \`\`\`
-
-2. **Start the production server**
-   \`\`\`bash
-   npm start
-   # or
-   bun start
-   \`\`\`
+See [`deploy/README.md`](deploy/README.md) for the full server deployment guide, including:
+- Nginx reverse proxy configuration
+- OpenClaw Gateway setup
+- SSL certificate management
+- PM2 process management
 
 ### Project Structure
 
-\`\`\`
-gtv-visa-assessment/
-├── app/
-│   ├── api/
-│   │   └── analyze-resume/
-│   │       └── route.ts          # AI analysis API endpoint
-│   ├── assessment/
-│   │   └── page.tsx               # Assessment form page
-│   ├── results/
-│   │   └── page.tsx               # Results display page
-│   ├── layout.tsx                 # Root layout with i18n
-│   ├── page.tsx                   # Home page
-│   └── globals.css                # Global styles
-├── components/
-│   ├── assessment-form.tsx        # Resume upload form
-│   ├── assessment-results.tsx     # Results display component
-│   ├── hero.tsx                   # Hero section
-│   ├── features.tsx               # Features section
-│   ├── language-switcher.tsx      # Language toggle
+```
+visa-assessment/
+├── app/                              # Next.js App Router
+│   ├── api/                          # 24 API route handlers
+│   │   ├── auth/                     # Login, register, session, logout, nginx-verify
+│   │   ├── assessment/               # Deep analysis, deep evaluation, OC evaluation
+│   │   ├── assessments/              # Save results, upload resume
+│   │   ├── scoring/                  # Batch scoring analysis
+│   │   ├── copywriting/[...path]/    # Proxy to Python backend
+│   │   ├── smart-chat/               # AI chat endpoint
+│   │   ├── ace-chat/                 # ACE agent chat
+│   │   ├── chat-*/                   # Chat management (share, upload, download, title)
+│   │   ├── admin/                    # User administration
+│   │   └── health/                   # Health checks
+│   ├── assessment/                   # GTV assessment page
+│   ├── deep-assessment/              # Deep assessment page
+│   ├── results/                      # Assessment results display
+│   ├── chat/                         # AI chat (+ share/[token])
+│   ├── claude-chat/                  # Claude Code agent chat
+│   ├── copywriting/                  # Copywriting project hub
+│   │   └── [projectId]/              # Per-project workflow
+│   │       ├── assistant/            # AI writing assistant
+│   │       ├── extraction/           # Content extraction
+│   │       ├── framework/            # Framework building
+│   │       ├── generation/           # Document generation
+│   │       ├── prompts/              # Prompt management
+│   │       ├── recommendation_letters/
+│   │       └── [packageType]/        # Material packages
+│   ├── analysis/                     # Analysis hub (+ agent/)
+│   ├── knowledge-base/              # Knowledge base management
+│   ├── material-collection/          # Material upload & management
+│   ├── material-tags/                # Material tagging
+│   ├── admin/                        # Admin dashboard
+│   ├── profile/                      # User profile
+│   ├── about/                        # About page
+│   ├── debug/                        # Debug panel
+│   ├── layout.tsx                    # Root layout (i18n, theme, analytics)
+│   ├── page.tsx                      # Landing page
+│   ├── globals.css                   # Global styles & design tokens
+│   ├── sitemap.ts / robots.ts        # SEO
+│   └── manifest.ts                   # PWA manifest
+│
+├── components/                       # 141 React components
+│   ├── ui/                           # 55 shadcn/ui primitives
+│   ├── claude-chat/                  # Claude chat (messages, input, tool calls, plan mode)
+│   ├── copywriting/                  # Document workspace, editor, assistant, diff viewer
+│   ├── remotion/                     # Video compositions & players
+│   ├── animations/                   # Scroll reveal, typewriter, counter, card hover
+│   ├── web-terminal/                 # Embedded terminal (xterm)
+│   ├── assessment-*.tsx              # Assessment form, results, progress, PDF export
+│   ├── chat-*.tsx                    # Chat UI variants (standard, ACE, OpenClaw)
+│   ├── hero.tsx / hero-animated.tsx  # Landing page hero sections
+│   ├── navbar.tsx / footer.tsx       # Site navigation
+│   └── ...                           # Auth, mindmap, scoring, file preview, etc.
+│
+├── lib/                              # Shared utilities
+│   ├── auth/                         # Authentication context & helpers
+│   ├── ace/                          # ACE framework types & playbook
+│   ├── i18n.tsx                      # Internationalization
+│   ├── ai-config.ts                  # AI provider configuration
+│   └── ...                           # PDF, OpenClaw client, chat sessions
+│
+├── hooks/                            # React hooks (toast, mobile, assessment loading)
+│
+├── ace_gtv/                          # Python backend
+│   ├── api_server.py                 # Main Flask server (port 5005)
+│   ├── api/                          # Route blueprints
+│   │   ├── copywriting_routes.py     # Copywriting pipeline API
+│   │   ├── scoring_agent_api.py      # Scoring agent API
+│   │   ├── document_api.py           # Document processing API
+│   │   └── terminal_routes.py        # Web terminal API
+│   ├── agents/                       # AI agents
+│   │   ├── langgraph_scoring_agent.py
+│   │   ├── langgraph_oc_agent.py
+│   │   ├── copywriting_agent.py
+│   │   ├── content_extraction_agent.py
+│   │   ├── framework_building_agent.py
+│   │   ├── material_agent.py
+│   │   ├── scoring_agent_lite.py
+│   │   ├── document_llm_assistant.py
+│   │   └── gtv_ace_agent.py          # ACE self-evolving agent
+│   ├── services/                     # Business logic
+│   │   ├── claude_code_service.py    # Claude Code CLI integration
+│   │   ├── project_workspace_service.py
+│   │   ├── copywriting_workflow.py
+│   │   ├── copywriting_project_manager.py
+│   │   ├── skill_router.py
+│   │   ├── assessment_integration.py
+│   │   ├── success_case_library.py
+│   │   └── ...
+│   ├── processors/                   # Document processors
+│   │   ├── resume_processor.py
+│   │   ├── material_processor.py
+│   │   ├── material_analyzer.py
+│   │   ├── document_analyzer.py
+│   │   └── pdf_report_generator.py
+│   ├── database/                     # Data access layer
+│   │   ├── copywriting_database.py   # Core SQLite schema & CRUD
+│   │   ├── file_storage.py           # Unified storage abstraction
+│   │   ├── minio_client.py           # MinIO client
+│   │   └── dao/                      # DAO pattern modules
+│   ├── prompts/                      # LLM prompt templates
+│   ├── data/                         # Static data & rules
+│   └── migrations/                   # SQL migrations (Supabase)
+│
+├── .claude/skills/                   # Claude Code skill definitions
+│   ├── resume-analysis/
+│   ├── gtv-eligibility-assessment/
+│   ├── scoring-calculation/
+│   ├── evidence-validation/
+│   ├── recommendations-generation/
+│   └── document-processing/
+│
+├── openclaw-skills/                  # OpenClaw Gateway skills
+│   ├── gtv-assessment/
+│   ├── gtv-copywriting/
+│   ├── gtv-recommendation-letter/
+│   ├── resume-analyzer/
+│   ├── immigration-strategy/
+│   └── uk-immigration-policy/
+│
+├── deploy/                           # Deployment config
+│   ├── nginx/                        # Nginx site config
+│   ├── openclaw/                     # OpenClaw Gateway setup
+│   └── setup.sh                      # One-click deploy script
+│
+├── docs/                             # Documentation
+│   ├── CLAUDE_CODE_SERVICE_DESIGN.md
+│   ├── CLAUDE_CODE_WORKSPACE_DESIGN.md
+│   ├── STORAGE_CONFIG.md
+│   ├── AZURE_SETUP.md
+│   ├── PORT_CONFIG.md
+│   ├── DEPLOY_502_LOGIN.md
 │   └── ...
-├── lib/
-│   └── i18n.tsx                   # Internationalization context
-└── README.md
-\`\`\`
+│
+├── public/                           # Static assets & KB rules JSON
+├── scripts/                          # Install & startup scripts
+├── ecosystem.config.js               # PM2 process config
+├── package.json                      # Frontend dependencies (pnpm)
+├── next.config.mjs                   # Next.js configuration
+├── tsconfig.json                     # TypeScript configuration
+└── components.json                   # shadcn/ui config
+```
 
-### Usage
+### Architecture Overview
 
-1. **Home Page**: Introduction to the GTV assessment service
-2. **Start Assessment**: Click "Start Assessment" button
-3. **Upload Resume**: 
-   - Upload a file (TXT, PDF, DOC, DOCX) or
-   - Paste resume text directly
-4. **Fill Basic Info**: Provide name, email, phone, and field
-5. **Submit**: Click "Analyze Resume" to start AI analysis
-6. **View Results**: Detailed assessment report with:
-   - Overall score and pathway recommendation
-   - Education, industry, work, and technical analysis
-   - Strengths and weaknesses
-   - Professional advice
-   - Required documents and timeline
+```
+Browser → Nginx (443/HTTPS)
+            ├── /              → Next.js (127.0.0.1:3000)    # Frontend
+            ├── /api/copywriting/* → Next.js → Flask (5005)  # Backend proxy
+            ├── /ws/openclaw   → OpenClaw (127.0.0.1:18789)  # Chat WebSocket
+            └── /openclaw/     → OpenClaw (127.0.0.1:18789)  # Dashboard
+```
 
-### Debug Mode
+### Configuration Reference
 
-For administrators to optimize AI prompts:
+| Config Area | Documentation |
+|-------------|---------------|
+| AI Provider (OpenAI / Azure) | [`docs/AZURE_SETUP.md`](docs/AZURE_SETUP.md) |
+| File Storage (MinIO / S3 / OSS / COS) | [`docs/STORAGE_CONFIG.md`](docs/STORAGE_CONFIG.md) |
+| Port Configuration | [`docs/PORT_CONFIG.md`](docs/PORT_CONFIG.md) |
+| Claude Code Service | [`docs/CLAUDE_CODE_SERVICE_DESIGN.md`](docs/CLAUDE_CODE_SERVICE_DESIGN.md) |
+| Project Workspaces | [`docs/CLAUDE_CODE_WORKSPACE_DESIGN.md`](docs/CLAUDE_CODE_WORKSPACE_DESIGN.md) |
+| Server Deployment | [`deploy/README.md`](deploy/README.md) |
+| Backend (ACE / Agents) | [`ace_gtv/README.md`](ace_gtv/README.md) |
 
-1. Navigate to the results page after an assessment
-2. Scroll to the bottom to find the "Debug Information" section
-3. View the exact prompt sent to GPT and the raw response
-4. Copy prompts for testing and optimization
+### SEO
 
-### Customization
-
-#### Modify AI Analysis
-
-Edit `app/api/analyze-resume/route.ts` to customize:
-- Assessment criteria
-- Scoring logic
-- Output format
-- AI model parameters
-
-#### Update UI Text
-
-Edit `lib/i18n.tsx` to modify:
-- English translations
-- Chinese translations
-- Add new language support
-
-#### Styling
-
-Edit `app/globals.css` to customize:
-- Color scheme (design tokens)
-- Typography
-- Component styles
-
-### SEO Optimization
-
-The project has been fully optimized for search engines. Below is the complete list of SEO features:
-
-#### Global Metadata (`app/layout.tsx`)
-
-- `metadataBase` configured for production domain
-- `title.template` for consistent page titles across all routes
-- `keywords`: bilingual keywords for target search terms
-- `authors`, `creator`, `publisher`: company branding
-- `robots`: index/follow with googleBot directives
-- `openGraph`: type, locale, siteName, images
-- `twitter`: summary_large_image card
-- `alternates.canonical`: canonical URL
-- `icons`: favicon + apple-icon
-- `manifest`: Web Manifest link
-
-#### Page-Level Metadata
-
-Each route has its own nested `layout.tsx` exporting page-specific `title`, `description`, `openGraph`, and `canonical`. Private pages are set to `noindex`.
-
-#### Sitemap & Robots
-
-- **`app/sitemap.ts`** — generates `/sitemap.xml` with public routes, priorities, and change frequencies
-- **`app/robots.ts`** — generates `/robots.txt` with appropriate allow/disallow rules
-
-#### Structured Data (JSON-LD)
-
-- **`components/structured-data.tsx`** — schema.org types injected into `<head>`:
-  - `Organization` — company info, service area
-  - `WebSite` — site metadata
-  - `ProfessionalService` — service catalog
-
-#### Dynamic Image Generation
-
-- **`app/icon.tsx`** — 32x32 favicon
-- **`app/apple-icon.tsx`** — 180x180 Apple touch icon
-- **`app/opengraph-image.tsx`** — 1200x630 OG image for social sharing
-
-#### Web Manifest
-
-- **`app/manifest.ts`** — generates `/manifest.webmanifest` with app name, theme color, icons
-
-#### Semantic HTML
-
-- Semantic tags (`<section>`, `<nav>`, `<footer>`) used throughout
-- Proper heading hierarchy: h1 → h2 → h3
-- List content uses `<ul>`/`<li>`
-- Images include `alt` attributes
-- Root layout sets appropriate `lang` attribute
-
-#### Next.js Config
-
-- `trailingSlash: false` for consistent URLs
-- `poweredByHeader: false` to hide server info
-- `compress: true` for response compression
-- Static asset long-term caching enabled
-
-### Troubleshooting
-
-**Issue**: AI returns "I'm sorry, I can't assist with that"
-- **Solution**: Check if resume content is appropriate and not too long (max 2500 chars)
-
-**Issue**: "Missing required fields" error
-- **Solution**: The API now auto-fills missing fields. Check debug logs for details.
-
-**Issue**: Array type errors in results
-- **Solution**: Fixed with comprehensive type validation. Update to latest code.
+Full SEO support including metadata, sitemap, robots.txt, JSON-LD structured data (`Organization`, `WebSite`, `ProfessionalService`), dynamic OG images, Web Manifest, and semantic HTML. See page-level `layout.tsx` files for per-route metadata.
 
 ### License
 
 MIT License
-
-### Support
-
-For issues or questions, please open an issue on GitHub.
 
 ---
 
@@ -279,264 +316,219 @@ For issues or questions, please open an issue on GitHub.
 
 ### 项目简介
 
-这是一个基于 AI 的英国全球人才签证（GTV）评估应用。它能够分析申请人的简历，并根据英国 GTV 官方标准提供详细的评估报告，包括 Exceptional Talent 或 Exceptional Promise 路径的推荐。
+惜池移民（Xichi Immigration）是一个 AI 驱动的英国全球人才签证（GTV）全流程服务平台。系统覆盖从初始资格评估、评分分析，到材料收集、证据验证，再到 AI 辅助撰写个人陈述、推荐信和申请文档的完整流程。
 
-### 功能特点
+### 核心功能
 
-- **简历分析**：支持上传简历文件或粘贴文本进行 AI 分析
-- **全面评估**：多维度详细评估：
-  - 教育背景
-  - 行业背景
-  - 从业经历
-  - 技术特长
-- **官方标准**：基于 Tech Nation 和英国政府标准进行评估
-- **双语支持**：完整的中英文双语界面
-- **调试界面**：内置调试工具，方便管理员优化 AI 提示词
-- **详细报告**：
-  - 综合资格评分
-  - 优劣势分析
-  - GTV 路径推荐
-  - 所需文档清单
-  - 专业建议和时间表
+- **简历分析与评分**：支持上传简历文件（PDF/DOC/DOCX/TXT）或粘贴文本，AI 进行教育、行业、工作经验和技术特长多维度分析。
+- **GTV 资格评估**：基于 Tech Nation / 英国政府官方标准自动评估，推荐 Exceptional Talent、Exceptional Promise 或 Startup Visa 路径。
+- **深度评估**：基于 LangGraph 的评分代理、Optional Criteria (OC) 分析和差距识别。
+- **AI 智能对话**：多种对话模式 — OpenClaw WebSocket、Claude Code Agent、Vercel AI SDK — 支持持久化历史记录和分享链接。
+- **文书工作流**：基于项目的多阶段文档流水线：
+  - 材料收集与上传
+  - 内容提取与分析
+  - 申请框架搭建
+  - 个人陈述、Cover Letter、推荐信生成
+  - AI 助手（Agent / Ask 模式）实时流式输出
+- **材料管理**：上传、标签、分类和预览申请材料，支持 MinIO / S3 / OSS / COS 对象存储。
+- **知识库**：基于规则的 GTV 评估标准知识管理。
+- **PDF 报告生成**：多种导出样式，支持中文字体。
+- **双语支持**：完整的中英文界面。
+- **管理后台**：用户管理和系统运维。
+- **SEO 优化**：完整的元数据、Sitemap、robots.txt、JSON-LD 结构化数据和动态 OG 图片。
 
 ### 技术栈
 
-- **框架**：Next.js 15（App Router）
-- **语言**：TypeScript
-- **样式**：Tailwind CSS v4
-- **UI 组件**：shadcn/ui
-- **AI**：OpenAI GPT-4（通过 Vercel AI SDK）
-- **部署**：Vercel
+#### 前端
+
+| 类别 | 技术 |
+|------|------|
+| 框架 | Next.js 16（App Router） |
+| 语言 | TypeScript 5 |
+| UI 运行时 | React 19 |
+| 样式 | Tailwind CSS v4, tw-animate-css |
+| 组件库 | shadcn/ui, Semi UI, Radix UI |
+| 富文本编辑器 | TipTap |
+| 图表与可视化 | Recharts, Mermaid, React Flow |
+| 视频 / 动画 | Remotion, Framer Motion |
+| AI 集成 | Vercel AI SDK（`ai`, `@ai-sdk/openai`, `@ai-sdk/azure`） |
+| PDF | jsPDF, react-pdf, pdfjs-dist |
+| 终端 | xterm.js |
+| 分析 | Vercel Analytics |
+
+#### 后端（Python）
+
+| 类别 | 技术 |
+|------|------|
+| Web 框架 | Flask 3, Flask-CORS, Flask-SocketIO |
+| LLM 编排 | LangChain, LangGraph, OpenAI SDK |
+| 数据处理 | pandas, numpy |
+| 文档处理 | pdfminer.six, python-docx, ReportLab, Pillow |
+| 对象存储 | MinIO（S3 兼容） |
+| 数据库 | SQLite（DAO 层） |
+| 测试 | pytest, pytest-flask |
+
+#### 基础设施
+
+| 类别 | 技术 |
+|------|------|
+| 进程管理 | PM2（ecosystem.config.js） |
+| 反向代理 | Nginx + Certbot（SSL） |
+| AI 网关 | OpenClaw Gateway |
+| 包管理器 | pnpm |
 
 ### 环境要求
 
-- Node.js 18+ 或 Bun
-- OpenAI API 密钥（或 Vercel AI Gateway 访问权限）
+- Node.js 20+ 和 pnpm
+- Python 3.9+
+- OpenAI API 密钥（或 Azure OpenAI / ENNCLOUD 凭证）
 
-### 安装步骤
+### 快速开始
 
-1. **克隆仓库**
-   \`\`\`bash
+1. **克隆并安装前端依赖**
+   ```bash
    git clone <repository-url>
-   cd gtv-visa-assessment
-   \`\`\`
+   cd visa-assessment
+   pnpm install
+   ```
 
-2. **安装依赖**
-   \`\`\`bash
-   npm install
-   # 或
-   bun install
-   \`\`\`
+2. **安装后端依赖**
+   ```bash
+   cd ace_gtv
+   pip install -r requirements.txt
+   cd ..
+   ```
 
 3. **配置环境变量**
-   
-   在根目录创建 `.env.local` 文件：
-   \`\`\`env
-   # 可选：如果不使用 Vercel AI Gateway
-   OPENAI_API_KEY=your_openai_api_key_here
-   \`\`\`
 
-4. **启动开发服务器**
-   \`\`\`bash
-   npm run dev
-   # 或
-   bun dev
-   \`\`\`
+   在项目根目录创建 `.env.local`：
+   ```env
+   # AI 提供商 (openai / azure)
+   AI_PROVIDER=openai
+   OPENAI_API_KEY=your_key_here
 
-5. **打开浏览器**
-   
-   访问 [http://localhost:3000](http://localhost:3000)
+   # 后端 URL
+   COPYWRITING_API_URL=http://localhost:5005
 
-### 部署说明
+   # 文件存储 (local / minio / s3 / oss / cos)
+   FILE_STORAGE_TYPE=local
+   ```
 
-#### 部署到 Vercel（推荐）
+4. **使用 PM2 启动全部服务**
+   ```bash
+   pm2 start ecosystem.config.js
+   ```
 
-1. **推送到 GitHub**
-   \`\`\`bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git remote add origin <your-github-repo-url>
-   git push -u origin main
-   \`\`\`
+   或分别启动：
+   ```bash
+   # 前端（开发）
+   pnpm dev
 
-2. **在 Vercel 上部署**
-   - 访问 [vercel.com](https://vercel.com)
-   - 点击 "New Project"
-   - 导入你的 GitHub 仓库
-   - 配置环境变量（如需要）
-   - 点击 "Deploy"
+   # 后端
+   cd ace_gtv && python3 api_server.py
+   ```
 
-3. **在 Vercel 配置环境变量**
-   
-   如果不使用 Vercel AI Gateway，在 Vercel 控制台添加：
-   - `OPENAI_API_KEY`：你的 OpenAI API 密钥
+5. **访问** [http://localhost](http://localhost)（80 端口）或 [http://localhost:3000](http://localhost:3000)
 
-#### 手动部署
+### 生产部署
 
-1. **构建应用**
-   \`\`\`bash
-   npm run build
-   # 或
-   bun run build
-   \`\`\`
-
-2. **启动生产服务器**
-   \`\`\`bash
-   npm start
-   # 或
-   bun start
-   \`\`\`
+参见 [`deploy/README.md`](deploy/README.md) 获取完整的服务器部署指南，包括：
+- Nginx 反向代理配置
+- OpenClaw Gateway 设置
+- SSL 证书管理
+- PM2 进程管理
 
 ### 项目结构
 
-\`\`\`
-gtv-visa-assessment/
-├── app/
-│   ├── api/
-│   │   └── analyze-resume/
-│   │       └── route.ts          # AI 分析 API 端点
-│   ├── assessment/
-│   │   └── page.tsx               # 评估表单页面
-│   ├── results/
-│   │   └── page.tsx               # 结果展示页面
-│   ├── layout.tsx                 # 根布局（含国际化）
-│   ├── page.tsx                   # 首页
-│   └── globals.css                # 全局样式
-├── components/
-│   ├── assessment-form.tsx        # 简历上传表单
-│   ├── assessment-results.tsx     # 结果展示组件
-│   ├── hero.tsx                   # 英雄区块
-│   ├── features.tsx               # 功能特点区块
-│   ├── language-switcher.tsx      # 语言切换器
-│   └── ...
-├── lib/
-│   └── i18n.tsx                   # 国际化上下文
-└── README.md
-\`\`\`
+```
+visa-assessment/
+├── app/                              # Next.js App Router
+│   ├── api/                          # 24 个 API 路由处理器
+│   │   ├── auth/                     # 登录、注册、会话、登出
+│   │   ├── assessment/               # 深度分析、OC 评估
+│   │   ├── assessments/              # 保存结果、上传简历
+│   │   ├── scoring/                  # 批量评分分析
+│   │   ├── copywriting/[...path]/    # 代理到 Python 后端
+│   │   ├── smart-chat/               # AI 对话端点
+│   │   ├── ace-chat/                 # ACE 代理对话
+│   │   ├── chat-*/                   # 对话管理（分享、上传、下载、标题）
+│   │   ├── admin/                    # 用户管理
+│   │   └── health/                   # 健康检查
+│   ├── assessment/                   # GTV 评估页面
+│   ├── deep-assessment/              # 深度评估页面
+│   ├── results/                      # 评估结果展示
+│   ├── chat/                         # AI 对话（含 share/[token]）
+│   ├── claude-chat/                  # Claude Code Agent 对话
+│   ├── copywriting/                  # 文书项目中心
+│   │   └── [projectId]/              # 项目工作流
+│   │       ├── assistant/            # AI 写作助手
+│   │       ├── extraction/           # 内容提取
+│   │       ├── framework/            # 框架搭建
+│   │       ├── generation/           # 文档生成
+│   │       ├── prompts/              # 提示词管理
+│   │       ├── recommendation_letters/
+│   │       └── [packageType]/        # 材料包
+│   ├── analysis/                     # 分析中心（含 agent/）
+│   ├── knowledge-base/              # 知识库管理
+│   ├── material-collection/          # 材料上传与管理
+│   ├── material-tags/                # 材料标签
+│   ├── admin/                        # 管理后台
+│   ├── profile/                      # 用户资料
+│   ├── about/                        # 关于页面
+│   └── debug/                        # 调试面板
+│
+├── components/                       # 141 个 React 组件
+│   ├── ui/                           # 55 个 shadcn/ui 基础组件
+│   ├── claude-chat/                  # Claude 对话（消息、输入、工具调用、计划模式）
+│   ├── copywriting/                  # 文档工作区、编辑器、AI 助手、差异对比
+│   ├── remotion/                     # 视频合成与播放器
+│   ├── animations/                   # 滚动动画、打字机、计数器
+│   ├── web-terminal/                 # 嵌入式终端
+│   └── ...                           # 评估、对话、导航、PDF 导出等
+│
+├── ace_gtv/                          # Python 后端
+│   ├── api_server.py                 # Flask 主服务器（端口 5005）
+│   ├── api/                          # 路由蓝图
+│   ├── agents/                       # AI 代理（评分、文书、OC、ACE 等）
+│   ├── services/                     # 业务逻辑服务
+│   ├── processors/                   # 文档处理器
+│   ├── database/                     # 数据访问层（SQLite + DAO）
+│   └── prompts/                      # LLM 提示词模板
+│
+├── .claude/skills/                   # Claude Code 技能定义（6 个）
+├── openclaw-skills/                  # OpenClaw Gateway 技能（6 个）
+├── deploy/                           # 部署配置（Nginx、OpenClaw、setup.sh）
+├── docs/                             # 技术文档
+├── ecosystem.config.js               # PM2 进程配置
+└── package.json                      # 前端依赖（pnpm）
+```
 
-### 使用说明
+### 架构概览
 
-1. **首页**：查看 GTV 评估服务介绍
-2. **开始评估**：点击"开始评估"按钮
-3. **上传简历**：
-   - 上传文件（TXT、PDF、DOC、DOCX）或
-   - 直接粘贴简历文本
-4. **填写基本信息**：提供姓名、邮箱、电话和申请领域
-5. **提交**：点击"分析简历"开始 AI 分析
-6. **查看结果**：详细的评估报告包含：
-   - 综合评分和路径推荐
-   - 教育、行业、工作和技术分析
-   - 优势和劣势
-   - 专业建议
-   - 所需文档和时间表
+```
+浏览器 → Nginx (443/HTTPS)
+            ├── /              → Next.js (127.0.0.1:3000)    # 前端应用
+            ├── /api/copywriting/* → Next.js → Flask (5005)  # 后端代理
+            ├── /ws/openclaw   → OpenClaw (127.0.0.1:18789)  # Chat WebSocket
+            └── /openclaw/     → OpenClaw (127.0.0.1:18789)  # 控制台
+```
 
-### 调试模式
+### 配置参考
 
-供管理员优化 AI 提示词：
-
-1. 完成评估后进入结果页面
-2. 滚动到底部找到"调试信息"部分
-3. 查看发送给 GPT 的确切提示词和原始响应
-4. 复制提示词进行测试和优化
-
-### 自定义配置
-
-#### 修改 AI 分析
-
-编辑 `app/api/analyze-resume/route.ts` 来自定义：
-- 评估标准
-- 评分逻辑
-- 输出格式
-- AI 模型参数
-
-#### 更新界面文本
-
-编辑 `lib/i18n.tsx` 来修改：
-- 英文翻译
-- 中文翻译
-- 添加新语言支持
-
-#### 样式定制
-
-编辑 `app/globals.css` 来自定义：
-- 配色方案（设计令牌）
-- 字体排版
-- 组件样式
+| 配置领域 | 文档 |
+|----------|------|
+| AI 提供商（OpenAI / Azure） | [`docs/AZURE_SETUP.md`](docs/AZURE_SETUP.md) |
+| 文件存储（MinIO / S3 / OSS / COS） | [`docs/STORAGE_CONFIG.md`](docs/STORAGE_CONFIG.md) |
+| 端口配置 | [`docs/PORT_CONFIG.md`](docs/PORT_CONFIG.md) |
+| Claude Code 服务 | [`docs/CLAUDE_CODE_SERVICE_DESIGN.md`](docs/CLAUDE_CODE_SERVICE_DESIGN.md) |
+| 项目工作空间 | [`docs/CLAUDE_CODE_WORKSPACE_DESIGN.md`](docs/CLAUDE_CODE_WORKSPACE_DESIGN.md) |
+| 服务器部署 | [`deploy/README.md`](deploy/README.md) |
+| 后端（ACE / 代理） | [`ace_gtv/README.md`](ace_gtv/README.md) |
 
 ### SEO 搜索引擎优化
 
-项目已完成全站搜索引擎优化，以下是完整的 SEO 配置清单：
-
-#### 全局元数据（`app/layout.tsx`）
-
-- `metadataBase`：配置生产环境域名
-- `title.template`：子页面标题自动拼接模板
-- `keywords`：中英双语目标关键词
-- `authors`、`creator`、`publisher`：公司品牌信息
-- `robots`：index/follow + googleBot 指令
-- `openGraph`：类型、locale、站点名称、分享图片
-- `twitter`：summary_large_image 卡片
-- `alternates.canonical`：规范化 URL
-- `icons`：favicon + apple-icon
-- `manifest`：Web Manifest 链接
-
-#### 页面级元数据
-
-每个路由都有独立的嵌套 `layout.tsx` 导出页面专属的 title、description、openGraph 和 canonical。私密页面设置为 `noindex`。
-
-#### Sitemap 与 Robots
-
-- **`app/sitemap.ts`** — 生成 `/sitemap.xml`，包含公开路由、优先级和更新频率
-- **`app/robots.ts`** — 生成 `/robots.txt`，配置适当的 allow/disallow 规则
-
-#### 结构化数据（JSON-LD）
-
-- **`components/structured-data.tsx`** — schema.org 类型注入 `<head>`：
-  - `Organization` — 公司信息、服务区域
-  - `WebSite` — 站点元数据
-  - `ProfessionalService` — 服务目录
-
-#### 动态图片生成
-
-- **`app/icon.tsx`** — 32x32 favicon
-- **`app/apple-icon.tsx`** — 180x180 Apple 触摸图标
-- **`app/opengraph-image.tsx`** — 1200x630 社交分享 OG 图片
-
-#### Web Manifest
-
-- **`app/manifest.ts`** — 生成 `/manifest.webmanifest`，包含应用名称、主题色、图标
-
-#### 语义化 HTML
-
-- 组件使用 `<section>`、`<nav>`、`<footer>` 等语义标签
-- 正确的标题层级：h1 → h2 → h3
-- 列表内容使用 `<ul>`/`<li>`
-- 图片包含 `alt` 属性
-- 根布局设置适当的 `lang` 属性
-
-#### Next.js 配置
-
-- `trailingSlash: false`：保持 URL 一致性
-- `poweredByHeader: false`：隐藏服务器信息
-- `compress: true`：响应压缩
-- 静态资源长期缓存已启用
-
-### 常见问题
-
-**问题**：AI 返回 "I'm sorry, I can't assist with that"
-- **解决方案**：检查简历内容是否合适且不要太长（最多 2500 字符）
-
-**问题**："Missing required fields" 错误
-- **解决方案**：API 现在会自动填充缺失字段。查看调试日志了解详情。
-
-**问题**：结果页面出现数组类型错误
-- **解决方案**：已通过全面的类型验证修复。更新到最新代码。
+全站 SEO 支持，包括元数据、Sitemap、robots.txt、JSON-LD 结构化数据（`Organization`、`WebSite`、`ProfessionalService`）、动态 OG 图片、Web Manifest 和语义化 HTML。各路由的页面级元数据参见对应的 `layout.tsx` 文件。
 
 ### 许可证
 
 MIT License
-
-### 支持
-
-如有问题或疑问，请在 GitHub 上提交 issue。
